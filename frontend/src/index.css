@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: "Baloo 2", ui-sans-serif, system-ui;
+}
+
+.btn-primary {
+  @apply rounded-full bg-royal px-6 py-3 text-base font-semibold text-white shadow-soft transition-transform transition-colors duration-200 ease-out;
+}
+
+.btn-primary:hover {
+  @apply -translate-y-0.5 bg-ink;
+}
+
+.btn-primary:active {
+  @apply translate-y-0 scale-[0.98];
+}
+
+.btn-secondary {
+  @apply rounded-full bg-banana-200 px-6 py-3 text-base font-semibold text-royal shadow-soft transition-transform transition-colors duration-200 ease-out;
+}
+
+.btn-secondary:hover {
+  @apply -translate-y-0.5 bg-banana-300;
+}
+
+.btn-secondary:active {
+  @apply translate-y-0 scale-[0.98];
+}
+
+.card-soft {
+  @apply rounded-[2rem] bg-white shadow-soft transition-transform duration-200 ease-out;
+}
+
+.card-soft:hover {
+  @apply -translate-y-1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary,
+  .btn-secondary,
+  .card-soft {
+    transition: none;
+  }
+}

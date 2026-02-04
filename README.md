@@ -1,75 +1,39 @@
-# Banana Meow - GitHub Setup Guide
+# Banana Meow 🐱👑
 
-## 🚀 Getting Started with GitHub
-
-This guide will help you and your groupmates set up GitHub for collaborative development.
+A fully responsive, mobile-first MERN stack web application for a brand called Banana Meow, featuring 12 British Shorthair cats with a cute, royal, and slightly dramatic personality.
 
 ---
 
-## 📋 Prerequisites
+## 🚀 Getting Started
 
-- Git installed on your computer ([Download Git](https://git-scm.com/downloads))
-- GitHub account ([Sign up here](https://github.com/signup))
-- GitHub Desktop (optional, but easier for beginners) ([Download here](https://desktop.github.com/))
+### Prerequisites
 
----
-
-## 🔧 Initial Setup (One Person Does This First)
-
-### Step 1: Create a GitHub Repository
-
-1. Go to [GitHub.com](https://github.com) and sign in
-2. Click the **"+"** icon in the top right → **"New repository"**
-3. Name it: `BananaMeow` (or any name you prefer)
-4. Choose **Public** or **Private**
-5. **DO NOT** check "Initialize with README" (we already have files)
-6. Click **"Create repository"**
-
-### Step 2: Initialize Git in Your Project
-
-Open terminal/PowerShell in your project folder (`E:\Projects2026\BananaMeow`) and run:
-
-```bash
-# Initialize git repository
-git init
-
-# Add all files
-git add .
-
-# Create first commit
-git commit -m "Initial commit: Banana Meow project"
-
-# Add your GitHub repository as remote (replace YOUR_USERNAME with your GitHub username)
-git remote add origin https://github.com/YOUR_USERNAME/BananaMeow.git
-
-# Push to GitHub
-git branch -M main
-git push -u origin main
-```
-
-**Note**: You'll be asked to enter your GitHub username and password (or use a Personal Access Token).
+- **Node.js** installed ([Download here](https://nodejs.org/))
+- **Git** installed ([Download here](https://git-scm.com/downloads))
+- **MongoDB** running locally or MongoDB Atlas account
 
 ---
 
-## 👥 For Your Groupmates (Cloning the Repository)
+## 📥 How to Clone This Repository
 
 ### Step 1: Clone the Repository
 
-1. Go to your GitHub repository page
-2. Click the green **"Code"** button
-3. Copy the HTTPS URL
-4. Open terminal/PowerShell where you want the project
-5. Run:
+Open your terminal/PowerShell and run:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/BananaMeow.git
+git clone https://github.com/Coco120903/BananaMeow.git
+```
+
+### Step 2: Navigate to Project Folder
+
+```bash
 cd BananaMeow
 ```
 
-### Step 2: Install Dependencies
+### Step 3: Install Dependencies
 
 ```bash
-# Install root dependencies
+# Install root dependencies (for running both frontend and backend)
 npm install
 
 # Install frontend dependencies
@@ -83,9 +47,22 @@ npm install
 cd ..
 ```
 
-### Step 3: Create Environment Files
+### Step 4: Set Up Environment Variables
 
-Create `backend/.env` file:
+Create a file named `.env` in the `backend` folder:
+
+```bash
+# Navigate to backend folder
+cd backend
+
+# Create .env file (Windows PowerShell)
+New-Item -ItemType File -Name .env
+
+# Or use your text editor to create backend/.env
+```
+
+Add these variables to `backend/.env`:
+
 ```
 PORT=5000
 MONGO_URI=mongodb://localhost:27017/banana-meow
@@ -93,9 +70,23 @@ STRIPE_SECRET_KEY=sk_test_your_stripe_key_here
 FRONTEND_URL=http://localhost:5173
 ```
 
+**Note**: Replace `MONGO_URI` with your MongoDB connection string if using MongoDB Atlas.
+
+### Step 5: Run the Application
+
+From the root directory (`BananaMeow`):
+
+```bash
+npm run dev
+```
+
+This will start both:
+- **Frontend**: http://localhost:5173
+- **Backend**: http://localhost:5000
+
 ---
 
-## 🔄 Daily Workflow: Push and Pull
+## 🔄 Daily Workflow
 
 ### Before Starting Work (Always Do This First!)
 
@@ -104,23 +95,19 @@ FRONTEND_URL=http://localhost:5173
 git pull origin main
 ```
 
-### Making Changes
-
-1. **Work on your feature/bug fix**
-2. **Test your changes**
-3. **When ready to save:**
+### Making Changes and Pushing
 
 ```bash
-# See what files you changed
+# 1. See what files you changed
 git status
 
-# Add your changes
+# 2. Add your changes
 git add .
 
-# Commit with a descriptive message
+# 3. Commit with a descriptive message
 git commit -m "Add: description of what you did"
 
-# Push to GitHub
+# 4. Push to GitHub
 git push origin main
 ```
 
@@ -133,116 +120,78 @@ git push origin main
 
 ---
 
-## ⚠️ Important Rules for Team Collaboration
+## 📁 Project Structure
 
-### 1. Always Pull Before You Push
-```bash
-git pull origin main
-# Fix any conflicts if they occur
-git push origin main
 ```
-
-### 2. Don't Commit These Files
-- `node_modules/` (already in .gitignore)
-- `.env` files (already in .gitignore)
-- Personal IDE settings
-
-### 3. Communicate Before Major Changes
-- Let your team know if you're working on a big feature
-- Use branches for major features (see below)
-
-### 4. Write Clear Commit Messages
-- Be descriptive: "Add quantity selector to shop page"
-- Not vague: "changes" or "fix"
+BananaMeow/
+├── frontend/          # React + Vite frontend
+│   ├── src/
+│   │   ├── components/    # UI components
+│   │   ├── pages/         # Page components
+│   │   ├── context/       # React Context (Cart, Auth)
+│   │   └── ...
+│   └── package.json
+├── backend/           # Node.js + Express backend
+│   ├── src/
+│   │   ├── routes/        # API routes
+│   │   ├── controllers/   # Route controllers
+│   │   ├── models/        # Mongoose models
+│   │   └── ...
+│   └── package.json
+└── package.json       # Root package (concurrently)
+```
 
 ---
 
-## 🌿 Using Branches (Advanced - Optional)
+## 🛠️ Available Scripts
 
-For bigger features, use branches to avoid conflicts:
+### Root Directory
+- `npm run dev` - Start both frontend and backend
 
-```bash
-# Create a new branch
-git checkout -b feature-name
+### Frontend (`cd frontend`)
+- `npm run dev` - Start Vite dev server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
 
-# Work on your feature
-# ... make changes ...
-
-# Commit your changes
-git add .
-git commit -m "Add: feature description"
-
-# Push branch to GitHub
-git push origin feature-name
-```
-
-Then create a Pull Request on GitHub to merge into main.
+### Backend (`cd backend`)
+- `npm run dev` - Start backend with nodemon
+- `npm start` - Start backend server
+- `npm run seed:cats` - Seed database with cat data
 
 ---
 
-## 🔍 Common Git Commands
+## 🎯 Tech Stack
 
-```bash
-# Check status of your files
-git status
+- **Frontend**: React 18, Vite, Tailwind CSS, React Router, Lucide Icons
+- **Backend**: Node.js, Express, MongoDB, Mongoose
+- **Payments**: Stripe (test mode)
 
-# See what changed
-git diff
+---
 
-# Undo changes to a file (before committing)
-git checkout -- filename
+## ⚠️ Important Notes
 
-# See commit history
-git log
-
-# Update from GitHub
-git pull origin main
-
-# Send changes to GitHub
-git push origin main
-```
+1. **Always pull before you push** - Avoid conflicts with team members
+2. **Don't commit `.env` files** - They contain sensitive data (already in .gitignore)
+3. **Don't commit `node_modules`** - Already in .gitignore
+4. **Write clear commit messages** - Help your team understand changes
 
 ---
 
 ## 🐛 Troubleshooting
 
-### "Your branch is behind origin/main"
+### Port Already in Use
+If port 5000 or 5173 is already in use:
+- Change `PORT` in `backend/.env`
+- Or stop the process using that port
+
+### MongoDB Connection Error
+- Make sure MongoDB is running locally, or
+- Update `MONGO_URI` in `backend/.env` with your MongoDB Atlas connection string
+
+### Module Not Found Errors
 ```bash
-git pull origin main
-```
-
-### "Merge conflict"
-1. Open the conflicted file
-2. Look for `<<<<<<<`, `=======`, `>>>>>>>` markers
-3. Keep the code you want, remove the markers
-4. Save the file
-5. Run: `git add .` then `git commit -m "Resolve merge conflict"`
-
-### "Permission denied"
-- Make sure you're added as a collaborator on GitHub
-- Repository owner: Settings → Collaborators → Add people
-
-### "Nothing to commit"
-- Your changes are already committed
-- Or you haven't made any changes
-
----
-
-## 📝 Quick Reference
-
-**Daily workflow:**
-```bash
-git pull          # Get latest changes
-# ... work on code ...
-git add .         # Stage changes
-git commit -m "message"  # Save changes
-git push          # Upload to GitHub
-```
-
-**First time setup:**
-```bash
-git clone https://github.com/USERNAME/BananaMeow.git
-cd BananaMeow
+# Delete node_modules and reinstall
+rm -rf node_modules frontend/node_modules backend/node_modules
 npm install
 cd frontend && npm install && cd ..
 cd backend && npm install && cd ..
@@ -250,24 +199,11 @@ cd backend && npm install && cd ..
 
 ---
 
-## 🎯 Best Practices
+## 📞 Need Help?
 
-1. ✅ **Pull before you start working**
-2. ✅ **Commit often** (small commits are better)
-3. ✅ **Write clear commit messages**
-4. ✅ **Test before pushing**
-5. ✅ **Communicate with your team**
-6. ❌ **Don't commit `.env` files**
-7. ❌ **Don't commit `node_modules`**
-8. ❌ **Don't force push to main**
-
----
-
-## 💡 Need Help?
-
-- [Git Documentation](https://git-scm.com/doc)
-- [GitHub Guides](https://guides.github.com/)
-- [GitHub Desktop Guide](https://docs.github.com/en/desktop)
+- Check the [Git Documentation](https://git-scm.com/doc)
+- Review [GitHub Guides](https://guides.github.com/)
+- Ask your team members!
 
 ---
 

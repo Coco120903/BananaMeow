@@ -66,10 +66,10 @@ export default function ShopPage() {
           return (
             <article
               key={category.id}
-              className="card-cute p-[3px] group"
+              className="card-cute p-[3px] group magnetic-hover"
               style={{ animationDelay: `${index * 100}ms` }}
             >
-              <div className="flex flex-col gap-4 rounded-[1.8rem] bg-white p-6 h-full relative overflow-hidden">
+              <div className="flex flex-col gap-4 rounded-[1.8rem] bg-white p-6 h-full relative overflow-hidden card-shine">
                 {/* Background pattern */}
                 <div className="absolute inset-0 opacity-[0.02] pointer-events-none">
                   <div className="absolute inset-0 dots-pattern" />
@@ -124,25 +124,28 @@ export default function ShopPage() {
       </div>
 
       {/* Promo banner */}
-      <div className="mt-12 rounded-[2rem] bg-gradient-to-r from-banana-100 via-lilac/30 to-blush/40 p-6 md:p-8 shadow-soft relative overflow-hidden">
-        {/* Background decoration */}
-        <div className="absolute top-0 right-0 w-32 h-32 bg-white/20 rounded-bl-[4rem]" />
-        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-tr-[3rem]" />
+      <div className="mt-12 rounded-[2rem] gradient-border-animated p-8 md:p-10 shadow-soft relative overflow-hidden">
+        {/* Background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-r from-banana-50 via-lilac/20 to-blush/30 z-0" />
         
-        <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        {/* Background decoration */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-white/30 rounded-bl-[4rem]" />
+        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/20 rounded-tr-[3rem]" />
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="h-14 w-14 rounded-2xl bg-white/70 backdrop-blur-sm shadow-soft flex items-center justify-center">
+            <div className="h-14 w-14 rounded-2xl bg-white/80 backdrop-blur-sm shadow-soft flex items-center justify-center pulse-notification">
               <Percent className="h-7 w-7 text-royal" />
             </div>
             <div>
-              <p className="text-lg font-bold text-royal flex items-center gap-2">
+              <p className="text-lg font-bold text-royal flex items-center gap-2 glow-text">
                 Royal Members Get 10% Off
                 <Star className="h-4 w-4 text-banana-400 fill-banana-200" />
               </p>
               <p className="text-sm text-ink/70">Join the kingdom and save on every order.</p>
             </div>
           </div>
-          <Link to="/signup" className="btn-primary flex items-center justify-center gap-2 group">
+          <Link to="/signup" className="btn-primary flex items-center justify-center gap-2 group press-effect">
             <Crown className="h-4 w-4 group-hover:animate-wiggle" />
             Join Now
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -159,11 +162,11 @@ export default function ShopPage() {
         ].map((item, index) => {
           const Icon = item.icon;
           return (
-            <div key={index} className="flex items-center gap-2 text-sm text-ink/60">
-              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-banana-50 to-lilac/30 flex items-center justify-center">
+            <div key={index} className={`flex items-center gap-2 text-sm text-ink/60 stagger-${index + 1}`} style={{ animation: 'slide-up-fade 0.5s ease-out backwards' }}>
+              <div className="icon-float h-10 w-10 flex items-center justify-center">
                 <Icon className="h-4 w-4 text-royal" />
               </div>
-              <span>{item.label}</span>
+              <span className="font-medium">{item.label}</span>
             </div>
           );
         })}

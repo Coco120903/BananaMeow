@@ -258,7 +258,7 @@ export const resendCode = async (req, res) => {
   }
 };
 
-// @desc    Login user
+// @desc    Login user or admin
 // @route   POST /api/auth/login
 // @access  Public
 export const login = async (req, res) => {
@@ -273,7 +273,35 @@ export const login = async (req, res) => {
       });
     }
 
-    // Find user and include password field
+    // First, check if this is an admin login
+    const adminUsername = process.env.ADMIN_USERNAME;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    
+    if (email === adminUsername && password === adminPassword) {
+      // Admin login
+      const token = jwt.sign(
+        { username: adminUsername, role: "admin" },
+        process.env.JWT_SECRET,
+        { expiresIn: "24h" }
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: "Welcome back, Royal Administrator!",
+        data: {
+          user: {
+            id: "admin",
+            name: "Administrator",
+            email: adminUsername,
+            role: "admin"
+          },
+          token,
+          isAdmin: true
+        }
+      });
+    }
+
+    // Regular user login - Find user and include password field
     const user = await User.findOne({ email }).select("+password");
     
     if (!user) {
@@ -307,7 +335,8 @@ export const login = async (req, res) => {
           role: user.role,
           createdAt: user.createdAt
         },
-        token
+        token,
+        isAdmin: false
       }
     });
   } catch (error) {
@@ -432,3 +461,43 @@ export const protect = async (req, res, next) => {
     });
   }
 };
+
+// @desc    Admin login
+// @route   POST /api/auth/admin/login
+// @access  Public
+export async function adminLogin(req, res) {
+  const { username, password } = req.body;
+
+  const adminUsername = process.env.ADMIN_USERNAME;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  const jwtSecret = process.env.JWT_SECRET;
+
+  if (!adminUsername || !adminPassword || !jwtSecret) {
+    console.error("Admin credentials or JWT_SECRET not configured in .env");
+    return res.status(500).json({ message: "Server configuration error" });
+  }
+
+  if (username !== adminUsername || password !== adminPassword) {
+    return res.status(401).json({ message: "Invalid credentials" });
+  }
+
+  const token = jwt.sign(
+    { username: adminUsername, role: "admin" },
+    jwtSecret,
+    { expiresIn: "24h" }
+  );
+
+  res.json({
+    message: "Login successful",
+    token,
+    admin: { username: adminUsername }
+  });
+}
+
+// @desc    Verify admin token
+// @route   GET /api/auth/admin/verify
+// @access  Admin
+export async function verifyToken(req, res) {
+  // If we get here, the token is valid (middleware already verified)
+  res.json({ valid: true, admin: req.admin });
+}

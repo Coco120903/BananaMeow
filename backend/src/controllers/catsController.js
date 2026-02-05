@@ -17,3 +17,22 @@ export async function createCat(req, res) {
   const cat = await Cat.create(req.body);
   res.status(201).json(cat);
 }
+
+export async function updateCat(req, res) {
+  const cat = await Cat.findByIdAndUpdate(req.params.id, req.body, {
+    new: true,
+    runValidators: true
+  });
+  if (!cat) {
+    return res.status(404).json({ message: "Cat not found" });
+  }
+  res.json(cat);
+}
+
+export async function deleteCat(req, res) {
+  const cat = await Cat.findByIdAndDelete(req.params.id);
+  if (!cat) {
+    return res.status(404).json({ message: "Cat not found" });
+  }
+  res.json({ message: "Cat deleted successfully" });
+}

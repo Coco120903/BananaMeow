@@ -6,6 +6,7 @@ import donationsRoutes from "./routes/donationsRoutes.js";
 import ordersRoutes from "./routes/ordersRoutes.js";
 import paymentsRoutes from "./routes/paymentsRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
 app.use("/api/cats", catsRoutes);
 app.use("/api/products", productsRoutes);
 app.use("/api/donations", donationsRoutes);

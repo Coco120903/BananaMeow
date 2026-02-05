@@ -2,7 +2,18 @@ import Stripe from "stripe";
 import Donation from "../models/Donation.js";
 import Order from "../models/Order.js";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+function getStripeClient() {
+  const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+  if (!stripeSecretKey || !stripeSecretKey.trim()) {
+    const error = new Error(
+      "STRIPE_SECRET_KEY is missing. Set it in backend/.env and restart the server."
+    );
+    error.statusCode = 500;
+    throw error;
+  }
+
+  return new Stripe(stripeSecretKey);
+}
 
 const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
 
@@ -10,6 +21,7 @@ export async function createDonationCheckout(req, res) {
   const { amount, frequency, type, cat } = req.body;
 
   try {
+    const stripe = getStripeClient();
     const normalizedFrequency =
       frequency === "monthly" ? "monthly" : "one-time";
     const isSubscription = normalizedFrequency === "monthly";
@@ -59,6 +71,8 @@ export async function createDonationCheckout(req, res) {
 
 export async function createOrderCheckout(req, res) {
   const { items, email } = req.body;
+
+  const stripe = getStripeClient();
 
   const lineItems = items.map((item) => ({
     price_data: {

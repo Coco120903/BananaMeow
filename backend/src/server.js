@@ -1,8 +1,9 @@
 import dotenv from "dotenv";
-import app from "./app.js";
-import { connectDatabase } from "./config/db.js";
 
 dotenv.config();
+
+import app from "./app.js";
+import { connectDatabase } from "./config/db.js";
 
 const port = process.env.PORT || 5000;
 
@@ -20,4 +21,7 @@ connectDatabase()
 app.listen(port, () => {
   console.log(`🚀 Server running on port ${port}`);
   console.log(`📡 API available at http://localhost:${port}`);
+  console.log(
+    `💳 Stripe key loaded: ${Boolean(process.env.STRIPE_SECRET_KEY)}`
+  );
 });

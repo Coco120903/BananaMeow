@@ -19,7 +19,35 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <CartProvider>
-          <div className="flex min-h-screen flex-col bg-cream text-ink">
+          {/* Animated Background */}
+          <div className="app-background">
+            {/* Floating gradient orbs */}
+            <div className="floating-orb floating-orb-1" style={{ top: '10%', left: '5%' }} />
+            <div className="floating-orb floating-orb-2" style={{ top: '60%', right: '10%' }} />
+            <div className="floating-orb floating-orb-3" style={{ bottom: '20%', left: '30%' }} />
+            <div className="floating-orb floating-orb-1" style={{ top: '40%', right: '25%', opacity: 0.5 }} />
+            
+            {/* Sparkle decorations */}
+            <div className="sparkle-container">
+              {[...Array(20)].map((_, i) => (
+                <div
+                  key={i}
+                  className="sparkle"
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    top: `${Math.random() * 100}%`,
+                    animationDelay: `${Math.random() * 5}s`,
+                    animationDuration: `${2 + Math.random() * 3}s`,
+                    width: `${2 + Math.random() * 4}px`,
+                    height: `${2 + Math.random() * 4}px`,
+                    background: ['#FFE699', '#EBDCF9', '#FDE2E4', '#D4F5E9'][Math.floor(Math.random() * 4)]
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+          
+          <div className="relative flex min-h-screen flex-col text-ink">
             <Navbar />
             <main className="flex-1">
               <Routes>

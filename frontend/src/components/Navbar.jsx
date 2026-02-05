@@ -2,13 +2,13 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
-import { Cat, Crown, ShoppingCart, User } from "lucide-react";
+import { Cat, Crown, ShoppingCart, User, Heart, Sparkles, Menu, X, LogOut, Settings, ChevronDown, Star } from "lucide-react";
 
 const navLinks = [
-  { label: "Home", href: "/" },
-  { label: "Meet the Cats", href: "/cats" },
-  { label: "Shop", href: "/shop" },
-  { label: "About", href: "/about" }
+  { label: "Home", href: "/", icon: Sparkles },
+  { label: "Meet the Cats", href: "/cats", icon: Cat },
+  { label: "Shop", href: "/shop", icon: ShoppingCart },
+  { label: "About", href: "/about", icon: Heart }
 ];
 
 export default function Navbar() {
@@ -18,6 +18,9 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
   const loginMenuRef = useRef(null);
 
   const isActive = (href) => {
@@ -26,6 +29,19 @@ export default function Navbar() {
     }
     return location.pathname.startsWith(href);
   };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+      
+      // Calculate scroll progress
+      const windowHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const progress = windowHeight > 0 ? (window.scrollY / windowHeight) * 100 : 0;
+      setScrollProgress(progress);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
@@ -63,105 +79,173 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-30 bg-cream/90 backdrop-blur">
-      <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 md:px-8">
-        <Link to="/" className="group flex items-center gap-3 transition-transform duration-200 hover:scale-105">
-          <div className="relative grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-banana-200 via-banana-100 to-royal/20 shadow-soft transition-all duration-300 group-hover:shadow-lg">
-            <Cat className="h-6 w-6 text-royal transition-transform duration-300 group-hover:scale-110" />
-            <Crown className="absolute -right-1 -top-1 h-4 w-4 text-royal drop-shadow-sm" />
+    <header className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/95 backdrop-blur-lg shadow-soft' : 'bg-white/80 backdrop-blur-md'}`}>
+      {/* Scroll Progress Bar */}
+      <div className="absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-royal via-banana-400 to-coral transition-all duration-150" style={{ width: `${scrollProgress}%` }} />
+      
+      <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:px-8 md:py-4">
+        {/* Logo */}
+        <Link to="/" className="group flex items-center gap-3 transition-transform duration-300 hover:scale-105">
+          <div className="relative">
+            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-banana-200 via-banana-100 to-lilac/40 shadow-soft transition-all duration-300 group-hover:shadow-glow">
+              <Cat className="h-5 w-5 text-royal transition-transform duration-300 group-hover:scale-110" />
+            </div>
+            <div className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-white shadow-sm">
+              <Crown className="h-3 w-3 text-banana-500" />
+            </div>
           </div>
-          <div>
-            <p className="text-lg font-bold text-royal transition-colors group-hover:text-royal/80">
+          <div className="hidden sm:block">
+            <p className="text-lg font-bold text-royal transition-colors">
               Banana Meow
             </p>
-            <p className="text-xs uppercase tracking-[0.3em] text-ink/60">
+            <p className="text-[10px] uppercase tracking-[0.25em] text-ink/50 font-medium">
               Chonky Royals
             </p>
           </div>
         </Link>
-        <div className="hidden items-center gap-6 text-sm font-medium md:flex">
+
+        {/* Desktop Navigation */}
+        <div className="hidden items-center gap-2 md:flex">
           {navLinks.map((link) => {
             const active = isActive(link.href);
+            const Icon = link.icon;
             return (
               <Link
                 key={link.label}
                 to={link.href}
-                className={`group relative px-3 py-1.5 rounded-full transition-all duration-300 ease-out ${
+                className={`group relative flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-300 ease-out ${
                   active
-                    ? "font-semibold text-royal"
-                    : "text-ink/70 hover:text-royal"
+                    ? "text-royal"
+                    : "text-ink/60 hover:text-royal"
                 }`}
               >
-                <span className="relative z-10 transition-transform duration-300 group-hover:scale-105">
-                  {link.label}
-                </span>
-                {active ? (
-                  <span className="absolute inset-0 rounded-full bg-royal/10 transition-all duration-300" />
-                ) : (
-                  <span className="absolute inset-0 rounded-full bg-royal/0 transition-all duration-300 group-hover:bg-royal/5" />
+                <Icon className={`h-4 w-4 transition-all duration-300 ${active ? 'text-royal' : 'text-ink/40 group-hover:text-royal/70'}`} />
+                <span className="text-sm font-medium">{link.label}</span>
+                {active && (
+                  <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-banana-100/80 to-lilac/40 -z-10" />
                 )}
+                {!active && (
+                  <span className="absolute inset-0 rounded-xl bg-royal/0 transition-all duration-300 group-hover:bg-royal/5 -z-10" />
+                )}
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Right side actions */}
+        <div className="flex items-center gap-3">
+          {/* Donate button - Desktop */}
+          <Link
+            to="/donate"
+            className={`hidden md:flex items-center gap-2 rounded-xl px-4 py-2.5 font-semibold text-sm transition-all duration-300 ease-out ${
+              isActive("/donate")
+                ? "bg-gradient-to-r from-coral/90 to-blush text-white shadow-warm"
+                : "bg-gradient-to-r from-blush/80 to-lilac/80 text-royal hover:shadow-glow-pink hover:scale-105"
+            }`}
+          >
+            <Heart className={`h-4 w-4 transition-all duration-300 ${isActive("/donate") ? 'fill-white' : 'fill-coral text-coral'}`} />
+            <span>Donate</span>
+          </Link>
+
+          {/* Cart button */}
+          <Link
+            to="/cart"
+            className="group relative flex items-center justify-center w-11 h-11 rounded-xl border-2 border-royal/10 bg-white/80 backdrop-blur-sm text-royal transition-all duration-300 hover:border-royal/30 hover:bg-white hover:shadow-soft"
+          >
+            <ShoppingCart className="h-5 w-5 transition-transform duration-300 group-hover:scale-110" />
+            {itemCount > 0 && (
+              <span className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-gradient-to-r from-coral to-blush text-[10px] font-bold text-white shadow-sm" style={{ animation: 'scale-pulse 2s ease-in-out infinite' }}>
+                {itemCount}
+              </span>
+            )}
+          </Link>
+
+          {/* User menu */}
+          <div className="relative" ref={loginMenuRef}>
+            <button
+              type="button"
+              onClick={handleLoginClick}
+              className="group flex items-center justify-center w-11 h-11 rounded-xl border-2 border-royal/10 bg-white/80 backdrop-blur-sm text-royal transition-all duration-300 hover:border-royal/30 hover:bg-white hover:shadow-soft"
+              aria-haspopup="menu"
+              aria-expanded={isLoginOpen}
+            >
+              <User className="h-5 w-5 transition-transform duration-300 group-hover:scale-110" />
+            </button>
+            
+            {user && (
+              <div
+                className={`absolute right-0 mt-3 w-56 origin-top-right rounded-2xl bg-white p-2 shadow-glow border border-royal/5 transition-all duration-200 ${
+                  isLoginOpen
+                    ? "scale-100 opacity-100 translate-y-0"
+                    : "pointer-events-none scale-95 opacity-0 -translate-y-2"
+                }`}
+              >
+                <div className="px-3 py-3 border-b border-royal/5 mb-2">
+                  <p className="text-sm font-semibold text-royal">Welcome back</p>
+                  <p className="text-xs text-ink/50 mt-0.5 truncate">{user.email || 'Royal Member'}</p>
+                </div>
+                <Link
+                  to="/profile"
+                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-ink/70 transition-all duration-200 hover:bg-gradient-to-r hover:from-banana-50 hover:to-lilac/20 hover:text-royal"
+                  onClick={() => setIsLoginOpen(false)}
+                >
+                  <Settings className="h-4 w-4" />
+                  <span>Profile Settings</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-ink/70 transition-all duration-200 hover:bg-gradient-to-r hover:from-blush/30 hover:to-coral/20 hover:text-coral"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Mobile menu button */}
+          <button 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="flex md:hidden items-center justify-center w-11 h-11 rounded-xl bg-gradient-to-r from-banana-100 to-lilac/40 text-royal shadow-soft transition-all duration-300 active:scale-95"
+          >
+            {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
+      </nav>
+
+      {/* Mobile Menu */}
+      <div className={`md:hidden transition-all duration-300 overflow-hidden ${isMobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+        <div className="px-4 pb-4 space-y-2 bg-white/95 backdrop-blur-lg border-t border-royal/5">
+          {navLinks.map((link) => {
+            const active = isActive(link.href);
+            const Icon = link.icon;
+            return (
+              <Link
+                key={link.label}
+                to={link.href}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                  active
+                    ? "bg-gradient-to-r from-banana-100 to-lilac/40 text-royal font-semibold"
+                    : "text-ink/70 hover:bg-royal/5"
+                }`}
+              >
+                <Icon className="h-5 w-5" />
+                <span>{link.label}</span>
               </Link>
             );
           })}
           <Link
             to="/donate"
-            className={`text-sm rounded-full px-4 py-2 font-semibold bg-royal text-white shadow-soft transition-all duration-300 ease-out hover:scale-105 hover:bg-ink ${
-              isActive("/donate") ? "scale-105" : ""
-            }`}
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-blush to-lilac text-royal font-semibold"
           >
-            Donate
+            <Heart className="h-5 w-5 fill-coral text-coral" />
+            <span>Donate</span>
           </Link>
-          <Link
-            to="/cart"
-            className="group relative flex items-center justify-center rounded-full border border-royal/20 px-3.5 py-3 text-royal transition-all hover:border-royal hover:bg-royal/5"
-          >
-            <ShoppingCart className="h-5 w-5 transition-transform group-hover:scale-110" />
-            {itemCount > 0 ? (
-              <span className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-royal text-xs font-bold text-white shadow-sm">
-                {itemCount}
-              </span>
-            ) : null}
-          </Link>
-          <div className="relative" ref={loginMenuRef}>
-            <button
-              type="button"
-              onClick={handleLoginClick}
-              className="group flex items-center justify-center rounded-full border border-royal/20 px-3.5 py-3 text-royal transition-all hover:border-royal hover:bg-royal/5"
-              aria-haspopup="menu"
-              aria-expanded={isLoginOpen}
-            >
-              <User className="h-5 w-5 transition-transform group-hover:scale-110" />
-            </button>
-            {user ? (
-              <div
-                className={`absolute right-0 mt-2 w-40 origin-top-right rounded-2xl border border-royal/10 bg-white p-2 text-sm shadow-soft transition-all duration-200 ${
-                  isLoginOpen
-                    ? "scale-100 opacity-100"
-                    : "pointer-events-none scale-95 opacity-0"
-                }`}
-              >
-                <Link
-                  to="/profile"
-                  className="block rounded-xl px-3 py-2 text-ink/80 transition hover:bg-cream"
-                  onClick={() => setIsLoginOpen(false)}
-                >
-                  Profile
-                </Link>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="block w-full rounded-xl px-3 py-2 text-left text-ink/80 transition hover:bg-cream"
-                >
-                  Logout
-                </button>
-              </div>
-            ) : null}
-          </div>
         </div>
-        <button className="rounded-full bg-banana-200 px-4 py-2 text-sm font-semibold text-royal transition-transform duration-200 ease-out active:scale-95 md:hidden">
-          Menu
-        </button>
-      </nav>
+      </div>
     </header>
   );
 }

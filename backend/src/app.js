@@ -5,6 +5,7 @@ import productsRoutes from "./routes/productsRoutes.js";
 import donationsRoutes from "./routes/donationsRoutes.js";
 import ordersRoutes from "./routes/ordersRoutes.js";
 import paymentsRoutes from "./routes/paymentsRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.get("/", (req, res) => {
   res.json({ message: "Banana Meow API is purring" });
 });
 
+app.use("/api/auth", authRoutes);
 app.use("/api/cats", catsRoutes);
 app.use("/api/products", productsRoutes);
 app.use("/api/donations", donationsRoutes);

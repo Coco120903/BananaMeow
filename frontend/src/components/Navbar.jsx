@@ -165,11 +165,20 @@ export default function Navbar() {
             <button
               type="button"
               onClick={handleLoginClick}
-              className="group flex items-center justify-center w-11 h-11 rounded-xl border-2 border-royal/10 bg-white/80 backdrop-blur-sm text-royal transition-all duration-300 hover:border-royal/30 hover:bg-white hover:shadow-soft"
+              className={`group flex items-center justify-center w-11 h-11 rounded-xl border-2 transition-all duration-300 hover:shadow-soft ${
+                user 
+                  ? "border-royal/30 bg-gradient-to-r from-banana-100 to-lilac/40 text-royal" 
+                  : "border-royal/10 bg-white/80 backdrop-blur-sm text-royal hover:border-royal/30 hover:bg-white"
+              }`}
               aria-haspopup="menu"
               aria-expanded={isLoginOpen}
             >
               <User className="h-5 w-5 transition-transform duration-300 group-hover:scale-110" />
+              {user && (
+                <span className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-gradient-to-r from-mint to-sky">
+                  <span className="h-2 w-2 rounded-full bg-white" />
+                </span>
+              )}
             </button>
             
             {user && (
@@ -181,8 +190,8 @@ export default function Navbar() {
                 }`}
               >
                 <div className="px-3 py-3 border-b border-royal/5 mb-2">
-                  <p className="text-sm font-semibold text-royal">Welcome back</p>
-                  <p className="text-xs text-ink/50 mt-0.5 truncate">{user.email || 'Royal Member'}</p>
+                  <p className="text-sm font-semibold text-royal">{user.name || 'Royal Member'}</p>
+                  <p className="text-xs text-ink/50 mt-0.5 truncate">{user.email}</p>
                 </div>
                 <Link
                   to="/profile"

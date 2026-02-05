@@ -1,18 +1,32 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
-import { Crown, Mail, Lock, Sparkles, ArrowRight, Heart, Star } from "lucide-react";
+import { Crown, Mail, Lock, Sparkles, ArrowRight, Heart, Star, AlertCircle, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, loading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    login({ email });
+  // Redirect if already logged in
+  if (isAuthenticated) {
     navigate("/");
+    return null;
+  }
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError("");
+
+    const result = await login(email, password);
+    
+    if (result.success) {
+      navigate("/");
+    } else {
+      setError(result.message);
+    }
   };
 
   return (
@@ -46,6 +60,13 @@ export default function LoginPage() {
                 Enter your details to access the royal lounge.
               </p>
             </div>
+
+            {error && (
+              <div className="mb-4 rounded-2xl bg-coral/10 border border-coral/20 px-4 py-3 text-sm text-coral flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                {error}
+              </div>
+            )}
 
             <form className="space-y-4" onSubmit={handleSubmit}>
               <label className="block text-sm font-semibold text-ink/60">
@@ -94,9 +115,22 @@ export default function LoginPage() {
                 </button>
               </div>
 
-              <button type="submit" className="btn-primary w-full flex items-center justify-center gap-2 group">
-                <span>Login to Kingdom</span>
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              <button 
+                type="submit" 
+                className="btn-primary w-full flex items-center justify-center gap-2 group"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Logging in...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Login to Kingdom</span>
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </>
+                )}
               </button>
             </form>
 

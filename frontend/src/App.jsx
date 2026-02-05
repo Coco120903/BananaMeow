@@ -21,15 +21,25 @@ export default function App() {
         <CartProvider>
           {/* Animated Background */}
           <div className="app-background">
-            {/* Floating gradient orbs */}
-            <div className="floating-orb floating-orb-1" style={{ top: '10%', left: '5%' }} />
-            <div className="floating-orb floating-orb-2" style={{ top: '60%', right: '10%' }} />
-            <div className="floating-orb floating-orb-3" style={{ bottom: '20%', left: '30%' }} />
-            <div className="floating-orb floating-orb-1" style={{ top: '40%', right: '25%', opacity: 0.5 }} />
+            {/* Mesh gradient layer */}
+            <div className="mesh-gradient" />
+            
+            {/* Floating gradient orbs - larger and more visible */}
+            <div className="floating-orb floating-orb-1" style={{ top: '5%', left: '3%' }} />
+            <div className="floating-orb floating-orb-2" style={{ top: '55%', right: '5%' }} />
+            <div className="floating-orb floating-orb-3" style={{ bottom: '15%', left: '25%' }} />
+            <div className="floating-orb floating-orb-1" style={{ top: '35%', right: '20%', opacity: 0.6 }} />
+            <div className="floating-orb floating-orb-2" style={{ bottom: '40%', left: '60%', opacity: 0.4 }} />
+            <div className="floating-orb floating-orb-3" style={{ top: '70%', left: '8%', opacity: 0.5 }} />
+            
+            {/* Decorative blob shapes */}
+            <div className="blob-shape blob-shape-1" />
+            <div className="blob-shape blob-shape-2" />
+            <div className="blob-shape blob-shape-3" />
             
             {/* Sparkle decorations */}
             <div className="sparkle-container">
-              {[...Array(20)].map((_, i) => (
+              {[...Array(30)].map((_, i) => (
                 <div
                   key={i}
                   className="sparkle"
@@ -38,9 +48,25 @@ export default function App() {
                     top: `${Math.random() * 100}%`,
                     animationDelay: `${Math.random() * 5}s`,
                     animationDuration: `${2 + Math.random() * 3}s`,
-                    width: `${2 + Math.random() * 4}px`,
-                    height: `${2 + Math.random() * 4}px`,
-                    background: ['#FFE699', '#EBDCF9', '#FDE2E4', '#D4F5E9'][Math.floor(Math.random() * 4)]
+                    width: `${3 + Math.random() * 5}px`,
+                    height: `${3 + Math.random() * 5}px`,
+                    background: ['#FFE699', '#EBDCF9', '#FDE2E4', '#D4F5E9', '#BAE6FD', '#FFB5A7'][Math.floor(Math.random() * 6)]
+                  }}
+                />
+              ))}
+            </div>
+            
+            {/* Floating cat paw prints */}
+            <div className="paw-prints-container">
+              {[...Array(8)].map((_, i) => (
+                <div
+                  key={i}
+                  className="paw-print"
+                  style={{
+                    left: `${10 + Math.random() * 80}%`,
+                    top: `${10 + Math.random() * 80}%`,
+                    animationDelay: `${Math.random() * 10}s`,
+                    transform: `rotate(${Math.random() * 360}deg)`
                   }}
                 />
               ))}

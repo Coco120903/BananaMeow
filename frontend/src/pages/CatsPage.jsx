@@ -149,9 +149,9 @@ export default function CatsPage() {
             onMouseLeave={() => setHoveredCat(null)}
             style={{ animation: `slide-up-fade 0.5s ease-out ${0.05 * index}s backwards` }}
           >
-            <div className="flex h-full flex-col rounded-[1.85rem] bg-white">
+            <div className="flex h-full flex-col rounded-[1.85rem] bg-white card-shine relative overflow-hidden">
               {/* Cat Image Area */}
-              <div className="relative h-52 rounded-t-[1.7rem] bg-gradient-to-br from-banana-50 via-lilac/20 to-blush/30 overflow-hidden">
+              <div className="relative h-52 rounded-t-[1.7rem] bg-gradient-to-br from-banana-50 via-lilac/20 to-blush/30 overflow-hidden img-zoom">
                 {/* Decorative pattern */}
                 <div className="absolute inset-0 dots-pattern opacity-30" />
                 

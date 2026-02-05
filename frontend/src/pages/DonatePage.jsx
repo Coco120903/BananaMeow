@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { API_BASE } from "../lib/api.js";
-import { Utensils, Pill, HeartPulse, Heart, Cat, Crown, Check } from "lucide-react";
+import { Utensils, Pill, HeartPulse, Heart, Cat, Crown, Check, Sparkles, Star, Shield, Gift, ArrowRight } from "lucide-react";
 import { catBios } from "../content/catBios.js";
 
 const donationTypes = [
@@ -11,7 +11,8 @@ const donationTypes = [
     icon: Utensils,
     subtitle: "Feed a Chonk",
     goal: 1200,
-    funded: 720
+    funded: 720,
+    color: "from-banana-100 to-banana-200/50"
   },
   {
     id: "vitamins",
@@ -19,7 +20,8 @@ const donationTypes = [
     icon: Pill,
     subtitle: "Shiny Coat Sponsor",
     goal: 800,
-    funded: 520
+    funded: 520,
+    color: "from-mint/40 to-sky/30"
   },
   {
     id: "vet",
@@ -27,7 +29,8 @@ const donationTypes = [
     icon: HeartPulse,
     subtitle: "Health Guardian",
     goal: 2000,
-    funded: 1320
+    funded: 1320,
+    color: "from-blush to-coral/30"
   }
 ];
 
@@ -110,27 +113,42 @@ export default function DonatePage() {
   };
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-12 md:px-8">
-      <div className="flex flex-col gap-3 pb-6">
-        <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.3em] text-ink/50">
-          Support the Royals
-          <Heart className="h-4 w-4 text-royal" />
-        </p>
-        <h1 className="text-3xl font-bold text-royal md:text-4xl">
+    <section className="relative mx-auto max-w-6xl px-4 py-12 md:px-8 overflow-hidden">
+      {/* Floating decorations */}
+      <div className="floating-shape floating-shape-1 top-20 right-10" />
+      <div className="floating-shape floating-shape-2 bottom-40 left-10" />
+      <div className="floating-shape floating-shape-3 top-1/2 right-1/4" />
+      
+      {/* Page Header */}
+      <div className="flex flex-col gap-3 pb-8">
+        <div className="flex items-center gap-3">
+          <div className="h-1 w-8 rounded-full bg-gradient-to-r from-banana-400 to-coral" />
+          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-ink/50">
+            Support the Royals
+          </p>
+          <Heart className="h-4 w-4 text-coral fill-coral animate-pulse-soft" />
+        </div>
+        <h1 className="text-3xl font-bold text-royal md:text-4xl flex items-center gap-3 flex-wrap">
           Become a royal sponsor
+          <div className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-gradient-to-br from-banana-100 to-lilac shadow-soft">
+            <Crown className="h-5 w-5 text-royal" />
+          </div>
         </h1>
-        <p className="text-base text-ink/70 md:text-lg">
-          Choose a royal to support and keep the court thriving.
+        <p className="text-base text-ink/70 md:text-lg max-w-xl">
+          Choose a royal to support and keep the court thriving with love and treats.
         </p>
       </div>
 
+      {/* Cat Selection */}
       <div className="mb-8 space-y-4">
-        <div className="flex items-center gap-2">
-          <Cat className="h-5 w-5 text-royal" />
-          <Crown className="h-5 w-5 text-royal" />
+        <div className="flex items-center gap-3">
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-banana-100 to-lilac flex items-center justify-center">
+            <Cat className="h-4 w-4 text-royal" />
+          </div>
           <h2 className="text-xl font-semibold text-royal">
             Choose a Royal to Support
           </h2>
+          <Sparkles className="h-4 w-4 text-banana-400" />
         </div>
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {catList.map((cat, index) => {
@@ -143,21 +161,24 @@ export default function DonatePage() {
                   setSelectedCat(cat);
                   setError("");
                 }}
-                className={`group relative rounded-2xl border p-4 text-left transition-all ${
+                className={`group relative rounded-2xl p-4 text-left transition-all duration-300 hover:-translate-y-1 ${
                   isSelected
-                    ? "border-royal bg-white shadow-soft"
-                    : "border-royal/20 bg-cream hover:border-royal/40"
+                    ? "bg-white shadow-glow border-2 border-royal/20"
+                    : "bg-white/60 backdrop-blur-sm border border-royal/10 hover:bg-white hover:shadow-soft"
                 }`}
               >
                 {isSelected && (
-                  <div className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full bg-royal">
+                  <div className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full bg-gradient-to-br from-royal to-royal/80 shadow-soft">
                     <Check className="h-4 w-4 text-white" />
                   </div>
                 )}
-                <div className="mb-2 flex h-16 w-16 items-center justify-center rounded-xl bg-banana-100">
+                <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-banana-100 to-lilac/50 shadow-soft group-hover:scale-105 transition-transform">
                   <Cat className="h-8 w-8 text-royal" />
                 </div>
-                <h3 className="font-semibold text-royal">{cat.name}</h3>
+                <h3 className="font-semibold text-royal flex items-center gap-1">
+                  {cat.name}
+                  {isSelected && <Star className="h-3 w-3 text-banana-400 fill-banana-200" />}
+                </h3>
                 <p className="mt-1 text-xs text-ink/60">{cat.nickname}</p>
               </button>
             );
@@ -167,6 +188,7 @@ export default function DonatePage() {
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr,0.8fr]">
         <div className="space-y-6">
+          {/* Donation Type Cards */}
           <div className="grid gap-4 md:grid-cols-3">
             {donationTypes.map((type) => {
               const progress = Math.round((type.funded / type.goal) * 100);
@@ -176,125 +198,173 @@ export default function DonatePage() {
                   key={type.id}
                   type="button"
                   onClick={() => setSelectedType(type.id)}
-                  className={`rounded-[2rem] border px-5 py-4 text-left transition ${
+                  className={`group relative rounded-[2rem] px-5 py-5 text-left transition-all duration-300 hover:-translate-y-1 overflow-hidden ${
                     selectedType === type.id
-                      ? "border-royal bg-white shadow-soft"
-                      : "border-transparent bg-cream"
+                      ? "bg-white shadow-glow border-2 border-royal/20"
+                      : "bg-white/60 backdrop-blur-sm border border-royal/10 hover:bg-white hover:shadow-soft"
                   }`}
                 >
-                  <p className="flex items-center gap-2 text-lg font-semibold text-royal">
-                    <IconComponent className="h-5 w-5" />
-                    {type.title}
-                  </p>
-                  <p className="text-sm text-ink/60">{type.subtitle}</p>
-                  <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-banana-100">
-                    <div
-                      className="h-full rounded-full bg-royal"
-                      style={{ width: `${progress}%` }}
-                    />
+                  {/* Background gradient */}
+                  <div className={`absolute inset-0 bg-gradient-to-br ${type.color} opacity-30 transition-opacity group-hover:opacity-50`} />
+                  
+                  <div className="relative">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="h-10 w-10 rounded-xl bg-white shadow-soft flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <IconComponent className="h-5 w-5 text-royal" />
+                      </div>
+                      {selectedType === type.id && (
+                        <div className="h-6 w-6 rounded-full bg-royal flex items-center justify-center">
+                          <Check className="h-4 w-4 text-white" />
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-lg font-semibold text-royal">{type.title}</p>
+                    <p className="text-sm text-ink/60">{type.subtitle}</p>
+                    <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-royal/10">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-royal to-royal/70 transition-all duration-500"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                    <p className="mt-2 text-xs font-semibold text-ink/60 flex items-center gap-1">
+                      <Sparkles className="h-3 w-3 text-banana-400" />
+                      {progress}% funded
+                    </p>
                   </div>
-                  <p className="mt-2 text-xs font-semibold text-ink/60">
-                    {progress}% funded
-                  </p>
                 </button>
               );
             })}
           </div>
 
-          <div className="card-soft rounded-[2rem] p-6">
-            <p className="text-sm font-semibold text-ink/60">Donation Type</p>
-            <h2 className="mt-2 flex items-center gap-2 text-2xl font-semibold text-royal">
-              {activeType?.icon && (() => {
-                const ActiveIcon = activeType.icon;
-                return <ActiveIcon className="h-6 w-6" />;
-              })()}
-              {activeType?.title}
-            </h2>
-            <p className="mt-2 text-sm text-ink/60">{activeType?.subtitle}</p>
+          {/* Donation Options Card */}
+          <div className="card-cute p-[2px]">
+            <div className="rounded-[1.85rem] bg-white p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-banana-100 to-lilac flex items-center justify-center">
+                  {activeType?.icon && (() => {
+                    const ActiveIcon = activeType.icon;
+                    return <ActiveIcon className="h-4 w-4 text-royal" />;
+                  })()}
+                </div>
+                <div>
+                  <p className="text-sm text-ink/60">Donation Type</p>
+                  <h2 className="text-xl font-semibold text-royal">{activeType?.title}</h2>
+                </div>
+              </div>
 
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <button
-                type="button"
-                onClick={() => setFrequency("one-time")}
-                className={`rounded-full px-4 py-2 text-sm font-semibold ${
-                  frequency === "one-time"
-                    ? "bg-royal text-white"
-                    : "bg-cream text-ink/70"
-                }`}
-              >
-                One-time
-              </button>
-              <button
-                type="button"
-                onClick={() => setFrequency("monthly")}
-                className={`rounded-full px-4 py-2 text-sm font-semibold ${
-                  frequency === "monthly"
-                    ? "bg-royal text-white"
-                    : "bg-cream text-ink/70"
-                }`}
-              >
-                Monthly
-              </button>
-            </div>
-
-            <div className="mt-6">
-              <label className="text-sm font-semibold text-ink/60">
-                Donation amount
-              </label>
-              <div className="mt-3 flex items-center gap-3">
-                {[15, 25, 50, 100].map((value) => (
+              <div className="flex flex-col gap-3 sm:flex-row mb-6">
+                {["one-time", "monthly"].map((freq) => (
                   <button
-                    key={value}
+                    key={freq}
                     type="button"
-                    onClick={() => setAmount(value)}
-                    className={`rounded-full px-4 py-2 text-sm font-semibold ${
-                      amount === value
-                        ? "bg-royal text-white"
-                        : "bg-cream text-ink/70"
+                    onClick={() => setFrequency(freq)}
+                    className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-300 ${
+                      frequency === freq
+                        ? "bg-royal text-white shadow-soft"
+                        : "bg-royal/5 text-ink/70 hover:bg-royal/10"
                     }`}
                   >
-                    ${value}
+                    {freq === "one-time" ? "One-time" : "Monthly"}
                   </button>
                 ))}
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold text-ink/60 flex items-center gap-2">
+                  <Gift className="h-4 w-4" />
+                  Donation amount
+                </label>
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  {[15, 25, 50, 100].map((value) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setAmount(value)}
+                      className={`rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-300 ${
+                        amount === value
+                          ? "bg-royal text-white shadow-soft scale-105"
+                          : "bg-royal/5 text-ink/70 hover:bg-royal/10"
+                      }`}
+                    >
+                      ${value}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <aside className="rounded-[2.5rem] bg-blush p-6 shadow-soft">
-          <h3 className="text-xl font-semibold text-royal">
-            Royal checkout
-          </h3>
-          <p className="mt-3 text-sm text-ink/70">
-            Secure Stripe checkout in test mode. Your generosity keeps the
-            kingdom fluffy and fabulous.
-          </p>
-          <div className="mt-6 rounded-2xl bg-white p-4 text-sm text-ink/70">
-            <p className="font-semibold text-ink">Summary</p>
-            <p className="mt-2">Type: {activeType?.subtitle}</p>
-            <p>Frequency: {frequency}</p>
-            <p>Amount: ${amount}</p>
-            <p className={selectedCat ? "" : "text-ink/50"}>
-              Sponsor: {selectedCat ? selectedCat.name : "Not selected"}
+        {/* Checkout Sidebar */}
+        <aside className="card-cute p-[2px] h-fit sticky top-24">
+          <div className="rounded-[2rem] bg-gradient-to-br from-blush/50 to-lilac/30 p-6">
+            <h3 className="text-xl font-semibold text-royal flex items-center gap-2">
+              <Crown className="h-5 w-5 text-banana-400" />
+              Royal checkout
+            </h3>
+            <p className="mt-3 text-sm text-ink/70">
+              Secure Stripe checkout in test mode. Your generosity keeps the
+              kingdom fluffy and fabulous.
             </p>
-          </div>
-          {error && (
-            <div className="mt-4 rounded-2xl bg-blush/50 border border-royal/20 px-4 py-3 text-sm text-royal">
-              {error}
+            
+            <div className="mt-6 rounded-2xl bg-white/80 backdrop-blur-sm p-4 text-sm text-ink/70 shadow-soft">
+              <p className="font-semibold text-royal flex items-center gap-2 mb-3">
+                <Star className="h-4 w-4 text-banana-400 fill-banana-200" />
+                Summary
+              </p>
+              <div className="space-y-2">
+                <p className="flex justify-between"><span>Type:</span> <span className="font-medium text-ink">{activeType?.subtitle}</span></p>
+                <p className="flex justify-between"><span>Frequency:</span> <span className="font-medium text-ink capitalize">{frequency}</span></p>
+                <p className="flex justify-between"><span>Amount:</span> <span className="font-medium text-ink">${amount}</span></p>
+                <div className="h-px bg-royal/10 my-2" />
+                <p className="flex justify-between">
+                  <span>Sponsor:</span> 
+                  <span className={`font-medium ${selectedCat ? "text-royal" : "text-ink/40"}`}>
+                    {selectedCat ? selectedCat.name : "Not selected"}
+                  </span>
+                </p>
+              </div>
             </div>
-          )}
-          <button
-            type="button"
-            onClick={handleCheckout}
-            disabled={!selectedCat}
-            className={`mt-6 w-full rounded-full px-6 py-3 text-base font-semibold text-white shadow-soft transition-transform transition-colors duration-200 ease-out ${
-              selectedCat
-                ? "bg-royal hover:-translate-y-0.5 hover:bg-ink cursor-pointer"
-                : "bg-ink/40 cursor-not-allowed"
-            }`}
-          >
-            {selectedCat ? "Proceed to Stripe" : "Select a Royal First"}
-          </button>
+            
+            {error && (
+              <div className="mt-4 rounded-2xl bg-coral/10 border border-coral/20 px-4 py-3 text-sm text-coral flex items-center gap-2">
+                <Heart className="h-4 w-4" />
+                {error}
+              </div>
+            )}
+            
+            <button
+              type="button"
+              onClick={handleCheckout}
+              disabled={!selectedCat}
+              className={`mt-6 w-full rounded-full px-6 py-3.5 text-base font-semibold text-white shadow-soft transition-all duration-300 flex items-center justify-center gap-2 ${
+                selectedCat
+                  ? "bg-royal hover:-translate-y-1 hover:bg-ink hover:shadow-glow cursor-pointer"
+                  : "bg-ink/30 cursor-not-allowed"
+              }`}
+            >
+              {selectedCat ? (
+                <>
+                  Proceed to Stripe
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              ) : (
+                "Select a Royal First"
+              )}
+            </button>
+            
+            {/* Trust badges */}
+            <div className="mt-6 flex items-center justify-center gap-4">
+              <div className="flex items-center gap-1 text-xs text-ink/50">
+                <Shield className="h-4 w-4" />
+                Secure
+              </div>
+              <div className="flex items-center gap-1 text-xs text-ink/50">
+                <Heart className="h-4 w-4" />
+                100% to Cats
+              </div>
+            </div>
+          </div>
         </aside>
       </div>
     </section>

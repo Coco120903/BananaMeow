@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import { sendVerificationEmail, sendWelcomeEmail } from "../utils/emailService.js";
 
 /* ===========================
-   ADMIN AUTH (your feature)
+   ADMIN AUTH
 =========================== */
 export async function adminLogin(req, res) {
   const { username, password } = req.body;
@@ -28,20 +28,22 @@ export async function adminLogin(req, res) {
     { expiresIn: "24h" }
   );
 
-  res.json({
+  return res.json({
+    success: true,
     message: "Login successful",
     token,
-    admin: { username: adminUsername },
+    admin: { username: adminUsername, role: "admin" },
+    isAdmin: true,
   });
 }
 
 export async function verifyToken(req, res) {
-  // If we get here, the token is valid (middleware already verified)
-  res.json({ valid: true, admin: req.admin });
+  // If we get here, token is valid (requireAdmin middleware already verified it)
+  return res.json({ valid: true, admin: req.admin });
 }
 
 /* ===========================
-   USER AUTH (kim feature)
+   USER AUTH
 =========================== */
 
 // In-memory store for pending registrations (use Redis in production)
@@ -51,20 +53,16 @@ const pendingRegistrations = new Map();
 setInterval(() => {
   const now = Date.now();
   for (const [email, data] of pendingRegistrations.entries()) {
-    if (now > data.expiresAt) {
-      pendingRegistrations.delete(email);
-    }
+    if (now > data.expiresAt) pendingRegistrations.delete(email);
   }
 }, 5 * 60 * 1000);
 
-// Generate JWT Token
-const generateToken = (userId) => {
+// Generate JWT Token (users)
+const generateUserToken = (userId) => {
   return jwt.sign(
-    { id: userId },
+    { id: userId, role: "user" },
     process.env.JWT_SECRET || "banana-meow-secret-key-2024",
-    {
-      expiresIn: "7d",
-    }
+    { expiresIn: "7d" }
   );
 };
 
@@ -80,7 +78,6 @@ export const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // Validate input
     if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
@@ -95,8 +92,7 @@ export const register = async (req, res) => {
       });
     }
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) {
       return res.status(400).json({
         success: false,
@@ -104,27 +100,23 @@ export const register = async (req, res) => {
       });
     }
 
-    // Generate verification code
     const verificationCode = generateVerificationCode();
 
-    // Hash password for storage
     const salt = await bcrypt.genSalt(12);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Store pending registration (expires in 10 minutes)
     pendingRegistrations.set(email.toLowerCase(), {
       name,
       email: email.toLowerCase(),
       password: hashedPassword,
       verificationCode,
-      expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
+      expiresAt: Date.now() + 10 * 60 * 1000,
       attempts: 0,
     });
 
-    // Send verification email
     try {
       await sendVerificationEmail(email, verificationCode, name);
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         message: "Verification code sent to your email!",
         requiresVerification: true,
@@ -132,21 +124,19 @@ export const register = async (req, res) => {
       });
     } catch (emailError) {
       console.error("Email sending failed:", emailError);
-      // Still allow registration but inform user
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         message:
           "Verification code generated. Check your email (or use demo code below if email fails).",
         requiresVerification: true,
-        // Fallback: show code if email fails (remove in production)
-        verificationCode: verificationCode,
+        verificationCode, // remove in prod
         expiresIn: "10 minutes",
         emailFailed: true,
       });
     }
   } catch (error) {
     console.error("Register error:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Something went wrong. Please try again.",
     });
@@ -168,7 +158,6 @@ export const verifyRegister = async (req, res) => {
     }
 
     const pendingData = pendingRegistrations.get(email.toLowerCase());
-
     if (!pendingData) {
       return res.status(400).json({
         success: false,
@@ -176,7 +165,6 @@ export const verifyRegister = async (req, res) => {
       });
     }
 
-    // Check if expired
     if (Date.now() > pendingData.expiresAt) {
       pendingRegistrations.delete(email.toLowerCase());
       return res.status(400).json({
@@ -185,7 +173,6 @@ export const verifyRegister = async (req, res) => {
       });
     }
 
-    // Check attempts (max 5)
     if (pendingData.attempts >= 5) {
       pendingRegistrations.delete(email.toLowerCase());
       return res.status(400).json({
@@ -194,7 +181,6 @@ export const verifyRegister = async (req, res) => {
       });
     }
 
-    // Verify code
     if (code !== pendingData.verificationCode) {
       pendingData.attempts += 1;
       return res.status(400).json({
@@ -205,29 +191,25 @@ export const verifyRegister = async (req, res) => {
       });
     }
 
-    // Code is valid - create the user
     const user = new User({
       name: pendingData.name,
       email: pendingData.email,
       password: pendingData.password,
     });
 
-    // Skip password hashing since it's already hashed
+    // if your User model hashes password in pre-save, keep this flag
     user.$skipPasswordHash = true;
     await user.save();
 
-    // Clean up pending registration
     pendingRegistrations.delete(email.toLowerCase());
 
-    // Generate token
-    const token = generateToken(user._id);
+    const token = generateUserToken(user._id);
 
-    // Send welcome email (non-blocking)
     sendWelcomeEmail(user.email, user.name).catch((err) => {
       console.error("Welcome email failed:", err);
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: "Welcome to the royal court! Account verified successfully.",
       data: {
@@ -243,7 +225,7 @@ export const verifyRegister = async (req, res) => {
     });
   } catch (error) {
     console.error("Verify register error:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Something went wrong. Please try again.",
     });
@@ -265,7 +247,6 @@ export const resendCode = async (req, res) => {
     }
 
     const pendingData = pendingRegistrations.get(email.toLowerCase());
-
     if (!pendingData) {
       return res.status(400).json({
         success: false,
@@ -273,48 +254,45 @@ export const resendCode = async (req, res) => {
       });
     }
 
-    // Generate new code
     const newCode = generateVerificationCode();
     pendingData.verificationCode = newCode;
     pendingData.expiresAt = Date.now() + 10 * 60 * 1000;
     pendingData.attempts = 0;
 
-    // Send new verification email
     try {
       await sendVerificationEmail(email, newCode, pendingData.name);
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         message: "New verification code sent to your email!",
         expiresIn: "10 minutes",
       });
     } catch (emailError) {
       console.error("Resend email failed:", emailError);
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         message:
           "New code generated. Check your email (or use demo code below if email fails).",
-        verificationCode: newCode, // Fallback if email fails
+        verificationCode: newCode, // remove in prod
         expiresIn: "10 minutes",
         emailFailed: true,
       });
     }
   } catch (error) {
     console.error("Resend code error:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Something went wrong. Please try again.",
     });
   }
 };
 
-// @desc    Login user
+// @desc    Login user OR admin (single endpoint)
 // @route   POST /api/auth/login
 // @access  Public
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validate email and password were provided
     if (!email || !password) {
       return res.status(400).json({
         success: false,
@@ -322,8 +300,45 @@ export const login = async (req, res) => {
       });
     }
 
-    // Find user and include password field
-    const user = await User.findOne({ email }).select("+password");
+    // Admin login via /login (optional)
+    const adminUsername = process.env.ADMIN_USERNAME;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+
+    if (email === adminUsername && password === adminPassword) {
+      const jwtSecret = process.env.JWT_SECRET;
+      if (!jwtSecret) {
+        return res.status(500).json({
+          success: false,
+          message: "Server configuration error",
+        });
+      }
+
+      const token = jwt.sign(
+        { username: adminUsername, role: "admin" },
+        jwtSecret,
+        { expiresIn: "24h" }
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: "Welcome back, Royal Administrator!",
+        data: {
+          user: {
+            id: "admin",
+            name: "Administrator",
+            email: adminUsername,
+            role: "admin",
+          },
+          token,
+          isAdmin: true,
+        },
+      });
+    }
+
+    // Regular user login
+    const user = await User.findOne({ email: email.toLowerCase() }).select(
+      "+password"
+    );
 
     if (!user) {
       return res.status(401).json({
@@ -332,9 +347,7 @@ export const login = async (req, res) => {
       });
     }
 
-    // Check if password matches
     const isMatch = await user.comparePassword(password);
-
     if (!isMatch) {
       return res.status(401).json({
         success: false,
@@ -342,10 +355,9 @@ export const login = async (req, res) => {
       });
     }
 
-    // Generate token
-    const token = generateToken(user._id);
+    const token = generateUserToken(user._id);
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Welcome back to the royal court!",
       data: {
@@ -357,11 +369,12 @@ export const login = async (req, res) => {
           createdAt: user.createdAt,
         },
         token,
+        isAdmin: false,
       },
     });
   } catch (error) {
     console.error("Login error:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Something went wrong. Please try again.",
     });
@@ -375,7 +388,7 @@ export const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       data: {
         user: {
@@ -389,7 +402,7 @@ export const getMe = async (req, res) => {
     });
   } catch (error) {
     console.error("Get me error:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Something went wrong",
     });
@@ -403,10 +416,9 @@ export const updateProfile = async (req, res) => {
   try {
     const { name, email } = req.body;
 
-    // Check if email is taken by another user
     if (email) {
       const existingUser = await User.findOne({
-        email,
+        email: email.toLowerCase(),
         _id: { $ne: req.user.id },
       });
       if (existingUser) {
@@ -419,11 +431,11 @@ export const updateProfile = async (req, res) => {
 
     const user = await User.findByIdAndUpdate(
       req.user.id,
-      { name, email },
+      { name, email: email?.toLowerCase?.() || email },
       { new: true, runValidators: true }
     );
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       message: "Profile updated successfully",
       data: {
@@ -437,19 +449,18 @@ export const updateProfile = async (req, res) => {
     });
   } catch (error) {
     console.error("Update profile error:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Something went wrong",
     });
   }
 };
 
-// Middleware to protect routes
+// Middleware to protect routes (user)
 export const protect = async (req, res, next) => {
   try {
     let token;
 
-    // Get token from Authorization header
     if (
       req.headers.authorization &&
       req.headers.authorization.startsWith("Bearer")
@@ -464,13 +475,11 @@ export const protect = async (req, res, next) => {
       });
     }
 
-    // Verify token
     const decoded = jwt.verify(
       token,
       process.env.JWT_SECRET || "banana-meow-secret-key-2024"
     );
 
-    // Check if user still exists
     const user = await User.findById(decoded.id);
     if (!user) {
       return res.status(401).json({
@@ -479,12 +488,11 @@ export const protect = async (req, res, next) => {
       });
     }
 
-    // Grant access
     req.user = user;
     next();
   } catch (error) {
     console.error("Auth middleware error:", error);
-    res.status(401).json({
+    return res.status(401).json({
       success: false,
       message: "Invalid or expired token",
     });

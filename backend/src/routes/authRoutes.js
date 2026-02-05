@@ -1,11 +1,13 @@
 import express from "express";
 import cors from "cors";
-
+import { register, verifyRegister, resendCode, login, getMe, updateProfile, protect, adminLogin, verifyToken } from "../controllers/authController.js";
+import { requireAdmin } from "../middleware/adminAuth.js";
 import catsRoutes from "./routes/catsRoutes.js";
 import productsRoutes from "./routes/productsRoutes.js";
 import donationsRoutes from "./routes/donationsRoutes.js";
 import ordersRoutes from "./routes/ordersRoutes.js";
 import paymentsRoutes from "./routes/paymentsRoutes.js";
+
 
 import authRoutes from "./routes/authRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
@@ -18,6 +20,21 @@ app.use(express.json());
 app.get("/", (req, res) => {
   res.json({ message: "Banana Meow API is purring" });
 });
+
+// Public routes
+router.post("/register", register);
+router.post("/verify-register", verifyRegister);
+router.post("/resend-code", resendCode);
+router.post("/login", login);
+
+// Protected routes
+router.get("/me", protect, getMe);
+router.put("/update", protect, updateProfile);
+
+// Admin routes
+router.post("/admin/login", adminLogin);
+router.get("/admin/verify", requireAdmin, verifyToken);
+
 
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);

@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+import { useAdminAuth } from "../context/AdminAuthContext.jsx";
 import { Crown, Mail, Lock, Sparkles, ArrowRight, Heart, Star, AlertCircle, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const { login, loading, isAuthenticated } = useAuth();
+  const { setAdminAuth } = useAdminAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,7 +25,14 @@ export default function LoginPage() {
     const result = await login(email, password);
     
     if (result.success) {
-      navigate("/");
+      // Redirect to admin dashboard if admin, otherwise home
+      if (result.isAdmin) {
+        // Also update AdminAuthContext so protected routes work
+        setAdminAuth(result.user, result.token);
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/");
+      }
     } else {
       setError(result.message);
     }
@@ -72,13 +81,13 @@ export default function LoginPage() {
               <label className="block text-sm font-semibold text-ink/60">
                 <span className="flex items-center gap-2 mb-2">
                   <Mail className="h-4 w-4" />
-                  Email
+                  Email / Username
                 </span>
                 <input
-                  type="email"
+                  type="text"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
-                  placeholder="royal@example.com"
+                  placeholder="royal@example.com or admin"
                   className="input-soft"
                   required
                 />

@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAdminAuth } from "../../context/AdminAuthContext.jsx";
+import { useAuth } from "../../context/AuthContext.jsx";
 import {
   LayoutDashboard,
   Cat,
@@ -22,13 +23,15 @@ const navItems = [
 ];
 
 export default function AdminLayout() {
-  const { admin, logout } = useAdminAuth();
+  const { admin, logout: adminLogout } = useAdminAuth();
+  const { logout: userLogout } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleLogout = () => {
-    logout();
-    navigate("/admin/login");
+    adminLogout();
+    userLogout(); // Also clear user auth context
+    navigate("/login");
   };
 
   return (

@@ -6,8 +6,8 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load .env from backend directory (before importing app/db)
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
+// Load .env from root directory (before importing app/db)
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 import app from "./app.js";
 import { connectDatabase } from "./config/db.js";

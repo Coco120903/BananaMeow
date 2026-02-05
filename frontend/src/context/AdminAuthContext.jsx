@@ -10,15 +10,22 @@ export function AdminAuthProvider({ children }) {
 
   useEffect(() => {
     const verifyToken = async () => {
-      if (!token) {
+      const currentToken = localStorage.getItem("adminToken");
+      
+      if (!currentToken) {
         setLoading(false);
         return;
+      }
+
+      // Update token state if it changed in localStorage
+      if (currentToken !== token) {
+        setToken(currentToken);
       }
 
       try {
         const response = await fetch(`${API_BASE}/api/auth/admin/verify`, {
           headers: {
-            Authorization: `Bearer ${token}`
+            Authorization: `Bearer ${currentToken}`
           }
         });
 
@@ -41,36 +48,51 @@ export function AdminAuthProvider({ children }) {
     verifyToken();
   }, [token]);
 
+  // Direct function to set admin state (used when logging in via unified login)
+  const setAdminAuth = (adminData, adminToken) => {
+    localStorage.setItem("adminToken", adminToken);
+    setToken(adminToken);
+    setAdmin(adminData);
+  };
+
   const login = async (username, password) => {
-    const response = await fetch(`${API_BASE}/api/auth/admin/login`, {
+    // Use the unified login endpoint (admin uses username as "email")
+    const response = await fetch(`${API_BASE}/api/auth/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ username, password })
+      body: JSON.stringify({ email: username, password })
     });
 
+    const data = await response.json();
+
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Login failed");
+      throw new Error(data.message || "Login failed");
     }
 
-    const data = await response.json();
-    localStorage.setItem("adminToken", data.token);
-    setToken(data.token);
-    setAdmin(data.admin);
+    // Check if this is actually an admin login
+    if (!data.data.isAdmin) {
+      throw new Error("Invalid admin credentials");
+    }
+
+    localStorage.setItem("adminToken", data.data.token);
+    setToken(data.data.token);
+    setAdmin(data.data.user);
     return data;
   };
 
   const logout = () => {
     localStorage.removeItem("adminToken");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setToken(null);
     setAdmin(null);
   };
 
   return (
     <AdminAuthContext.Provider
-      value={{ admin, token, loading, login, logout, isAuthenticated: !!admin }}
+      value={{ admin, token, loading, login, logout, setAdminAuth, isAuthenticated: !!admin }}
     >
       {children}
     </AdminAuthContext.Provider>

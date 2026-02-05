@@ -21,7 +21,6 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
-
 app.use("/api/cats", catsRoutes);
 app.use("/api/products", productsRoutes);
 app.use("/api/donations", donationsRoutes);

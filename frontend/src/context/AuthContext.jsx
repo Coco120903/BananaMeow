@@ -82,11 +82,22 @@ export function AuthProvider({ children }) {
       localStorage.setItem("token", data.data.token);
       localStorage.setItem("user", JSON.stringify(data.data.user));
       
+      // If admin, also store admin token for admin panel
+      if (data.data.isAdmin) {
+        localStorage.setItem("adminToken", data.data.token);
+      }
+      
       setToken(data.data.token);
       setUser(data.data.user);
       setLoading(false);
 
-      return { success: true, message: data.message };
+      return { 
+        success: true, 
+        message: data.message, 
+        isAdmin: data.data.isAdmin,
+        user: data.data.user,
+        token: data.data.token
+      };
     } catch (err) {
       setLoading(false);
       setError(err.message);
@@ -200,6 +211,7 @@ export function AuthProvider({ children }) {
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem("adminToken");
     setUser(null);
     setToken(null);
     setError(null);

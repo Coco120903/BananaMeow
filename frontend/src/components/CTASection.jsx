@@ -39,7 +39,7 @@ export default function CTASection() {
         {ctas.map((card) => (
           <div
             key={card.title}
-            className={`flex flex-col justify-between gap-6 rounded-[2rem] p-6 shadow-soft transition-transform duration-200 ease-out hover:-translate-y-1 ${card.tone}`}
+            className={`flex flex-col justify-between gap-6 rounded-[2.5rem] p-6 shadow-soft transition-all duration-200 ease-out hover:-translate-y-2 hover:scale-[1.02] ${card.tone}`}
           >
             <div>
               <h3 className="text-xl font-semibold text-royal">{card.title}</h3>

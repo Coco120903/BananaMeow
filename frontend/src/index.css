@@ -7,40 +7,41 @@
 }
 
 body {
-  font-family: "Baloo 2", ui-sans-serif, system-ui;
+  font-family: "Fredoka", "Baloo 2", ui-sans-serif, system-ui;
 }
 
 .btn-primary {
-  @apply rounded-full bg-royal px-6 py-3 text-base font-semibold text-white shadow-soft transition-transform transition-colors duration-200 ease-out;
+  @apply rounded-full bg-royal px-7 py-3 text-base font-bold text-white shadow-soft transition-all duration-200 ease-out;
 }
 
 .btn-primary:hover {
-  @apply -translate-y-0.5 bg-ink;
+  @apply -translate-y-1 scale-[1.03] bg-ink;
 }
 
 .btn-primary:active {
-  @apply translate-y-0 scale-[0.98];
+  @apply translate-y-0 scale-[0.95];
 }
 
 .btn-secondary {
-  @apply rounded-full bg-banana-200 px-6 py-3 text-base font-semibold text-royal shadow-soft transition-transform transition-colors duration-200 ease-out;
+  @apply rounded-full bg-banana-200 px-7 py-3 text-base font-bold text-royal shadow-soft transition-all duration-200 ease-out;
 }
 
 .btn-secondary:hover {
-  @apply -translate-y-0.5 bg-banana-300;
+  @apply -translate-y-1 scale-[1.03] bg-banana-300;
 }
 
 .btn-secondary:active {
-  @apply translate-y-0 scale-[0.98];
+  @apply translate-y-0 scale-[0.95];
 }
 
 .card-soft {
-  @apply rounded-[2rem] bg-white shadow-soft transition-transform duration-200 ease-out;
+  @apply rounded-[2rem] bg-white shadow-soft transition-all duration-200 ease-out;
 }
 
 .card-soft:hover {
-  @apply -translate-y-1;
+  @apply -translate-y-2 scale-[1.01];
 }
+
 
 @media (prefers-reduced-motion: reduce) {
   .btn-primary,
@@ -48,4 +49,98 @@ body {
   .card-soft {
     transition: none;
   }
+}
+
+@keyframes float {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+  100% { transform: translateY(0); }
+}
+
+.floaty {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes wiggle {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(2deg); }
+  50% { transform: rotate(-2deg); }
+  75% { transform: rotate(1deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.wiggle:hover {
+  animation: wiggle 0.4s ease-in-out;
+}
+
+.card-playful {
+  @apply rounded-[2.5rem] bg-white shadow-soft transition-all duration-200 ease-out;
+}
+
+.card-playful:hover {
+  @apply -translate-y-2 scale-[1.02];
+}
+
+.cat-card-wrapper {
+  position: relative;
+  padding-top: 50px; 
+}
+
+.cat-ear {
+  position: absolute;
+  top: -30px; 
+  width: 85px; 
+  height: 100px; 
+  background: white;
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  z-index: 1;
+  filter: drop-shadow(0 -2px 4px rgba(91, 66, 130, 0.1));
+}
+
+.cat-ear-inner {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 65%;
+  height: 70%;
+  background: #FFE4E9;
+  clip-path: polygon(50% 10%, 0% 100%, 100% 100%);
+}
+
+.ear-left { 
+  left: 15px; 
+  transform: rotate(-12deg); 
+}
+
+.ear-right { 
+  right: 15px; 
+  transform: rotate(12deg); 
+}
+
+.cat-card-wrapper:hover .ear-left { transform: rotate(-18deg) translateY(-5px); }
+.cat-card-wrapper:hover .ear-right { transform: rotate(18deg) translateY(-5px); }
+
+.whisker {
+  position: absolute;
+  height: 2px;
+  background: #5B4282; 
+  border-radius: 2px;
+  opacity: 0.4;
+  z-index: 0;
+  transition: all 0.3s ease;
+}
+
+.whisker-left { left: -40px; width: 50px; }
+.whisker-right { right: -40px; width: 50px; }
+
+.cat-card-wrapper:hover .whisker-left { transform: rotate(5deg) translateX(-5px); opacity: 0.8; }
+.cat-card-wrapper:hover .whisker-right { transform: rotate(-5deg) translateX(5px); opacity: 0.8; }
+
+@keyframes purr {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+.animate-purr {
+  animation: purr 4s ease-in-out infinite;
 }

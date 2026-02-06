@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
-import { Cat, Crown, ShoppingCart, User } from "lucide-react";
+import { Cat, Crown, ShoppingCart, User, PawPrint } from "lucide-react";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -63,64 +63,61 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-30 bg-cream/90 backdrop-blur">
-      <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 md:px-8">
-        <Link to="/" className="group flex items-center gap-3 transition-transform duration-200 hover:scale-105">
-          <div className="relative grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-banana-200 via-banana-100 to-royal/20 shadow-soft transition-all duration-300 group-hover:shadow-lg">
+    <header className="sticky top-4 z-50 px-4 md:px-8">
+      <nav className="mx-auto flex max-w-6xl items-center justify-between rounded-[2rem] border border-royal/10 bg-white/80 px-6 py-3 shadow-soft backdrop-blur-xl transition-all duration-300 hover:shadow-lg md:px-10">
+        <Link to="/" className="group flex items-center gap-3">
+          <div className="relative grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-banana-200 via-banana-100 to-royal/20 shadow-soft transition-all duration-500 ease-out group-hover:rotate-12 group-hover:scale-110 group-hover:shadow-lg">
             <Cat className="h-6 w-6 text-royal transition-transform duration-300 group-hover:scale-110" />
-            <Crown className="absolute -right-1 -top-1 h-4 w-4 text-royal drop-shadow-sm" />
+            <Crown className="absolute -right-1 -top-1 h-4 w-4 text-royal drop-shadow-sm transition-transform duration-300 group-hover:-translate-y-1 group-hover:translate-x-1" />
           </div>
-          <div>
-            <p className="text-lg font-bold text-royal transition-colors group-hover:text-royal/80">
-              Banana Meow
+          <div className="hidden sm:block">
+            <p className="text-base font-black tracking-tight text-royal">BANANA MEOW</p>
+            <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.25em] text-royal/60 transition-colors group-hover:text-banana-500">
+            Chonky Royals
             </p>
-            <p className="text-xs uppercase tracking-[0.3em] text-ink/60">
-              Chonky Royals
-            </p>
+            <div className="mt-0.5 h-0.5 w-0 bg-banana-400 transition-all duration-300 group-hover:w-full" />
           </div>
         </Link>
-        <div className="hidden items-center gap-6 text-sm font-medium md:flex">
+        <div className="hidden items-center gap-2 md:flex">
           {navLinks.map((link) => {
             const active = isActive(link.href);
             return (
               <Link
                 key={link.label}
                 to={link.href}
-                className={`group relative px-3 py-1.5 rounded-full transition-all duration-300 ease-out ${
-                  active
-                    ? "font-semibold text-royal"
-                    : "text-ink/70 hover:text-royal"
+                className={`group relative px-4 py-2 text-sm font-bold transition-colors ${
+                  active ? "text-royal" : "text-ink/60 hover:text-royal"
                 }`}
               >
-                <span className="relative z-10 transition-transform duration-300 group-hover:scale-105">
-                  {link.label}
-                </span>
-                {active ? (
-                  <span className="absolute inset-0 rounded-full bg-royal/10 transition-all duration-300" />
-                ) : (
-                  <span className="absolute inset-0 rounded-full bg-royal/0 transition-all duration-300 group-hover:bg-royal/5" />
+                <span className="relative z-10">{link.label}</span>
+                {active && (
+                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-royal animate-bounce">
+                    <PawPrint size={10} fill="currentColor" />
+                  </div>
                 )}
+                <div className="absolute inset-0 scale-75 rounded-full bg-banana-100 opacity-0 transition-all group-hover:scale-100 group-hover:opacity-100" />
               </Link>
             );
           })}
+          </div>
+
+          <div className="flex items-center gap-3">
           <Link
             to="/donate"
-            className={`text-sm rounded-full px-4 py-2 font-semibold bg-royal text-white shadow-soft transition-all duration-300 ease-out hover:scale-105 hover:bg-ink ${
-              isActive("/donate") ? "scale-105" : ""
-            }`}
+            className="hidden rounded-full bg-royal px-5 py-2 text-xs font-bold uppercase tracking-widest text-white shadow-soft transition-all hover:-translate-y-0.5 hover:bg-ink sm:block"
           >
             Donate
           </Link>
-          <Link
-            to="/cart"
-            className="group relative flex items-center justify-center rounded-full border border-royal/20 px-3.5 py-3 text-royal transition-all hover:border-royal hover:bg-royal/5"
-          >
-            <ShoppingCart className="h-5 w-5 transition-transform group-hover:scale-110" />
-            {itemCount > 0 ? (
-              <span className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-royal text-xs font-bold text-white shadow-sm">
+
+          <div className="h-8 w-px bg-royal/10 mx-1 hidden md:block" />
+          
+          <Link to="/cart" className="relative p-2 text-royal transition-transform hover:scale-110">
+            <ShoppingCart size={22} strokeWidth={2.5} />
+            {itemCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-banana-400 text-[10px] font-black text-royal ring-2 ring-white">
                 {itemCount}
               </span>
-            ) : null}
+            )}
           </Link>
           <div className="relative" ref={loginMenuRef}>
             <button

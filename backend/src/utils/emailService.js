@@ -1,30 +1,36 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
-// Initialize Resend with API key
-const getResend = () => {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    console.warn("RESEND_API_KEY not configured - emails will not be sent");
+// Create Gmail transporter
+const getTransporter = () => {
+  const user = process.env.EMAIL_USER;
+  const pass = process.env.EMAIL_PASS;
+  
+  if (!user || !pass) {
+    console.warn("EMAIL_USER/EMAIL_PASS not configured - emails will not be sent");
     return null;
   }
-  return new Resend(apiKey);
+  
+  return nodemailer.createTransport({
+    service: "gmail",
+    auth: { user, pass },
+  });
 };
 
 /**
  * Send verification code email
  */
 export async function sendVerificationEmail(to, code, name) {
-  const resend = getResend();
+  const transporter = getTransporter();
   
-  if (!resend) {
+  if (!transporter) {
     console.log(`[DEV] Verification code for ${to}: ${code}`);
     return { success: false, fallback: true };
   }
 
   try {
-    const { data, error } = await resend.emails.send({
-      from: "Banana Meow <onboarding@resend.dev>",
-      to: [to],
+    const info = await transporter.sendMail({
+      from: `"Banana Meow" <${process.env.EMAIL_USER}>`,
+      to,
       subject: "🐱 Your Royal Verification Code - Banana Meow",
       html: `
         <!DOCTYPE html>
@@ -66,13 +72,8 @@ export async function sendVerificationEmail(to, code, name) {
       `,
     });
 
-    if (error) {
-      console.error("Resend error:", error);
-      return { success: false, error: error.message };
-    }
-
-    console.log(`✉️ Verification email sent to ${to} (id: ${data.id})`);
-    return { success: true, id: data.id };
+    console.log(`✉️ Verification email sent to ${to} (id: ${info.messageId})`);
+    return { success: true, id: info.messageId };
   } catch (err) {
     console.error("Email send failed:", err);
     return { success: false, error: err.message };
@@ -83,17 +84,17 @@ export async function sendVerificationEmail(to, code, name) {
  * Send welcome email after successful registration
  */
 export async function sendWelcomeEmail(to, name) {
-  const resend = getResend();
+  const transporter = getTransporter();
   
-  if (!resend) {
+  if (!transporter) {
     console.log(`[DEV] Welcome email would be sent to ${to}`);
     return { success: false, fallback: true };
   }
 
   try {
-    const { data, error } = await resend.emails.send({
-      from: "Banana Meow <onboarding@resend.dev>",
-      to: [to],
+    const info = await transporter.sendMail({
+      from: `"Banana Meow" <${process.env.EMAIL_USER}>`,
+      to,
       subject: "👑 Welcome to the Royal Court - Banana Meow",
       html: `
         <!DOCTYPE html>
@@ -137,13 +138,8 @@ export async function sendWelcomeEmail(to, name) {
       `,
     });
 
-    if (error) {
-      console.error("Resend welcome email error:", error);
-      return { success: false, error: error.message };
-    }
-
-    console.log(`✉️ Welcome email sent to ${to} (id: ${data.id})`);
-    return { success: true, id: data.id };
+    console.log(`✉️ Welcome email sent to ${to} (id: ${info.messageId})`);
+    return { success: true, id: info.messageId };
   } catch (err) {
     console.error("Welcome email send failed:", err);
     return { success: false, error: err.message };

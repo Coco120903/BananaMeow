@@ -106,7 +106,7 @@ export async function sendWelcomeEmail(to, name) {
   }
 
   try {
-    await transporter.sendMail({
+    const info = await transporter.sendMail({
       from: `"Banana Meow 🐱" <${process.env.EMAIL_USER}>`,
       to,
       subject: "👑 Welcome to the Royal Court! - Banana Meow",
@@ -133,7 +133,7 @@ export async function sendWelcomeEmail(to, name) {
               </p>
 
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/cats"
+                <a href="${process.env.FRONTEND_URL || "http://localhost:5173"}/cats"
                    style="display: inline-block; background: linear-gradient(135deg, #5A3E85 0%, #8B6DB3 100%); color: white; text-decoration: none; padding: 15px 35px; border-radius: 30px; font-weight: 600; font-size: 15px;">
                   Meet the Cats 🐱
                 </a>
@@ -153,8 +153,8 @@ export async function sendWelcomeEmail(to, name) {
       `,
     });
 
-    console.log(`✉️ Welcome email sent to ${to}`);
-    return { success: true };
+    console.log(`✉️ Welcome email sent to ${to} (id: ${info.messageId})`);
+    return { success: true, messageId: info.messageId };
   } catch (err) {
     console.error("Welcome email send failed:", err);
     return { success: false, error: err.message };

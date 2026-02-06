@@ -27,9 +27,9 @@ export default function ProductPage() {
 
   if (!product) {
     return (
-      <section className="mx-auto max-w-4xl px-4 py-12 md:px-8">
-        <div className="rounded-[2rem] bg-white p-8 text-center shadow-soft">
-          <p className="text-lg font-semibold text-royal">
+      <section className="mx-auto max-w-4xl px-4 py-20 md:px-8 font-sans">
+        <div className="rounded-[2rem] bg-white border-[5px] border-royal p-12 text-center shadow-[12px_12px_0px_0px_#171717]">
+          <p className="text-2xl font-black text-royal italic animate-pulse">
             Product details are loading...
           </p>
         </div>
@@ -38,41 +38,62 @@ export default function ProductPage() {
   }
 
   return (
-    <section className="mx-auto max-w-4xl px-4 py-12 md:px-8">
-      <div className="card-soft rounded-[2.5rem] p-8 md:p-12">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-ink/50">
-          {product.category}
-        </p>
-        <h1 className="mt-3 text-3xl font-bold text-royal md:text-4xl">
-          {product.name}
-        </h1>
-        <p className="mt-4 text-base text-ink/70 md:text-lg">
-          {product.description}
-        </p>
-        <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <span className="text-2xl font-semibold text-royal">
-            ${product.price}
-          </span>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <button
-              type="button"
-              className="btn-primary"
-              onClick={() =>
-                dispatch({
-                  type: "ADD_ITEM",
-                  payload: {
-                    id: product._id,
-                    name: product.name,
-                    price: product.price
-                  }
-                })
-              }
-            >
-              Add to cart
-            </button>
-            <Link to="/shop" className="btn-secondary text-center">
-              Back to shop
-            </Link>
+    <section className="mx-auto max-w-5xl px-4 py-20 md:px-8 font-sans selection:bg-banana-400 selection:text-white">
+      <div className="relative group">
+        {/* Animated Floating Paws */}
+        <div className="absolute -top-12 -left-4 text-4xl animate-bounce opacity-20 select-none">🐾</div>
+        <div className="absolute -bottom-12 -right-4 text-4xl animate-bounce delay-300 opacity-20 select-none">🐾</div>
+
+        {/* Product Card Container */}
+        <div className="relative z-10 rounded-[3rem] bg-white border-[6px] border-royal p-8 md:p-16 shadow-[16px_16px_0px_0px_#171717] hover:shadow-[20px_20px_0px_0px_#171717] transition-all">
+          
+          <div className="inline-block bg-banana-400 text-royal px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest mb-6 border-2 border-royal">
+            📦 {product.category}
+          </div>
+          
+          <h1 className="text-4xl font-black text-royal md:text-6xl leading-[1.1] mb-6">
+            {product.name}
+          </h1>
+          
+          <div className="bg-lilac/10 border-l-[6px] border-royal p-6 mb-8">
+            <p className="text-lg font-bold text-ink/80 md:text-xl leading-relaxed italic">
+              "{product.description}"
+            </p>
+          </div>
+
+          <div className="mt-10 flex flex-col gap-8 sm:flex-row sm:items-center sm:justify-between">
+            <div className="relative inline-block">
+              <span className="relative z-10 text-4xl font-black text-white drop-shadow-[2px_2px_0px_rgba(0,0,0,1)] md:text-5xl">
+                ${product.price}
+              </span>
+              <span className="absolute inset-x-0 bottom-1 h-4 bg-banana-400 -rotate-1"></span>
+            </div>
+
+            <div className="flex flex-col gap-4 sm:flex-row">
+              <button
+                type="button"
+                className="bg-banana-400 border-[4px] border-royal px-8 py-4 rounded-2xl text-lg font-black uppercase tracking-tight shadow-[6px_6px_0px_0px_#171717] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all active:bg-white"
+                onClick={() =>
+                  dispatch({
+                    type: "ADD_ITEM",
+                    payload: {
+                      id: product._id,
+                      name: product.name,
+                      price: product.price
+                    }
+                  })
+                }
+              >
+                Add to cart 🐾
+              </button>
+              
+              <Link 
+                to="/shop" 
+                className="bg-white border-[4px] border-royal px-8 py-4 rounded-2xl text-lg font-black uppercase tracking-tight text-center shadow-[6px_6px_0px_0px_#171717] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all"
+              >
+                Back to shop
+              </Link>
+            </div>
           </div>
         </div>
       </div>

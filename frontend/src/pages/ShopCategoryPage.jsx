@@ -152,74 +152,87 @@ export default function ShopCategoryPage({ title, category }) {
   };
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-12 md:px-8">
-      <div className="flex flex-col gap-3 pb-6">
-        <p className="text-sm font-semibold uppercase tracking-[0.3em] text-ink/50">
-          Banana Meow Shop
-        </p>
-        <h1 className="text-3xl font-bold text-royal md:text-4xl">{title}</h1>
-        <p className="text-base text-ink/70 md:text-lg">
-          Browse {title.toLowerCase()} curated by the royal court.
+    <section className="mx-auto max-w-7xl px-4 py-20 md:px-8 font-sans selection:bg-banana-400 selection:text-white">
+      {/* Header Section */}
+      <div className="flex flex-col gap-4 pb-16">
+        <div className="inline-block w-fit bg-banana-400 text-royal px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest border-2 border-royal">
+          👑 Banana Meow Shop
+        </div>
+        <h1 className="text-4xl font-black text-royal md:text-6xl leading-tight">
+          {title}
+        </h1>
+        <p className="max-w-2xl text-xl font-bold text-ink/70 italic">
+          "Browse {title.toLowerCase()} curated by the royal court."
         </p>
       </div>
 
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {withImages.map((product) => {
+      {/* Products Grid */}
+      <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {withImages.map((product, index) => {
           const qty = getQuantity(product._id);
           return (
             <article
               key={product._id}
-              className="card-soft flex flex-col gap-4 rounded-[2rem] p-6"
+              className={`
+                group relative flex flex-col gap-5 rounded-[2.5rem] border-[5px] border-royal p-6 transition-all hover:-translate-y-2
+                ${index % 3 === 0 ? 'bg-white shadow-[8px_8px_0px_0px_#171717]' : 
+                  index % 3 === 1 ? 'bg-blush shadow-[8px_8px_0px_0px_#171717]' : 
+                  'bg-lilac shadow-[8px_8px_0px_0px_#171717]'}
+              `}
             >
-              <div className="flex h-32 items-center justify-center overflow-hidden rounded-2xl bg-banana-100">
+              {/* Image Container */}
+              <div className="relative aspect-video overflow-hidden rounded-3xl border-4 border-royal bg-white shadow-[4px_4px_0px_0px_#171717]">
                 <img
                   src={product.imageUrl}
                   alt={product.name}
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-cover transition-transform group-hover:scale-110"
                   loading="lazy"
                 />
               </div>
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-ink/50">
+
+              {/* Info */}
+              <div className="flex flex-col gap-1">
+                <p className="text-[10px] font-black uppercase tracking-widest text-royal/40">
                   {product.category}
                 </p>
                 <Link
                   to={`/shop/${product._id}`}
-                  className="mt-2 block text-xl font-semibold text-royal"
+                  className="block text-2xl font-black text-royal tracking-tighter leading-tight hover:underline decoration-banana-400 decoration-4"
                 >
                   {product.name}
                 </Link>
               </div>
-              <div className="flex items-center justify-between text-lg font-semibold text-royal">
-                <span>${product.price}</span>
+
+              {/* Price & Quantity Control */}
+              <div className="flex items-center justify-between">
+                <span className="text-2xl font-black text-royal">${product.price}</span>
+                
+                <div className="flex items-center border-3 border-royal rounded-xl bg-white overflow-hidden shadow-[3px_3px_0px_0px_#171717]">
+                  <button
+                    type="button"
+                    onClick={() => updateQuantity(product._id, qty - 1)}
+                    className="px-3 py-1 text-lg font-black hover:bg-blush border-r-3 border-royal transition-colors"
+                  >
+                    −
+                  </button>
+                  <span className="px-3 text-sm font-black text-royal">{qty}</span>
+                  <button
+                    type="button"
+                    onClick={() => updateQuantity(product._id, qty + 1)}
+                    className="px-3 py-1 text-lg font-black hover:bg-banana-400 border-l-3 border-royal transition-colors"
+                  >
+                    +
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center justify-between gap-3">
-                <button
-                  type="button"
-                  onClick={() => updateQuantity(product._id, qty - 1)}
-                  className="rounded-full bg-cream px-3 py-2 text-base font-semibold text-ink/70 transition hover:-translate-y-0.5"
-                  aria-label="Decrease quantity"
-                >
-                  −
-                </button>
-                <span className="min-w-[2rem] text-center text-sm font-semibold text-ink/70">
-                  {qty}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => updateQuantity(product._id, qty + 1)}
-                  className="rounded-full bg-cream px-3 py-2 text-base font-semibold text-ink/70 transition hover:-translate-y-0.5"
-                  aria-label="Increase quantity"
-                >
-                  +
-                </button>
-              </div>
+
+              {/* Add to Cart Button */}
               <button
                 type="button"
-                className="btn-secondary text-sm"
+                className="mt-auto w-full bg-banana-400 border-[4px] border-royal py-3 rounded-2xl text-center text-sm font-black uppercase tracking-widest shadow-[5px_5px_0px_0px_#171717] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
                 onClick={() => handleAddToCart(product._id, product)}
               >
-                Add to cart
+                Add to cart 🐾
               </button>
             </article>
           );

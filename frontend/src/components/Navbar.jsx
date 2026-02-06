@@ -21,27 +21,20 @@ export default function Navbar() {
   const loginMenuRef = useRef(null);
 
   const isActive = (href) => {
-    if (href === "/") {
-      return location.pathname === "/";
-    }
+    if (href === "/") return location.pathname === "/";
     return location.pathname.startsWith(href);
   };
 
   useEffect(() => {
     const handleOutsideClick = (event) => {
-      if (
-        loginMenuRef.current &&
-        !loginMenuRef.current.contains(event.target)
-      ) {
+      if (loginMenuRef.current && !loginMenuRef.current.contains(event.target)) {
         setIsLoginOpen(false);
       }
     };
-
     if (isLoginOpen) {
       document.addEventListener("mousedown", handleOutsideClick);
       document.addEventListener("touchstart", handleOutsideClick);
     }
-
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
       document.removeEventListener("touchstart", handleOutsideClick);
@@ -63,102 +56,105 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-30 bg-cream/90 backdrop-blur">
-      <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 md:px-8">
-        <Link to="/" className="group flex items-center gap-3 transition-transform duration-200 hover:scale-105">
-          <div className="relative grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-banana-200 via-banana-100 to-royal/20 shadow-soft transition-all duration-300 group-hover:shadow-lg">
-            <Cat className="h-6 w-6 text-royal transition-transform duration-300 group-hover:scale-110" />
-            <Crown className="absolute -right-1 -top-1 h-4 w-4 text-royal drop-shadow-sm" />
+    <header className="sticky top-0 z-30 border-b-[6px] border-royal bg-white py-2 font-sans selection:bg-banana-400">
+      <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-2 md:px-8">
+        
+        {/* Logo Section - Sticker Style */}
+        <Link to="/" className="group flex items-center gap-4 transition-transform active:scale-95">
+          <div className="relative grid h-14 w-14 place-items-center rounded-2xl border-[4px] border-royal bg-banana-400 shadow-[4px_4px_0px_0px_#171717] transition-all group-hover:shadow-none group-hover:translate-x-1 group-hover:translate-y-1">
+            <Cat className="h-8 w-8 text-royal" />
+            <Crown className="absolute -right-2 -top-2 h-6 w-6 text-royal drop-shadow-[2px_2px_0px_white] rotate-12" />
           </div>
-          <div>
-            <p className="text-lg font-bold text-royal transition-colors group-hover:text-royal/80">
+          <div className="hidden sm:block">
+            <p className="text-xl font-black text-royal leading-none uppercase tracking-tighter">
               Banana Meow
             </p>
-            <p className="text-xs uppercase tracking-[0.3em] text-ink/60">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-royal/40 mt-1">
               Chonky Royals
             </p>
           </div>
         </Link>
-        <div className="hidden items-center gap-6 text-sm font-medium md:flex">
+
+        {/* Desktop Links */}
+        <div className="hidden items-center gap-2 md:flex">
           {navLinks.map((link) => {
             const active = isActive(link.href);
             return (
               <Link
                 key={link.label}
                 to={link.href}
-                className={`group relative px-3 py-1.5 rounded-full transition-all duration-300 ease-out ${
-                  active
-                    ? "font-semibold text-royal"
-                    : "text-ink/70 hover:text-royal"
+                className={`relative px-4 py-2 text-sm font-black uppercase tracking-tight transition-all ${
+                  active ? "text-royal" : "text-royal/60 hover:text-royal"
                 }`}
               >
-                <span className="relative z-10 transition-transform duration-300 group-hover:scale-105">
-                  {link.label}
-                </span>
-                {active ? (
-                  <span className="absolute inset-0 rounded-full bg-royal/10 transition-all duration-300" />
-                ) : (
-                  <span className="absolute inset-0 rounded-full bg-royal/0 transition-all duration-300 group-hover:bg-royal/5" />
+                <span className="relative z-10">{link.label}</span>
+                {active && (
+                  <span className="absolute inset-x-1 bottom-2 h-3 bg-banana-400 -rotate-1 z-0" />
                 )}
               </Link>
             );
           })}
-          <Link
-            to="/donate"
-            className={`text-sm rounded-full px-4 py-2 font-semibold bg-royal text-white shadow-soft transition-all duration-300 ease-out hover:scale-105 hover:bg-ink ${
-              isActive("/donate") ? "scale-105" : ""
-            }`}
-          >
-            Donate
-          </Link>
-          <Link
-            to="/cart"
-            className="group relative flex items-center justify-center rounded-full border border-royal/20 px-3.5 py-3 text-royal transition-all hover:border-royal hover:bg-royal/5"
-          >
-            <ShoppingCart className="h-5 w-5 transition-transform group-hover:scale-110" />
-            {itemCount > 0 ? (
-              <span className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-royal text-xs font-bold text-white shadow-sm">
-                {itemCount}
-              </span>
-            ) : null}
-          </Link>
-          <div className="relative" ref={loginMenuRef}>
-            <button
-              type="button"
-              onClick={handleLoginClick}
-              className="group flex items-center justify-center rounded-full border border-royal/20 px-3.5 py-3 text-royal transition-all hover:border-royal hover:bg-royal/5"
-              aria-haspopup="menu"
-              aria-expanded={isLoginOpen}
+
+          <div className="ml-4 flex items-center gap-4">
+            {/* Donate Button */}
+            <Link
+              to="/donate"
+              className="rounded-xl border-[3px] border-royal bg-blush px-6 py-2 text-xs font-black uppercase tracking-widest text-royal shadow-[4px_4px_0px_0px_#171717] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
             >
-              <User className="h-5 w-5 transition-transform group-hover:scale-110" />
-            </button>
-            {user ? (
-              <div
-                className={`absolute right-0 mt-2 w-40 origin-top-right rounded-2xl border border-royal/10 bg-white p-2 text-sm shadow-soft transition-all duration-200 ${
-                  isLoginOpen
-                    ? "scale-100 opacity-100"
-                    : "pointer-events-none scale-95 opacity-0"
-                }`}
+              Donate
+            </Link>
+
+            {/* Cart Icon */}
+            <Link
+              to="/cart"
+              className="relative flex h-12 w-12 items-center justify-center rounded-xl border-[3px] border-royal bg-white text-royal shadow-[4px_4px_0px_0px_#171717] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
+            >
+              <ShoppingCart className="h-5 w-5" />
+              {itemCount > 0 && (
+                <span className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-lg border-2 border-royal bg-banana-400 text-[10px] font-black">
+                  {itemCount}
+                </span>
+              )}
+            </Link>
+
+            {/* User Icon & Dropdown */}
+            <div className="relative" ref={loginMenuRef}>
+              <button
+                type="button"
+                onClick={handleLoginClick}
+                className="flex h-12 w-12 items-center justify-center rounded-xl border-[3px] border-royal bg-white text-royal shadow-[4px_4px_0px_0px_#171717] transition-all hover:translate-x-1 hover:translate-y-1 hover:shadow-none"
               >
-                <Link
-                  to="/profile"
-                  className="block rounded-xl px-3 py-2 text-ink/80 transition hover:bg-cream"
-                  onClick={() => setIsLoginOpen(false)}
+                <User className="h-5 w-5" />
+              </button>
+              
+              {user && (
+                <div
+                  className={`absolute right-0 mt-4 w-48 border-[4px] border-royal bg-white p-2 shadow-[8px_8px_0px_0px_#171717] transition-all ${
+                    isLoginOpen ? "scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0"
+                  }`}
                 >
-                  Profile
-                </Link>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="block w-full rounded-xl px-3 py-2 text-left text-ink/80 transition hover:bg-cream"
-                >
-                  Logout
-                </button>
-              </div>
-            ) : null}
+                  <Link
+                    to="/profile"
+                    className="block px-4 py-2 font-black uppercase text-xs text-royal hover:bg-lilac transition-colors"
+                    onClick={() => setIsLoginOpen(false)}
+                  >
+                    Profile
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="block w-full px-4 py-2 text-left font-black uppercase text-xs text-royal hover:bg-blush transition-colors"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-        <button className="rounded-full bg-banana-200 px-4 py-2 text-sm font-semibold text-royal transition-transform duration-200 ease-out active:scale-95 md:hidden">
+
+        {/* Mobile Menu Button */}
+        <button className="rounded-xl border-[3px] border-royal bg-banana-400 px-4 py-2 text-xs font-black uppercase shadow-[4px_4px_0px_0px_#171717] active:shadow-none active:translate-x-1 active:translate-y-1 md:hidden">
           Menu
         </button>
       </nav>

@@ -43,115 +43,138 @@ export default function SignUpPage() {
   };
 
   return (
-    <section className="mx-auto max-w-md px-4 py-12 md:px-8">
-      <div className="card-soft rounded-[2rem] p-8">
-        <p className="text-sm font-semibold uppercase tracking-[0.3em] text-ink/50">
-          Create Account
-        </p>
-        <h1 className="mt-3 text-2xl font-bold text-royal">
-          Join the royal court
-        </h1>
-        <p className="mt-3 text-base text-ink/70">
-          Create your account to support the chonky royals.
-        </p>
+    <section className="mx-auto max-w-2xl px-4 py-24 md:px-8 font-sans selection:bg-banana-400 selection:text-white overflow-hidden">
+      
+      {/* Hero Section - The "Giant Cat Head" Container */}
+      <div className="relative group">
+        {/* Animated Floating Paws */}
+        <div className="absolute -top-12 -left-6 text-5xl animate-bounce opacity-20 select-none">🐾</div>
+        <div className="absolute -bottom-10 -right-6 text-5xl animate-bounce delay-300 opacity-20 select-none rotate-12">🐾</div>
 
-        {error && (
-          <div className="mt-4 rounded-2xl bg-blush/50 border border-royal/20 px-4 py-3 text-sm text-royal">
-            {error}
+        {/* Enhanced Cat Ears with inner-ear detail */}
+        <div className="absolute -top-10 left-10 w-20 h-24 bg-royal rounded-t-full -rotate-12 transition-all duration-500 group-hover:-translate-y-4">
+           <div className="absolute inset-2 bg-blush rounded-t-full"></div>
+        </div>
+        <div className="absolute -top-10 right-10 w-20 h-24 bg-royal rounded-t-full rotate-12 transition-all duration-500 group-hover:-translate-y-4">
+           <div className="absolute inset-2 bg-blush rounded-t-full"></div>
+        </div>
+        
+        {/* The Main "Face" Card */}
+        <div className="relative z-10 rounded-[3rem] bg-white border-[6px] border-royal p-8 md:p-12 shadow-[16px_16px_0px_0px_#171717]">
+          <div className="inline-block bg-banana-400 text-royal px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest mb-6 border-2 border-royal">
+            ✨ Create Account
           </div>
-        )}
+          
+          <h1 className="text-4xl font-black text-royal md:text-5xl leading-none mb-4">
+            Join the <br />
+            <span className="text-white drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">royal court</span>
+          </h1>
+          
+          <p className="mb-8 text-lg font-bold text-ink/70 italic leading-relaxed">
+            "Create your account to support the chonky royals. <br />
+            Membership has its plush privileges."
+          </p>
 
-        <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
-          <label className="block text-sm font-semibold text-ink/60">
-            Full Name
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="Your royal name"
-              className="mt-2 w-full rounded-2xl border border-royal/10 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-royal/30"
-              required
-            />
-          </label>
+          {error && (
+            <div className="mb-6 rounded-2xl bg-blush border-[3px] border-royal px-4 py-3 text-sm font-black text-royal animate-shake">
+              ⚠️ {error}
+            </div>
+          )}
 
-          <label className="block text-sm font-semibold text-ink/60">
-            Email
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="royal@example.com"
-              className="mt-2 w-full rounded-2xl border border-royal/10 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-royal/30"
-              required
-            />
-          </label>
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <div className="grid gap-6 md:grid-cols-2">
+              {/* Full Name */}
+              <div className="space-y-2">
+                <label className="text-xs font-black uppercase tracking-widest text-royal/60 ml-2">Full Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="Your royal name"
+                  className="w-full rounded-2xl border-[4px] border-royal bg-white px-5 py-3 font-bold shadow-[4px_4px_0px_0px_#171717] focus:outline-none focus:translate-x-1 focus:translate-y-1 focus:shadow-none transition-all"
+                  required
+                />
+              </div>
 
-          <label className="block text-sm font-semibold text-ink/60">
-            Password
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="••••••••"
-              className="mt-2 w-full rounded-2xl border border-royal/10 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-royal/30"
-              required
-              minLength={6}
-            />
-          </label>
+              {/* Email */}
+              <div className="space-y-2">
+                <label className="text-xs font-black uppercase tracking-widest text-royal/60 ml-2">Email</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="royal@example.com"
+                  className="w-full rounded-2xl border-[4px] border-royal bg-white px-5 py-3 font-bold shadow-[4px_4px_0px_0px_#171717] focus:outline-none focus:translate-x-1 focus:translate-y-1 focus:shadow-none transition-all"
+                  required
+                />
+              </div>
+            </div>
 
-          <label className="block text-sm font-semibold text-ink/60">
-            Confirm Password
-            <input
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="••••••••"
-              className="mt-2 w-full rounded-2xl border border-royal/10 bg-white px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-royal/30"
-              required
-            />
-          </label>
+            <div className="grid gap-6 md:grid-cols-2">
+              {/* Password */}
+              <div className="space-y-2">
+                <label className="text-xs font-black uppercase tracking-widest text-royal/60 ml-2">Password</label>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="••••••••"
+                  className="w-full rounded-2xl border-[4px] border-royal bg-white px-5 py-3 font-bold shadow-[4px_4px_0px_0px_#171717] focus:outline-none focus:translate-x-1 focus:translate-y-1 focus:shadow-none transition-all"
+                  required
+                  minLength={6}
+                />
+              </div>
 
-          <label className="flex items-start gap-2 text-sm text-ink/70">
-            <input
-              type="checkbox"
-              className="mt-1 h-4 w-4 rounded border-royal/20 text-royal focus:ring-royal/30"
-              required
-            />
-            <span>
-              I agree to the{" "}
-              <button
-                type="button"
-                className="text-royal transition hover:text-ink"
-              >
-                Terms of Service
-              </button>{" "}
-              and{" "}
-              <button
-                type="button"
-                className="text-royal transition hover:text-ink"
-              >
-                Privacy Policy
-              </button>
-            </span>
-          </label>
+              {/* Confirm Password */}
+              <div className="space-y-2">
+                <label className="text-xs font-black uppercase tracking-widest text-royal/60 ml-2">Confirm Password</label>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="••••••••"
+                  className="w-full rounded-2xl border-[4px] border-royal bg-white px-5 py-3 font-bold shadow-[4px_4px_0px_0px_#171717] focus:outline-none focus:translate-x-1 focus:translate-y-1 focus:shadow-none transition-all"
+                  required
+                />
+              </div>
+            </div>
 
-          <button type="submit" className="btn-primary w-full">
-            Create Account
-          </button>
-        </form>
+            {/* Terms Checkbox */}
+            <label className="flex items-start gap-3 cursor-pointer group/check py-2">
+              <input
+                type="checkbox"
+                className="mt-1 h-5 w-5 rounded-lg border-4 border-royal text-royal focus:ring-0 checked:bg-royal transition-all cursor-pointer"
+                required
+              />
+              <span className="text-sm font-bold text-royal/70 leading-snug">
+                I agree to the{" "}
+                <button type="button" className="text-royal border-b-2 border-banana-400 hover:border-royal transition-all">Terms of Service</button>
+                {" "}and{" "}
+                <button type="button" className="text-royal border-b-2 border-banana-400 hover:border-royal transition-all">Privacy Policy</button>
+              </span>
+            </label>
 
-        <div className="mt-6 text-center text-sm text-ink/70">
-          Already have an account?{" "}
-          <Link
-            to="/login"
-            className="font-semibold text-royal transition hover:text-ink"
-          >
-            Login
-          </Link>
+            <button 
+              type="submit" 
+              className="w-full bg-banana-400 border-[4px] border-royal py-5 rounded-2xl text-xl font-black uppercase tracking-widest shadow-[8px_8px_0px_0px_#171717] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all active:bg-white"
+            >
+              Create Account 🐾
+            </button>
+          </form>
+
+          <div className="mt-8 text-center font-bold text-royal/60">
+            Already have an account?{" "}
+            <Link
+              to="/login"
+              className="text-royal border-b-4 border-blush hover:border-royal transition-colors"
+            >
+              Login
+            </Link>
+          </div>
         </div>
       </div>
     </section>

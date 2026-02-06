@@ -3,75 +3,86 @@ import { Crown, Cat, Sparkles } from "lucide-react";
 
 export default function HeroSection() {
   return (
-    <section className="mx-auto grid max-w-6xl gap-10 px-4 pb-10 pt-12 md:grid-cols-[1.1fr,0.9fr] md:items-center md:px-8 md:pt-16">
-      <div className="space-y-6">
-        <p className="inline-flex items-center gap-2 rounded-full bg-blush px-4 py-2 text-sm font-semibold text-royal">
-          Luxury cats with unemployed energy
-        </p>
-        <h1 className="flex flex-wrap items-center gap-3 text-4xl font-bold text-royal md:text-5xl">
-          <span>Meet Banana Meow – 12 Chonky Royals</span>
-          <div className="flex items-center gap-2">
-            <div className="group relative">
+    <section className="mx-auto grid max-w-6xl gap-10 px-4 pb-20 pt-20 md:grid-cols-[1.1fr,0.9fr] md:items-center md:px-8 font-sans selection:bg-banana-400 selection:text-white">
+      <div className="space-y-8">
+        <div className="inline-block bg-banana-400 text-royal px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest border-2 border-royal shadow-[4px_4px_0px_0px_#171717]">
+          🐾 Luxury cats with unemployed energy
+        </div>
+        
+        <h1 className="flex flex-wrap items-center gap-3 text-5xl font-black text-royal md:text-7xl leading-[1.1]">
+          <span>Meet Banana Meow – <br /> 12 Chonky Royals</span>
+          <div className="flex items-center gap-4 mt-2">
+            <div className="group relative bg-white border-4 border-royal p-2 rounded-2xl shadow-[4px_4px_0px_0px_#171717] -rotate-6">
               <Crown className="h-8 w-8 text-royal transition-all duration-300 md:h-10 md:w-10 group-hover:scale-110 group-hover:rotate-12" />
-              <div className="absolute inset-0 h-8 w-8 animate-pulse rounded-full bg-royal/20 blur-md md:h-10 md:w-10" />
             </div>
-            <div className="group relative">
+            <div className="group relative bg-white border-4 border-royal p-2 rounded-2xl shadow-[4px_4px_0px_0px_#171717] rotate-6">
               <Cat className="h-8 w-8 text-royal transition-all duration-300 md:h-10 md:w-10 group-hover:scale-110 group-hover:-rotate-12" />
-              <div className="absolute inset-0 h-8 w-8 animate-pulse rounded-full bg-royal/20 blur-md md:h-10 md:w-10" />
             </div>
           </div>
         </h1>
-        <p className="text-base leading-relaxed text-ink/80 md:text-lg">
-          A soft, dramatic kingdom of British Shorthair royalty. They nap, they
-          judge, they inspire. Bring treats, admiration, and a very respectful
-          curtsy.
+
+        <p className="max-w-xl text-lg font-bold text-ink/80 md:text-2xl leading-relaxed italic border-l-8 border-banana-400 pl-6">
+          "A soft, dramatic kingdom of British Shorthair royalty. They nap, they
+          judge, they inspire. Bring treats and a very respectful curtsy."
         </p>
-        <div className="flex flex-col gap-3 md:flex-row">
-          <Link to="/cats" className="btn-primary w-full text-center md:w-auto">
+
+        <div className="flex flex-col gap-4 md:flex-row">
+          <Link to="/cats" className="bg-royal text-white border-4 border-royal px-8 py-4 rounded-2xl font-black uppercase tracking-widest shadow-[6px_6px_0px_0px_#facc15] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all text-center">
             Meet the Cats
           </Link>
           <Link
             to="/donate"
-            className="btn-secondary w-full text-center md:w-auto"
+            className="bg-blush text-royal border-4 border-royal px-8 py-4 rounded-2xl font-black uppercase tracking-widest shadow-[6px_6px_0px_0px_#171717] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all text-center"
           >
-            Donate for Their Care
+            Sponsor a Royal
           </Link>
           <Link
             to="/shop"
-            className="w-full rounded-full border border-royal/30 bg-white px-6 py-3 text-center text-base font-semibold text-royal shadow-soft transition hover:-translate-y-0.5 md:w-auto"
+            className="bg-white text-royal border-4 border-royal px-8 py-4 rounded-2xl font-black uppercase tracking-widest shadow-[6px_6px_0px_0px_#171717] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all text-center"
           >
-            Shop Banana Meow Merch
+            Shop Merch
           </Link>
         </div>
       </div>
-      <div className="relative">
-        <div className="absolute -left-4 -top-4 h-16 w-16 rounded-3xl bg-lilac/70" />
-        <div className="absolute -bottom-6 right-10 h-12 w-12 rounded-3xl bg-banana-200/80" />
-        <div className="card-soft rounded-[2.5rem] p-6">
-          <div className="flex items-center justify-between">
-            <span className="rounded-full bg-banana-100 px-3 py-1 text-xs font-semibold text-royal">
+
+      <div className="relative group">
+        {/* Animated Cat Ears for the Schedule Card */}
+        <div className="absolute -top-10 left-12 w-16 h-20 bg-royal rounded-t-full -rotate-12 transition-all duration-500 group-hover:-translate-y-4">
+           <div className="absolute inset-2 bg-blush rounded-t-full"></div>
+        </div>
+        <div className="absolute -top-10 right-12 w-16 h-20 bg-royal rounded-t-full rotate-12 transition-all duration-500 group-hover:-translate-y-4">
+           <div className="absolute inset-2 bg-blush rounded-t-full"></div>
+        </div>
+
+        <div className="relative z-10 rounded-[3rem] bg-white border-[6px] border-royal p-8 md:p-10 shadow-[16px_16px_0px_0px_#171717]">
+          <div className="flex items-center justify-between border-b-4 border-royal pb-4">
+            <span className="bg-banana-400 px-3 py-1 rounded-lg text-xs font-black uppercase border-2 border-royal shadow-[2px_2px_0px_0px_#171717]">
               Royal Schedule
             </span>
-            <span className="text-xs text-ink/60">Updated daily</span>
+            <span className="text-xs font-black text-royal opacity-40 uppercase tracking-widest">Updated daily</span>
           </div>
-          <div className="mt-6 space-y-4">
+
+          <div className="mt-8 space-y-4">
             {[
               "Nap on velvet throne",
               "Inspect snacks",
               "Stare dramatically at window",
               "Demand chin rub tribute"
-            ].map((item) => (
+            ].map((item, idx) => (
               <div
                 key={item}
-                className="flex items-center gap-3 rounded-2xl bg-cream px-4 py-3 text-sm font-medium text-ink/80 transition-transform duration-200 ease-out hover:-translate-y-0.5"
+                className={`flex items-center gap-3 rounded-2xl border-4 border-royal px-5 py-4 text-md font-black text-royal shadow-[4px_4px_0px_0px_#171717] transition-all hover:bg-banana-100 ${idx % 2 === 0 ? 'rotate-1' : '-rotate-1'}`}
               >
-                <Sparkles className="h-5 w-5 text-royal" />
+                <Sparkles className="h-5 w-5 fill-royal" />
                 <span>{item}</span>
               </div>
             ))}
           </div>
-          <div className="mt-6 rounded-2xl bg-royal px-4 py-3 text-sm font-semibold text-white">
-            "Your presence is accepted." – Nana
+
+          <div className="mt-10 rounded-2xl bg-royal border-4 border-royal p-5 text-center shadow-[6px_6px_0px_0px_#facc15]">
+             <p className="text-sm font-black text-white italic">
+               "Your presence is accepted." – Nana
+             </p>
           </div>
         </div>
       </div>

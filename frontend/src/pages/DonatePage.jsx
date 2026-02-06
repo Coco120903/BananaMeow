@@ -45,16 +45,13 @@ export default function DonatePage() {
     const loadCats = async () => {
       try {
         const response = await fetch(`${API_BASE}/api/cats`);
-        if (!response.ok) {
-          throw new Error("Failed to load cats");
-        }
+        if (!response.ok) throw new Error("Failed to load cats");
         const data = await response.json();
         setCats(data);
       } catch (error) {
         setCats([]);
       }
     };
-
     loadCats();
   }, []);
 
@@ -65,9 +62,7 @@ export default function DonatePage() {
       const found = catList.find(
         (cat) => cat.name.toLowerCase() === preselectedCatName.toLowerCase()
       );
-      if (found) {
-        setSelectedCat(found);
-      }
+      if (found) setSelectedCat(found);
     }
   }, [preselectedCatName, catList]);
 
@@ -81,27 +76,13 @@ export default function DonatePage() {
       setError("Please select a royal to support before proceeding.");
       return;
     }
-
     setError("");
-
-    const payload = {
-      amount,
-      frequency,
-      type: selectedType,
-      cat: selectedCat.name,
-      catId: selectedCat._id || selectedCat.id || null
-    };
-
-    const response = await fetch(
-      `${API_BASE}/api/payments/create-checkout-session`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      }
-    );
+    const payload = { amount, frequency, type: selectedType, cat: selectedCat.name };
+    const response = await fetch(`${API_BASE}/api/payments/create-checkout-session`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
 
     if (response.ok) {
       const data = await response.json();
@@ -110,190 +91,175 @@ export default function DonatePage() {
   };
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-12 md:px-8">
-      <div className="flex flex-col gap-3 pb-6">
-        <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.3em] text-ink/50">
-          Support the Royals
-          <Heart className="h-4 w-4 text-royal" />
-        </p>
-        <h1 className="text-3xl font-bold text-royal md:text-4xl">
+    <section className="mx-auto max-w-6xl px-4 py-20 md:px-8 font-sans selection:bg-banana-400">
+      {/* Header */}
+      <div className="flex flex-col gap-4 pb-12">
+        <div className="flex items-center gap-2 w-fit bg-banana-400 text-royal px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest border-2 border-royal">
+          Support the Royals <Heart className="h-3 w-3 fill-royal" />
+        </div>
+        <h1 className="text-4xl font-black text-royal md:text-6xl leading-tight">
           Become a royal sponsor
         </h1>
-        <p className="text-base text-ink/70 md:text-lg">
-          Choose a royal to support and keep the court thriving.
-        </p>
       </div>
 
-      <div className="mb-8 space-y-4">
-        <div className="flex items-center gap-2">
-          <Cat className="h-5 w-5 text-royal" />
-          <Crown className="h-5 w-5 text-royal" />
-          <h2 className="text-xl font-semibold text-royal">
-            Choose a Royal to Support
+      {/* Step 1: Cat Selection */}
+      <div className="mb-12 space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="bg-royal p-2 rounded-lg text-white shadow-[4px_4px_0px_0px_#facc15]">
+            <Cat className="h-6 w-6" />
+          </div>
+          <h2 className="text-2xl font-black text-royal uppercase tracking-tighter">
+            1. Choose Your Royal
           </h2>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        
+        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
           {catList.map((cat, index) => {
             const isSelected = selectedCat?.name === cat.name;
             return (
               <button
-                key={cat._id || cat.id || cat.name || index}
+                key={cat.name || index}
                 type="button"
-                onClick={() => {
-                  setSelectedCat(cat);
-                  setError("");
-                }}
-                className={`group relative rounded-2xl border p-4 text-left transition-all ${
+                onClick={() => { setSelectedCat(cat); setError(""); }}
+                className={`group relative rounded-[2rem] border-[4px] p-4 text-left transition-all ${
                   isSelected
-                    ? "border-royal bg-white shadow-soft"
-                    : "border-royal/20 bg-cream hover:border-royal/40"
+                    ? "border-royal bg-banana-400 translate-x-1 translate-y-1 shadow-none"
+                    : "border-royal bg-white shadow-[6px_6px_0px_0px_#171717] hover:-translate-y-1"
                 }`}
               >
-                {isSelected && (
-                  <div className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full bg-royal">
-                    <Check className="h-4 w-4 text-white" />
-                  </div>
-                )}
-                <div className="mb-2 flex h-16 w-16 items-center justify-center rounded-xl bg-banana-100">
-                  <Cat className="h-8 w-8 text-royal" />
+                <div className={`mb-3 flex h-12 w-12 items-center justify-center rounded-xl border-2 border-royal bg-white ${isSelected ? 'rotate-3' : ''}`}>
+                  <Cat className="h-6 w-6 text-royal" />
                 </div>
-                <h3 className="font-semibold text-royal">{cat.name}</h3>
-                <p className="mt-1 text-xs text-ink/60">{cat.nickname}</p>
+                <h3 className="font-black text-royal text-lg leading-none">{cat.name}</h3>
+                <p className={`mt-1 text-[10px] font-bold uppercase tracking-widest ${isSelected ? 'text-royal' : 'text-royal/40'}`}>
+                  {cat.nickname}
+                </p>
               </button>
             );
           })}
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1.2fr,0.8fr]">
-        <div className="space-y-6">
+      <div className="grid gap-10 lg:grid-cols-[1.2fr,0.8fr]">
+        <div className="space-y-10">
+          {/* Step 2: Goal Cards */}
           <div className="grid gap-4 md:grid-cols-3">
             {donationTypes.map((type) => {
               const progress = Math.round((type.funded / type.goal) * 100);
               const IconComponent = type.icon;
+              const isTypeSelected = selectedType === type.id;
               return (
                 <button
                   key={type.id}
                   type="button"
                   onClick={() => setSelectedType(type.id)}
-                  className={`rounded-[2rem] border px-5 py-4 text-left transition ${
-                    selectedType === type.id
-                      ? "border-royal bg-white shadow-soft"
-                      : "border-transparent bg-cream"
+                  className={`rounded-[2rem] border-[4px] p-5 text-left transition-all ${
+                    isTypeSelected
+                      ? "border-royal bg-white shadow-[8px_8px_0px_0px_#facc15]"
+                      : "border-royal bg-cream/30 opacity-70 hover:opacity-100"
                   }`}
                 >
-                  <p className="flex items-center gap-2 text-lg font-semibold text-royal">
-                    <IconComponent className="h-5 w-5" />
-                    {type.title}
-                  </p>
-                  <p className="text-sm text-ink/60">{type.subtitle}</p>
-                  <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-banana-100">
-                    <div
-                      className="h-full rounded-full bg-royal"
-                      style={{ width: `${progress}%` }}
-                    />
+                  <IconComponent className={`h-6 w-6 mb-2 ${isTypeSelected ? 'text-royal' : 'text-royal/40'}`} />
+                  <p className="text-lg font-black text-royal leading-tight">{type.title}</p>
+                  <div className="mt-4 h-4 w-full overflow-hidden rounded-full border-2 border-royal bg-white">
+                    <div className="h-full bg-royal" style={{ width: `${progress}%` }} />
                   </div>
-                  <p className="mt-2 text-xs font-semibold text-ink/60">
-                    {progress}% funded
-                  </p>
+                  <p className="mt-2 text-xs font-black text-royal/60">{progress}% FUNDED</p>
                 </button>
               );
             })}
           </div>
 
-          <div className="card-soft rounded-[2rem] p-6">
-            <p className="text-sm font-semibold text-ink/60">Donation Type</p>
-            <h2 className="mt-2 flex items-center gap-2 text-2xl font-semibold text-royal">
-              {activeType?.icon && (() => {
-                const ActiveIcon = activeType.icon;
-                return <ActiveIcon className="h-6 w-6" />;
-              })()}
-              {activeType?.title}
+          {/* Step 3: Amount Toggles */}
+          <div className="rounded-[3rem] border-[6px] border-royal bg-white p-8 shadow-[12px_12px_0px_0px_#171717]">
+            <h2 className="flex items-center gap-3 text-2xl font-black text-royal uppercase tracking-tighter mb-8">
+              {activeType?.icon && <activeType.icon className="h-7 w-7" />}
+              {activeType?.title} Details
             </h2>
-            <p className="mt-2 text-sm text-ink/60">{activeType?.subtitle}</p>
 
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <button
-                type="button"
-                onClick={() => setFrequency("one-time")}
-                className={`rounded-full px-4 py-2 text-sm font-semibold ${
-                  frequency === "one-time"
-                    ? "bg-royal text-white"
-                    : "bg-cream text-ink/70"
-                }`}
-              >
-                One-time
-              </button>
-              <button
-                type="button"
-                onClick={() => setFrequency("monthly")}
-                className={`rounded-full px-4 py-2 text-sm font-semibold ${
-                  frequency === "monthly"
-                    ? "bg-royal text-white"
-                    : "bg-cream text-ink/70"
-                }`}
-              >
-                Monthly
-              </button>
-            </div>
+            <div className="space-y-8">
+              <div>
+                <p className="text-xs font-black uppercase tracking-widest text-royal/40 mb-3">Frequency</p>
+                <div className="flex gap-3">
+                  {["one-time", "monthly"].map((f) => (
+                    <button
+                      key={f}
+                      type="button"
+                      onClick={() => setFrequency(f)}
+                      className={`flex-1 rounded-xl border-[3px] border-royal py-3 font-black uppercase tracking-tight transition-all ${
+                        frequency === f ? "bg-royal text-white -translate-y-1 shadow-[4px_4px_0px_0px_#facc15]" : "bg-white text-royal hover:bg-blush"
+                      }`}
+                    >
+                      {f}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-            <div className="mt-6">
-              <label className="text-sm font-semibold text-ink/60">
-                Donation amount
-              </label>
-              <div className="mt-3 flex items-center gap-3">
-                {[15, 25, 50, 100].map((value) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setAmount(value)}
-                    className={`rounded-full px-4 py-2 text-sm font-semibold ${
-                      amount === value
-                        ? "bg-royal text-white"
-                        : "bg-cream text-ink/70"
-                    }`}
-                  >
-                    ${value}
-                  </button>
-                ))}
+              <div>
+                <p className="text-xs font-black uppercase tracking-widest text-royal/40 mb-3">Amount</p>
+                <div className="grid grid-cols-4 gap-3">
+                  {[15, 25, 50, 100].map((value) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setAmount(value)}
+                      className={`rounded-xl border-[3px] border-royal py-3 font-black transition-all ${
+                        amount === value ? "bg-banana-400 text-royal -translate-y-1 shadow-[4px_4px_0px_0px_#171717]" : "bg-white text-royal"
+                      }`}
+                    >
+                      ${value}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <aside className="rounded-[2.5rem] bg-blush p-6 shadow-soft">
-          <h3 className="text-xl font-semibold text-royal">
-            Royal checkout
-          </h3>
-          <p className="mt-3 text-sm text-ink/70">
-            Secure Stripe checkout in test mode. Your generosity keeps the
-            kingdom fluffy and fabulous.
-          </p>
-          <div className="mt-6 rounded-2xl bg-white p-4 text-sm text-ink/70">
-            <p className="font-semibold text-ink">Summary</p>
-            <p className="mt-2">Type: {activeType?.subtitle}</p>
-            <p>Frequency: {frequency}</p>
-            <p>Amount: ${amount}</p>
-            <p className={selectedCat ? "" : "text-ink/50"}>
-              Sponsor: {selectedCat ? selectedCat.name : "Not selected"}
-            </p>
+        {/* Sidebar Summary */}
+        <aside className="h-fit sticky top-8 rounded-[2.5rem] bg-blush border-[5px] border-royal p-8 shadow-[12px_12px_0px_0px_#171717]">
+          <h3 className="text-3xl font-black text-royal uppercase tracking-tighter mb-6">Summary</h3>
+          
+          <div className="space-y-4 font-bold text-royal">
+            <div className="flex justify-between border-b-2 border-royal/10 pb-2">
+              <span className="opacity-60 uppercase text-[10px]">Royal</span>
+              <span className={selectedCat ? "text-royal" : "text-royal/30"}>
+                {selectedCat ? selectedCat.name : "Choose One 🐾"}
+              </span>
+            </div>
+            <div className="flex justify-between border-b-2 border-royal/10 pb-2">
+              <span className="opacity-60 uppercase text-[10px]">Support</span>
+              <span>{activeType?.title}</span>
+            </div>
+            <div className="flex justify-between border-b-2 border-royal/10 pb-2">
+              <span className="opacity-60 uppercase text-[10px]">Schedule</span>
+              <span className="capitalize">{frequency}</span>
+            </div>
+            
+            <div className="pt-4 flex justify-between items-center">
+              <span className="text-xl font-black uppercase">Total</span>
+              <span className="text-4xl font-black text-royal">${amount}</span>
+            </div>
           </div>
+
           {error && (
-            <div className="mt-4 rounded-2xl bg-blush/50 border border-royal/20 px-4 py-3 text-sm text-royal">
-              {error}
+            <div className="mt-6 bg-white border-[3px] border-royal p-4 rounded-xl font-bold text-sm text-red-500 animate-bounce">
+              ⚠️ {error}
             </div>
           )}
+
           <button
             type="button"
             onClick={handleCheckout}
             disabled={!selectedCat}
-            className={`mt-6 w-full rounded-full px-6 py-3 text-base font-semibold text-white shadow-soft transition-transform transition-colors duration-200 ease-out ${
-              selectedCat
-                ? "bg-royal hover:-translate-y-0.5 hover:bg-ink cursor-pointer"
-                : "bg-ink/40 cursor-not-allowed"
+            className={`mt-8 w-full border-[4px] border-royal py-5 rounded-2xl text-xl font-black uppercase tracking-tight transition-all ${
+              selectedCat 
+                ? "bg-banana-400 text-royal shadow-[8px_8px_0px_0px_#171717] hover:translate-x-1 hover:translate-y-1 hover:shadow-none active:bg-white" 
+                : "bg-royal/10 text-royal/30 cursor-not-allowed"
             }`}
           >
-            {selectedCat ? "Proceed to Stripe" : "Select a Royal First"}
+            {selectedCat ? "Proceed to Stripe 👑" : "Select a Royal"}
           </button>
         </aside>
       </div>

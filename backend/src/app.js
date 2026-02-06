@@ -27,6 +27,11 @@ app.use("/api/donations", donationsRoutes);
 app.use("/api/orders", ordersRoutes);
 app.use("/api/payments", paymentsRoutes);
 
+// 404 handler — return JSON, not HTML
+app.use((req, res) => {
+  res.status(404).json({ message: `Route not found: ${req.method} ${req.originalUrl}` });
+});
+
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).json({ message: "Something went wrong" });

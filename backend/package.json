@@ -17,6 +17,7 @@
     "mongoose": "^8.6.1",
     "nodemailer": "^8.0.0",
     "otplib": "^13.2.1",
+    "resend": "^6.9.1",
     "stripe": "^16.8.0"
   },
   "devDependencies": {

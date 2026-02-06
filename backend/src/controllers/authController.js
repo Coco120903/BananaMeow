@@ -1,11 +1,12 @@
 import jwt from "jsonwebtoken";
-import User from "../models/User.js";
 import bcrypt from "bcryptjs";
+import User from "../models/User.js";
 import { sendVerificationEmail, sendWelcomeEmail } from "../utils/emailService.js";
 
 /* ===========================
    ADMIN AUTH
 =========================== */
+
 export async function adminLogin(req, res) {
   const { username, password } = req.body;
 
@@ -28,28 +29,26 @@ export async function adminLogin(req, res) {
     { expiresIn: "24h" }
   );
 
-  return res.json({
-    success: true,
+  res.json({
     message: "Login successful",
     token,
-    admin: { username: adminUsername, role: "admin" },
-    isAdmin: true,
+    admin: { username: adminUsername }
   });
 }
 
 export async function verifyToken(req, res) {
-  // If we get here, token is valid (requireAdmin middleware already verified it)
-  return res.json({ valid: true, admin: req.admin });
+  // If we get here, the token is valid (middleware already verified)
+  res.json({ valid: true, admin: req.admin });
 }
 
 /* ===========================
    USER AUTH
 =========================== */
 
-// In-memory store for pending registrations (use Redis in production)
+// In-memory store for pending registrations (use Redis/DB in production)
 const pendingRegistrations = new Map();
 
-// Clean up expired registrations every 5 minutes
+// Cleanup expired pending registrations every 5 minutes
 setInterval(() => {
   const now = Date.now();
   for (const [email, data] of pendingRegistrations.entries()) {
@@ -57,7 +56,7 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000);
 
-// Generate JWT Token (users)
+// Generate JWT for users
 const generateUserToken = (userId) => {
   return jwt.sign(
     { id: userId, role: "user" },
@@ -71,9 +70,8 @@ const generateVerificationCode = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
-// @desc    Start registration (Step 1 - get verification code)
+// @desc    Register user (Step 1 - sends verification code)
 // @route   POST /api/auth/register
-// @access  Public
 export const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -102,6 +100,7 @@ export const register = async (req, res) => {
 
     const verificationCode = generateVerificationCode();
 
+    // Hash password now, store in pending
     const salt = await bcrypt.genSalt(12);
     const hashedPassword = await bcrypt.hash(password, salt);
 
@@ -110,26 +109,28 @@ export const register = async (req, res) => {
       email: email.toLowerCase(),
       password: hashedPassword,
       verificationCode,
-      expiresAt: Date.now() + 10 * 60 * 1000,
+      expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
       attempts: 0,
     });
 
-    try {
-      await sendVerificationEmail(email, verificationCode, name);
+    // Send verification email via Resend
+    const emailResult = await sendVerificationEmail(email, verificationCode, name);
+
+    if (emailResult.success) {
       return res.status(200).json({
         success: true,
         message: "Verification code sent to your email!",
         requiresVerification: true,
         expiresIn: "10 minutes",
+        emailFailed: false,
       });
-    } catch (emailError) {
-      console.error("Email sending failed:", emailError);
+    } else {
+      // Email failed - return code as fallback for dev
       return res.status(200).json({
         success: true,
-        message:
-          "Verification code generated. Check your email (or use demo code below if email fails).",
+        message: "Email delivery failed. Use the code below.",
         requiresVerification: true,
-        verificationCode, // remove in prod
+        verificationCode, // Fallback for dev
         expiresIn: "10 minutes",
         emailFailed: true,
       });
@@ -143,9 +144,8 @@ export const register = async (req, res) => {
   }
 };
 
-// @desc    Verify registration code (Step 2 - complete registration)
+// @desc    Verify registration code (Step 2 - creates the user)
 // @route   POST /api/auth/verify-register
-// @access  Public
 export const verifyRegister = async (req, res) => {
   try {
     const { email, code } = req.body;
@@ -185,19 +185,16 @@ export const verifyRegister = async (req, res) => {
       pendingData.attempts += 1;
       return res.status(400).json({
         success: false,
-        message: `Invalid verification code. ${
-          5 - pendingData.attempts
-        } attempts remaining.`,
+        message: `Invalid verification code. ${5 - pendingData.attempts} attempts remaining.`,
       });
     }
 
+    // Create user with already-hashed password
     const user = new User({
       name: pendingData.name,
       email: pendingData.email,
       password: pendingData.password,
     });
-
-    // if your User model hashes password in pre-save, keep this flag
     user.$skipPasswordHash = true;
     await user.save();
 
@@ -205,6 +202,7 @@ export const verifyRegister = async (req, res) => {
 
     const token = generateUserToken(user._id);
 
+    // Send welcome email (non-blocking)
     sendWelcomeEmail(user.email, user.name).catch((err) => {
       console.error("Welcome email failed:", err);
     });
@@ -234,7 +232,6 @@ export const verifyRegister = async (req, res) => {
 
 // @desc    Resend verification code
 // @route   POST /api/auth/resend-code
-// @access  Public
 export const resendCode = async (req, res) => {
   try {
     const { email } = req.body;
@@ -259,20 +256,21 @@ export const resendCode = async (req, res) => {
     pendingData.expiresAt = Date.now() + 10 * 60 * 1000;
     pendingData.attempts = 0;
 
-    try {
-      await sendVerificationEmail(email, newCode, pendingData.name);
+    // Send new verification email via Resend
+    const emailResult = await sendVerificationEmail(email, newCode, pendingData.name);
+
+    if (emailResult.success) {
       return res.status(200).json({
         success: true,
         message: "New verification code sent to your email!",
         expiresIn: "10 minutes",
+        emailFailed: false,
       });
-    } catch (emailError) {
-      console.error("Resend email failed:", emailError);
+    } else {
       return res.status(200).json({
         success: true,
-        message:
-          "New code generated. Check your email (or use demo code below if email fails).",
-        verificationCode: newCode, // remove in prod
+        message: "Email delivery failed. Use the code below.",
+        verificationCode: newCode, // Fallback for dev
         expiresIn: "10 minutes",
         emailFailed: true,
       });
@@ -286,9 +284,8 @@ export const resendCode = async (req, res) => {
   }
 };
 
-// @desc    Login user OR admin (single endpoint)
+// @desc    Login user
 // @route   POST /api/auth/login
-// @access  Public
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -300,19 +297,12 @@ export const login = async (req, res) => {
       });
     }
 
-    // Admin login via /login (optional)
+    // Check if it's admin login
     const adminUsername = process.env.ADMIN_USERNAME;
     const adminPassword = process.env.ADMIN_PASSWORD;
 
     if (email === adminUsername && password === adminPassword) {
       const jwtSecret = process.env.JWT_SECRET;
-      if (!jwtSecret) {
-        return res.status(500).json({
-          success: false,
-          message: "Server configuration error",
-        });
-      }
-
       const token = jwt.sign(
         { username: adminUsername, role: "admin" },
         jwtSecret,
@@ -336,9 +326,7 @@ export const login = async (req, res) => {
     }
 
     // Regular user login
-    const user = await User.findOne({ email: email.toLowerCase() }).select(
-      "+password"
-    );
+    const user = await User.findOne({ email: email.toLowerCase() }).select("+password");
 
     if (!user) {
       return res.status(401).json({
@@ -383,10 +371,12 @@ export const login = async (req, res) => {
 
 // @desc    Get current user
 // @route   GET /api/auth/me
-// @access  Private
 export const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
 
     return res.status(200).json({
       success: true,
@@ -402,16 +392,12 @@ export const getMe = async (req, res) => {
     });
   } catch (error) {
     console.error("Get me error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Something went wrong",
-    });
+    return res.status(500).json({ success: false, message: "Something went wrong" });
   }
 };
 
 // @desc    Update user profile
 // @route   PUT /api/auth/update
-// @access  Private
 export const updateProfile = async (req, res) => {
   try {
     const { name, email } = req.body;
@@ -422,16 +408,13 @@ export const updateProfile = async (req, res) => {
         _id: { $ne: req.user.id },
       });
       if (existingUser) {
-        return res.status(400).json({
-          success: false,
-          message: "Email is already in use",
-        });
+        return res.status(400).json({ success: false, message: "Email is already in use" });
       }
     }
 
     const user = await User.findByIdAndUpdate(
       req.user.id,
-      { name, email: email?.toLowerCase?.() || email },
+      { name, email: email?.toLowerCase() },
       { new: true, runValidators: true }
     );
 
@@ -449,22 +432,16 @@ export const updateProfile = async (req, res) => {
     });
   } catch (error) {
     console.error("Update profile error:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Something went wrong",
-    });
+    return res.status(500).json({ success: false, message: "Something went wrong" });
   }
 };
 
-// Middleware to protect routes (user)
+// Middleware: protect routes (user auth)
 export const protect = async (req, res, next) => {
   try {
     let token;
 
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.startsWith("Bearer")
-    ) {
+    if (req.headers.authorization?.startsWith("Bearer")) {
       token = req.headers.authorization.split(" ")[1];
     }
 
@@ -482,19 +459,12 @@ export const protect = async (req, res, next) => {
 
     const user = await User.findById(decoded.id);
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "User no longer exists",
-      });
+      return res.status(401).json({ success: false, message: "User no longer exists" });
     }
 
     req.user = user;
     next();
   } catch (error) {
-    console.error("Auth middleware error:", error);
-    return res.status(401).json({
-      success: false,
-      message: "Invalid or expired token",
-    });
+    return res.status(401).json({ success: false, message: "Invalid or expired token" });
   }
 };

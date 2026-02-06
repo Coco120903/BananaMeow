@@ -131,7 +131,8 @@ export function AuthProvider({ children }) {
         success: true, 
         message: data.message,
         requiresVerification: data.requiresVerification,
-        verificationCode: data.verificationCode // For demo - remove in production
+        verificationCode: data.verificationCode, // For demo/dev - remove in production
+        emailFailed: data.emailFailed
       };
     } catch (err) {
       setLoading(false);
@@ -199,7 +200,8 @@ export function AuthProvider({ children }) {
       return { 
         success: true, 
         message: data.message,
-        verificationCode: data.verificationCode // For demo - remove in production
+        verificationCode: data.verificationCode, // For demo/dev - remove in production
+        emailFailed: data.emailFailed
       };
     } catch (err) {
       setLoading(false);

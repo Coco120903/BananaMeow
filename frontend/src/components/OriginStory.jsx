@@ -7,21 +7,21 @@ export default function OriginStory() {
       prefix: "Ba",
       color: "bg-banana-100",
       detail: "Master of naps and silent judgment.",
-      trait: "The Thinker"
+      trait: "The Velvet Tank"
     },
     {
       name: "Nana",
       prefix: "Na",
       color: "bg-blush",
       detail: "Queen of snacks and side-eye.",
-      trait: "The Foodie"
+      trait: "Queen of Naps"
     },
     {
       name: "Angela",
       prefix: "AN",
       color: "bg-lilac",
       detail: "Royal stylist with a dramatic tail flick.",
-      trait: "The Diva"
+      trait: "Food Inspector"
     }
   ];
 

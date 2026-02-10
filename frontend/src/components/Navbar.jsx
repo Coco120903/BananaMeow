@@ -2,13 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
-import { Cat, Crown, ShoppingCart, User, Heart, Sparkles, Menu, X, LogOut, Settings, ChevronDown, Star } from "lucide-react";
+import { Cat, Crown, ShoppingCart, User, Heart, Sparkles, Menu, X, LogOut, Settings, ChevronDown, Star, Camera } from "lucide-react";
 
 const navLinks = [
   { label: "Home", href: "/", icon: Sparkles },
   { label: "Meet the Cats", href: "/cats", icon: Cat },
   { label: "Shop", href: "/shop", icon: ShoppingCart },
-  { label: "About", href: "/about", icon: Heart }
+  { label: "About", href: "/about", icon: Heart },
+  { label: "Gallery", href: "/gallery", icon: Camera }
 ];
 
 export default function Navbar() {
@@ -78,6 +79,13 @@ export default function Navbar() {
     navigate("/");
   };
 
+  const handleLogoClick = (e) => {
+    if (location.pathname === "/") {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   return (
     <header className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/95 backdrop-blur-lg shadow-soft' : 'bg-white/80 backdrop-blur-md'}`}>
       {/* Scroll Progress Bar */}
@@ -85,7 +93,7 @@ export default function Navbar() {
       
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:px-8 md:py-4">
         {/* Logo */}
-        <Link to="/" className="group flex items-center gap-3 transition-transform duration-300 hover:scale-105">
+        <Link to="/" onClick={handleLogoClick} className="group flex items-center gap-3 transition-transform duration-300 hover:scale-105">
           <div className="relative">
             <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-banana-200 via-banana-100 to-lilac/40 shadow-soft transition-all duration-300 group-hover:shadow-glow">
               <Cat className="h-5 w-5 text-royal transition-transform duration-300 group-hover:scale-110" />

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
-import { Crown, Mail, Lock, User, Sparkles, ArrowRight, Heart, Star, AlertCircle, Loader2, ShieldCheck, RefreshCw, CheckCircle2, KeyRound } from "lucide-react";
+import { Crown, Mail, Lock, User, Sparkles, ArrowRight, Heart, Star, AlertCircle, Loader2, ShieldCheck, RefreshCw, CheckCircle2, KeyRound, Eye, EyeOff } from "lucide-react";
 
 export default function SignUpPage() {
   const { register, verifyRegistration, resendVerificationCode, loading, isAuthenticated } = useAuth();
@@ -17,6 +17,8 @@ export default function SignUpPage() {
   });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   // Verification code state
   const [verificationCode, setVerificationCode] = useState(["", "", "", "", "", ""]);
@@ -286,16 +288,29 @@ export default function SignUpPage() {
                     <Lock className="h-4 w-4" />
                     Password
                   </span>
-                  <input
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder="••••••••"
-                    className="input-soft"
-                    required
-                    minLength={6}
-                  />
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      placeholder="••••••••"
+                      className="input-soft pr-12"
+                      required
+                      minLength={6}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-ink/40 hover:text-royal transition-colors"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-5 w-5" />
+                      ) : (
+                        <Eye className="h-5 w-5" />
+                      )}
+                    </button>
+                  </div>
                 </label>
 
                 <label className="block text-sm font-semibold text-ink/60">
@@ -303,15 +318,28 @@ export default function SignUpPage() {
                     <Lock className="h-4 w-4" />
                     Confirm Password
                   </span>
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    placeholder="••••••••"
-                    className="input-soft"
-                    required
-                  />
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      placeholder="••••••••"
+                      className="input-soft pr-12"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-ink/40 hover:text-royal transition-colors"
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="h-5 w-5" />
+                      ) : (
+                        <Eye className="h-5 w-5" />
+                      )}
+                    </button>
+                  </div>
                 </label>
 
                 <label className="flex items-start gap-2 text-sm text-ink/70 cursor-pointer group">

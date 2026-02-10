@@ -45,16 +45,16 @@ export default function Footer() {
             </p>
             
             {/* Newsletter mini form */}
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-banana-50/80 to-lilac/20 border border-royal/5">
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-banana-50/80 to-lilac/20 border border-royal/5 overflow-hidden">
               <p className="text-sm font-semibold text-royal mb-2">Join the Royal Court</p>
               <p className="text-xs text-ink/50 mb-3">Get updates on our fluffy royals</p>
-              <div className="flex gap-2">
+              <div className="flex gap-2 w-full">
                 <input 
                   type="email" 
                   placeholder="your@email.com"
-                  className="flex-1 px-3 py-2 text-sm rounded-xl border border-royal/10 bg-white focus:outline-none focus:border-royal/30"
+                  className="flex-1 min-w-0 px-3 py-2 text-sm rounded-xl border border-royal/10 bg-white focus:outline-none focus:border-royal/30"
                 />
-                <button className="px-4 py-2 rounded-xl bg-royal text-white text-sm font-medium hover:bg-ink transition-colors">
+                <button className="flex-shrink-0 px-4 py-2 rounded-xl bg-royal text-white text-sm font-medium hover:bg-ink transition-colors whitespace-nowrap">
                   Join
                 </button>
               </div>

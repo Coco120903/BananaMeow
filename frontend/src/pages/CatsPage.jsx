@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { Cat, Heart, Crown, Sparkles, Star, Filter, Search, Award, Zap, Coffee, Moon, Sun } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Cat, Heart, Crown, Sparkles, Star, Filter, Search, Award, Zap, Coffee, Moon, Sun, X } from "lucide-react";
 import { catBios } from "../content/catBios.js";
 import { API_BASE } from "../lib/api.js";
+import { useAuth } from "../context/AuthContext.jsx";
 
 const traitIcons = {
   default: Sparkles,
@@ -23,11 +24,14 @@ const traitColors = [
 ];
 
 export default function CatsPage() {
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [cats, setCats] = useState([]);
   const [likedCats, setLikedCats] = useState({});
   const [hoveredCat, setHoveredCat] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterTrait, setFilterTrait] = useState("all");
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
     const loadCats = async () => {
@@ -49,10 +53,27 @@ export default function CatsPage() {
   const toggleLike = (catName, e) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      setShowLoginModal(true);
+      return;
+    }
+    
+    // User is logged in, proceed with like
     setLikedCats(prev => ({
       ...prev,
       [catName]: !prev[catName]
     }));
+  };
+
+  const handleProceedToLogin = () => {
+    setShowLoginModal(false);
+    navigate("/login");
+  };
+
+  const handleCancel = () => {
+    setShowLoginModal(false);
   };
 
   const list = cats.length > 0 ? cats : catBios;
@@ -63,10 +84,62 @@ export default function CatsPage() {
     return matchesSearch && matchesFilter;
   });
 
+  // Separate main cats (Bane, Nana, Angela) from others - in specific order
+  const mainCatsOrder = ["Bane", "Nana", "Angela"];
+  const highlightedCats = mainCatsOrder
+    .map(name => filteredList.find(cat => cat.name === name))
+    .filter(Boolean); // Remove undefined if cat not found
+  const otherCats = filteredList.filter(cat => !mainCatsOrder.includes(cat.name));
+
   const allTraits = [...new Set(list.flatMap(cat => cat.traits || []))];
 
   return (
-    <section className="relative mx-auto max-w-6xl px-4 py-12 md:px-8 overflow-hidden">
+    <>
+      {/* Login Required Modal */}
+      {showLoginModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm transition-opacity duration-200">
+          <div className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 md:p-8 transform transition-all duration-200 scale-100">
+            {/* Close button */}
+            <button
+              onClick={handleCancel}
+              className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-cream hover:bg-blush/30 grid place-items-center transition-colors"
+            >
+              <X className="h-4 w-4 text-ink/60" />
+            </button>
+
+            {/* Icon */}
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-banana-100 to-lilac/40 grid place-items-center mx-auto mb-4">
+              <Heart className="h-8 w-8 text-royal" />
+            </div>
+
+            {/* Content */}
+            <h3 className="text-2xl font-bold text-royal text-center mb-2">
+              Login Required
+            </h3>
+            <p className="text-ink/60 text-center mb-6">
+              Please login to save your favorite cats and show them some love! 💜
+            </p>
+
+            {/* Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={handleCancel}
+                className="flex-1 px-6 py-3 rounded-xl border-2 border-royal/20 text-royal font-medium hover:bg-cream transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleProceedToLogin}
+                className="flex-1 px-6 py-3 rounded-xl bg-royal text-white font-medium hover:bg-ink transition-colors shadow-soft"
+              >
+                Proceed to Login
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <section className="relative mx-auto max-w-6xl px-4 py-12 md:px-8 overflow-hidden">
       {/* Floating decorative shapes */}
       <div className="floating-shape floating-shape-1 -right-20 top-40" />
       <div className="floating-shape floating-shape-2 -left-16 top-80" />
@@ -99,21 +172,21 @@ export default function CatsPage() {
       {/* Search and Filter Bar */}
       <div className="mb-8 flex flex-col sm:flex-row gap-4" style={{ animation: 'slide-up-fade 0.5s ease-out 0.1s backwards' }}>
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-ink/30" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-ink/30 pointer-events-none z-10" />
           <input
             type="text"
             placeholder="Search by name..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="input-soft pl-12 w-full"
+            className="w-full rounded-2xl border-2 border-royal/10 bg-white pl-11 pr-5 py-3.5 text-ink transition-all duration-300 focus:outline-none focus:border-royal/30 focus:shadow-[0_0_0_4px_rgba(90,62,133,0.1)] placeholder:text-ink/40"
           />
         </div>
         <div className="relative">
-          <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-ink/30" />
+          <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-ink/30 pointer-events-none z-10" />
           <select
             value={filterTrait}
             onChange={(e) => setFilterTrait(e.target.value)}
-            className="input-soft pl-12 pr-10 appearance-none cursor-pointer min-w-[180px]"
+            className="w-full rounded-2xl border-2 border-royal/10 bg-white pl-11 pr-10 py-3.5 text-ink transition-all duration-300 focus:outline-none focus:border-royal/30 focus:shadow-[0_0_0_4px_rgba(90,62,133,0.1)] appearance-none cursor-pointer min-w-[180px]"
           >
             <option value="all">All Traits</option>
             {allTraits.map(trait => (
@@ -139,9 +212,160 @@ export default function CatsPage() {
         </div>
       </div>
 
-      {/* Cat Cards Grid */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredList.map((cat, index) => (
+      {/* Main Cats Section - Bane, Nana, Angela */}
+      {highlightedCats.length > 0 && (
+        <div className="mb-12">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-royal/20 to-transparent"></div>
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-banana-100 to-lilac/40 border border-royal/10">
+              <Crown className="h-4 w-4 text-royal" />
+              <span className="text-sm font-bold text-royal uppercase tracking-wider">The Founding Royals</span>
+              <Crown className="h-4 w-4 text-royal" />
+            </div>
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-royal/20 to-transparent"></div>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {highlightedCats.map((cat, index) => (
+              <article
+                key={cat.name ?? index}
+                className="card-cute p-[2px] group relative"
+                onMouseEnter={() => setHoveredCat(cat.name)}
+                onMouseLeave={() => setHoveredCat(null)}
+                style={{ animation: `slide-up-fade 0.5s ease-out ${0.05 * index}s backwards` }}
+              >
+                {/* Special border highlight for main cats */}
+                <div className="absolute -inset-[2px] rounded-[1.9rem] bg-gradient-to-r from-royal/20 via-banana-200/30 to-lilac/20 opacity-60 blur-sm -z-10"></div>
+                <div className="flex h-full flex-col rounded-[1.85rem] bg-white card-shine relative overflow-hidden border-2 border-royal/10">
+                  {/* Cat Image Area */}
+                  <div className="relative h-52 rounded-t-[1.7rem] bg-gradient-to-br from-royal/10 via-banana-50 to-lilac/30 overflow-hidden img-zoom">
+                    {/* Decorative pattern */}
+                    <div className="absolute inset-0 dots-pattern opacity-30" />
+                    
+                    {/* Cat icon */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className={`relative transition-all duration-500 ${hoveredCat === cat.name ? 'scale-110' : ''}`}>
+                        <div className="w-24 h-24 rounded-full bg-white/60 backdrop-blur-sm grid place-items-center shadow-soft">
+                          <Cat className="h-12 w-12 text-royal" />
+                        </div>
+                        {hoveredCat === cat.name && (
+                          <>
+                            <Sparkles className="absolute -top-2 -right-2 h-5 w-5 text-banana-400" style={{ animation: 'sparkle-rotate 2s linear infinite' }} />
+                            <Sparkles className="absolute -bottom-1 -left-3 h-4 w-4 text-lilac" style={{ animation: 'sparkle-rotate 2s linear infinite 0.5s' }} />
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Like button */}
+                    <button
+                      onClick={(e) => toggleLike(cat.name, e)}
+                      className={`absolute top-4 right-4 w-10 h-10 rounded-xl bg-white/90 backdrop-blur-sm shadow-soft grid place-items-center transition-all duration-300 hover:scale-110 ${likedCats[cat.name] ? 'shadow-warm' : ''}`}
+                    >
+                      <Heart className={`h-5 w-5 transition-all duration-300 ${likedCats[cat.name] ? 'fill-coral text-coral scale-110' : 'text-ink/30 hover:text-coral'}`} />
+                    </button>
+                    
+                    {/* Featured badge for main cats */}
+                    <div className="absolute top-4 left-4 flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-royal/90 to-royal/70 backdrop-blur-sm px-3 py-1.5 shadow-soft border border-white/20">
+                      <Crown className="h-3.5 w-3.5 fill-banana-300 text-banana-300" />
+                      <span className="text-xs font-semibold text-white">Founding Royal</span>
+                    </div>
+                  </div>
+
+                  {/* Card Content */}
+                  <div className="flex flex-col flex-1 p-5">
+                    {/* Name and Nickname */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h2 className="text-xl font-bold text-royal flex items-center gap-2">
+                          {cat.name}
+                          {likedCats[cat.name] && (
+                            <span className="w-5 h-5 rounded-full bg-coral/10 grid place-items-center">
+                              <Heart className="h-3 w-3 fill-coral text-coral" />
+                            </span>
+                          )}
+                        </h2>
+                        <p className="text-xs text-ink/50 mt-0.5">British Shorthair</p>
+                      </div>
+                      <span className="badge-soft text-xs">
+                        {cat.nickname}
+                      </span>
+                    </div>
+
+                    {/* Traits */}
+                    <div className="mb-4">
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <Sparkles className="h-3.5 w-3.5 text-royal/50" />
+                        <span className="text-xs font-semibold text-ink/50 uppercase tracking-wider">Traits</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {(cat.traits || []).map((trait, traitIndex) => (
+                          <span
+                            key={trait}
+                            className={`rounded-lg bg-gradient-to-r ${traitColors[traitIndex % traitColors.length]} px-2.5 py-1 text-xs font-medium text-ink/70 transition-transform duration-200 hover:scale-105`}
+                          >
+                            {trait}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Details */}
+                    <div className="space-y-2.5 text-sm text-ink/60 flex-1">
+                      {cat.personality && (
+                        <div className="flex items-start gap-2.5">
+                          <div className="w-6 h-6 rounded-lg bg-lilac/30 grid place-items-center flex-shrink-0 mt-0.5">
+                            <Zap className="h-3.5 w-3.5 text-royal" />
+                          </div>
+                          <p><span className="font-semibold text-ink/80">Personality:</span> {cat.personality}</p>
+                        </div>
+                      )}
+                      <div className="flex items-start gap-2.5">
+                        <div className="w-6 h-6 rounded-lg bg-banana-100/50 grid place-items-center flex-shrink-0 mt-0.5">
+                          <Star className="h-3.5 w-3.5 text-royal" />
+                        </div>
+                        <p><span className="font-semibold text-ink/80">Fun fact:</span> {cat.funFact}</p>
+                      </div>
+                      <div className="flex items-start gap-2.5">
+                        <div className="w-6 h-6 rounded-lg bg-blush/30 grid place-items-center flex-shrink-0 mt-0.5">
+                          <Heart className="h-3.5 w-3.5 text-royal" />
+                        </div>
+                        <p><span className="font-semibold text-ink/80">Favorite:</span> {cat.favoriteThing}</p>
+                      </div>
+                    </div>
+
+                    {/* Support Button */}
+                    <Link
+                      to={`/donate?cat=${encodeURIComponent(cat.name)}`}
+                      className="btn-cute mt-5 w-full text-center flex items-center justify-center gap-2 group/btn"
+                    >
+                      <Heart className="h-4 w-4 text-coral transition-all duration-300 group-hover/btn:fill-coral group-hover/btn:scale-110" />
+                      <span className="relative z-10">Support {cat.name}</span>
+                    </Link>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Separator between main cats and others */}
+      {highlightedCats.length > 0 && otherCats.length > 0 && (
+        <div className="my-12 flex items-center gap-4">
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-royal/20 to-transparent"></div>
+          <div className="flex items-center gap-2">
+            <Cat className="h-5 w-5 text-royal/40" />
+            <span className="text-sm text-ink/40 font-medium">The Royal Court</span>
+            <Cat className="h-5 w-5 text-royal/40" />
+          </div>
+          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-royal/20 to-transparent"></div>
+        </div>
+      )}
+
+      {/* Other Cats Grid */}
+      {otherCats.length > 0 && (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {otherCats.map((cat, index) => (
           <article
             key={cat.name ?? index}
             className="card-cute p-[2px] group"
@@ -175,17 +399,9 @@ export default function CatsPage() {
                   onClick={(e) => toggleLike(cat.name, e)}
                   className={`absolute top-4 right-4 w-10 h-10 rounded-xl bg-white/90 backdrop-blur-sm shadow-soft grid place-items-center transition-all duration-300 hover:scale-110 ${likedCats[cat.name] ? 'shadow-warm' : ''}`}
                 >
-                  <Heart className={`h-5 w-5 transition-all duration-300 ${likedCats[cat.name] ? 'fill-coral text-coral scale-110' : 'text-ink/30 hover:text-coral'}`} />
-                </button>
-                
-                {/* Featured badge */}
-                {index < 3 && (
-                  <div className="absolute top-4 left-4 flex items-center gap-1.5 rounded-lg bg-white/90 backdrop-blur-sm px-3 py-1.5 shadow-soft">
-                    <Star className="h-3.5 w-3.5 fill-banana-400 text-banana-400" />
-                    <span className="text-xs font-semibold text-royal">Featured</span>
+                    <Heart className={`h-5 w-5 transition-all duration-300 ${likedCats[cat.name] ? 'fill-coral text-coral scale-110' : 'text-ink/30 hover:text-coral'}`} />
+                    </button>
                   </div>
-                )}
-              </div>
 
               {/* Card Content */}
               <div className="flex flex-col flex-1 p-5">
@@ -261,7 +477,8 @@ export default function CatsPage() {
             </div>
           </article>
         ))}
-      </div>
+        </div>
+      )}
 
       {/* Empty state */}
       {filteredList.length === 0 && (
@@ -294,5 +511,6 @@ export default function CatsPage() {
         </div>
       )}
     </section>
+    </>
   );
 }

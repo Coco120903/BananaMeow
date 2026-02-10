@@ -1,3 +1,6 @@
+/* Handwritten font for scrapbook titles */
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -1176,4 +1179,58 @@ html {
 ::selection {
   background: rgba(90, 62, 133, 0.2);
   color: #5A3E85;
+}
+
+/* ===== SCRAPBOOK ENHANCEMENTS ===== */
+
+/* Paper texture overlay for scrapbook pages */
+.scrapbook-paper {
+  position: relative;
+}
+
+.scrapbook-paper::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: 
+    url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='paper'%3E%3CfeTurbulence baseFrequency='0.04' numOctaves='5' seed='2' /%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23paper)' opacity='0.03'/%3E%3C/svg%3E"),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(139, 109, 179, 0.015) 2px,
+      rgba(139, 109, 179, 0.015) 4px
+    );
+  opacity: 0.6;
+  mix-blend-mode: multiply;
+}
+
+/* Scrapbook photo frame hover effect */
+.scrapbook-frame {
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.scrapbook-frame:hover {
+  transform: translateY(-8px) scale(1.03);
+}
+
+/* Decorative tape effect */
+.scrapbook-tape {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 243, 224, 0.9) 0%,
+    rgba(255, 236, 179, 0.85) 50%,
+    rgba(255, 228, 181, 0.8) 100%
+  );
+  box-shadow: 
+    inset 0 1px 2px rgba(255, 255, 255, 0.4),
+    0 2px 4px rgba(0, 0, 0, 0.1),
+    0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* Paper edge effect */
+.paper-edge {
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.05))
+          drop-shadow(1px 0 0 rgba(0, 0, 0, 0.03));
 }

@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar.jsx";
 import Footer from "./components/Footer.jsx";
+import ScrollToTop from "./components/ScrollToTop.jsx";
 import { CartProvider } from "./context/CartContext.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import { AdminAuthProvider } from "./context/AdminAuthContext.jsx";
@@ -15,6 +16,10 @@ import CartPage from "./pages/CartPage.jsx";
 import AboutPage from "./pages/AboutPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import SignUpPage from "./pages/SignUpPage.jsx";
+import PrivacyPage from "./pages/PrivacyPage.jsx";
+import TermsPage from "./pages/TermsPage.jsx";
+import GalleryPage from "./pages/GalleryPage.jsx";
+import GalleryDetailPage from "./pages/GalleryDetailPage.jsx";
 
 // Admin imports
 import AdminLayout from "./components/admin/AdminLayout.jsx";
@@ -24,6 +29,7 @@ import AdminCatsPage from "./pages/admin/AdminCatsPage.jsx";
 import AdminProductsPage from "./pages/admin/AdminProductsPage.jsx";
 import AdminDonationsPage from "./pages/admin/AdminDonationsPage.jsx";
 import AdminOrdersPage from "./pages/admin/AdminOrdersPage.jsx";
+import AdminGalleryPage from "./pages/AdminGalleryPage.jsx";
 
 function PublicLayout({ children }) {
   return (
@@ -105,6 +111,7 @@ function PublicLayout({ children }) {
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <AdminAuthProvider>
         <AuthProvider>
           <CartProvider>
@@ -125,6 +132,7 @@ export default function App() {
                 <Route path="products" element={<AdminProductsPage />} />
                 <Route path="donations" element={<AdminDonationsPage />} />
                 <Route path="orders" element={<AdminOrdersPage />} />
+                <Route path="gallery" element={<AdminGalleryPage />} />
               </Route>
 
               {/* Public Routes */}
@@ -154,6 +162,10 @@ export default function App() {
                       <Route path="/login" element={<LoginPage />} />
                       <Route path="/signup" element={<SignUpPage />} />
                       <Route path="/about" element={<AboutPage />} />
+                      <Route path="/gallery" element={<GalleryPage />} />
+                      <Route path="/gallery/:id" element={<GalleryDetailPage />} />
+                      <Route path="/privacy" element={<PrivacyPage />} />
+                      <Route path="/terms" element={<TermsPage />} />
                     </Routes>
                   </PublicLayout>
                 }

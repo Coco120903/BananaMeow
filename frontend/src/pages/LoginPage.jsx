@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useAdminAuth } from "../context/AdminAuthContext.jsx";
-import { Crown, Mail, Lock, Sparkles, ArrowRight, Heart, Star, AlertCircle, Loader2 } from "lucide-react";
+import { Crown, Mail, Lock, Sparkles, ArrowRight, Heart, Star, AlertCircle, Loader2, Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const { login, loading, isAuthenticated } = useAuth();
@@ -11,6 +11,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   // Redirect if already logged in
   if (isAuthenticated) {
@@ -98,14 +99,27 @@ export default function LoginPage() {
                   <Lock className="h-4 w-4" />
                   Password
                 </span>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  placeholder="••••••••"
-                  className="input-soft"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder="••••••••"
+                    className="input-soft pr-12"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-ink/40 hover:text-royal transition-colors"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
               </label>
 
               <div className="flex flex-col gap-3 text-sm text-ink/70 sm:flex-row sm:items-center sm:justify-between">

@@ -10,7 +10,8 @@ import {
   LogOut,
   Crown,
   Menu,
-  X
+  X,
+  Camera
 } from "lucide-react";
 import { useState } from "react";
 
@@ -19,7 +20,8 @@ const navItems = [
   { to: "/admin/cats", icon: Cat, label: "Manage Cats" },
   { to: "/admin/products", icon: Package, label: "Products" },
   { to: "/admin/donations", icon: Heart, label: "Donations" },
-  { to: "/admin/orders", icon: ShoppingCart, label: "Orders" }
+  { to: "/admin/orders", icon: ShoppingCart, label: "Orders" },
+  { to: "/admin/gallery", icon: Camera, label: "Gallery" }
 ];
 
 export default function AdminLayout() {

@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Cat, Heart, Instagram, Twitter, Youtube, Mail, Sparkles, Crown, MapPin, Phone, ArrowUpRight, Star } from "lucide-react";
+import { Cat, Heart, Instagram, Twitter, Youtube, Mail, Sparkles, Crown, MapPin, Phone, ArrowUpRight, Star, X } from "lucide-react";
 
 const quickLinks = [
   { label: "Meet the Cats", href: "/cats", icon: Cat },
@@ -15,8 +16,69 @@ const socialLinks = [
 ];
 
 export default function Footer() {
+  const [showEmailModal, setShowEmailModal] = useState(false);
+
+  const handleEmailClick = (e) => {
+    e.preventDefault();
+    setShowEmailModal(true);
+  };
+
+  const handleProceed = () => {
+    setShowEmailModal(false);
+    window.location.href = "mailto:meow@bananameow.com";
+  };
+
+  const handleCancel = () => {
+    setShowEmailModal(false);
+  };
+
   return (
-    <footer className="relative border-t border-royal/5 bg-gradient-to-b from-cream to-white overflow-hidden">
+    <>
+      {/* Email Confirmation Modal */}
+      {showEmailModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm transition-opacity duration-200">
+          <div className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 md:p-8 transform transition-all duration-200 scale-100">
+            {/* Close button */}
+            <button
+              onClick={handleCancel}
+              className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-cream hover:bg-blush/30 grid place-items-center transition-colors"
+            >
+              <X className="h-4 w-4 text-ink/60" />
+            </button>
+
+            {/* Icon */}
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-banana-100 to-lilac/40 grid place-items-center mx-auto mb-4">
+              <Mail className="h-8 w-8 text-royal" />
+            </div>
+
+            {/* Content */}
+            <h3 className="text-2xl font-bold text-royal text-center mb-2">
+              Email Us
+            </h3>
+            <p className="text-ink/60 text-center mb-6">
+              This will open your default email client to send a message to meow@bananameow.com. Continue?
+            </p>
+
+            {/* Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={handleCancel}
+                className="flex-1 px-6 py-3 rounded-xl border-2 border-royal/20 text-royal font-medium hover:bg-cream transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleProceed}
+                className="flex-1 px-6 py-3 rounded-xl bg-royal text-white font-medium hover:bg-ink transition-colors shadow-soft"
+              >
+                Open Email
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <footer className="relative border-t border-royal/5 bg-gradient-to-b from-cream to-white overflow-hidden">
       {/* Decorative shapes */}
       <div className="floating-shape floating-shape-1 -left-20 top-20 opacity-30" />
       <div className="floating-shape floating-shape-2 right-10 top-40 opacity-20" />
@@ -98,7 +160,8 @@ export default function Footer() {
             <div className="space-y-4">
               <a 
                 href="mailto:meow@bananameow.com" 
-                className="flex items-center gap-3 text-sm text-ink/60 hover:text-royal transition-colors"
+                onClick={handleEmailClick}
+                className="flex items-center gap-3 text-sm text-ink/60 hover:text-royal transition-colors cursor-pointer"
               >
                 <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-banana-50 to-lilac/20 grid place-items-center">
                   <Mail className="h-4 w-4 text-royal" />
@@ -195,5 +258,6 @@ export default function Footer() {
         </div>
       </div>
     </footer>
+    </>
   );
 }

@@ -57,12 +57,12 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000);
 
-// Generate JWT for users
+// Generate JWT for users (30-minute expiration for inactivity timeout)
 const generateUserToken = (userId, sessionVersion) => {
   return jwt.sign(
     { id: userId, role: "user", sessionVersion },
     process.env.JWT_SECRET || "banana-meow-secret-key-2024",
-    { expiresIn: "7d" }
+    { expiresIn: "30m" } // 30 minutes - matches frontend inactivity timeout
   );
 };
 

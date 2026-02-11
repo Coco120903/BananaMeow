@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useAdminAuth } from "../context/AdminAuthContext.jsx";
@@ -11,7 +11,17 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [logoutMessage, setLogoutMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
+  // Check for logout message from inactivity timeout
+  useEffect(() => {
+    const message = sessionStorage.getItem("logoutMessage");
+    if (message) {
+      setLogoutMessage(message);
+      sessionStorage.removeItem("logoutMessage"); // Clear after displaying
+    }
+  }, []);
 
   // Redirect if already logged in
   if (isAuthenticated) {
@@ -70,6 +80,13 @@ export default function LoginPage() {
                 Enter your details to access the royal lounge.
               </p>
             </div>
+
+            {logoutMessage && (
+              <div className="mb-4 rounded-2xl bg-amber/10 border border-amber/20 px-4 py-3 text-sm text-amber-700 flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                {logoutMessage}
+              </div>
+            )}
 
             {error && (
               <div className="mb-4 rounded-2xl bg-coral/10 border border-coral/20 px-4 py-3 text-sm text-coral flex items-center gap-2">

@@ -93,6 +93,7 @@ export default function ShopCategoryPage({ title, category }) {
   const { dispatch } = useCart();
 
   useEffect(() => {
+    setProducts([]);
     const loadProducts = async () => {
       try {
         const response = await fetch(`${API_BASE}/api/products`);
@@ -107,17 +108,18 @@ export default function ShopCategoryPage({ title, category }) {
     };
 
     loadProducts();
-  }, []);
+  }, [category]);
 
-  const list = products.length > 0 ? products : fallbackProducts;
-  const filtered = useMemo(
-    () =>
-      list.filter(
-        (product) =>
-          product.category?.toLowerCase() === category.toLowerCase()
-      ),
-    [list, category]
-  );
+  const filtered = useMemo(() => {
+    const categoryLower = category.toLowerCase().trim();
+    const apiFiltered = products.filter(
+      (product) => product.category?.toLowerCase().trim() === categoryLower
+    );
+    const fallbackFiltered = fallbackProducts.filter(
+      (product) => product.category?.toLowerCase().trim() === categoryLower
+    );
+    return apiFiltered.length > 0 ? apiFiltered : fallbackFiltered;
+  }, [products, category]);
 
   const withImages = useMemo(
     () =>

@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
+import { useAdminAuth } from "../../context/AdminAuthContext.jsx";
 import { API_BASE } from "../../lib/api.js";
-import { Heart, Search, Cat, DollarSign } from "lucide-react";
+import { Heart, Search, Cat, DollarSign, FileDown } from "lucide-react";
+import { generateDonationsPDF } from "../../utils/pdfExport.js";
 
 export default function AdminDonationsPage() {
+  const { admin } = useAdminAuth();
   const [donations, setDonations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     const fetchDonations = async () => {
@@ -52,9 +56,30 @@ export default function AdminDonationsPage() {
           </h1>
           <p className="text-ink/60">All donations from our generous supporters</p>
         </div>
-        <div className="bg-gradient-to-r from-blush to-blush/50 px-6 py-3 rounded-xl">
-          <p className="text-sm text-ink/60">Total Donations</p>
-          <p className="text-2xl font-bold text-royal">${totalAmount.toFixed(2)}</p>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              setExporting(true);
+              try {
+                generateDonationsPDF(filteredDonations, searchTerm, admin?.username || "Admin");
+              } catch (error) {
+                console.error("Failed to generate PDF:", error);
+                alert("Failed to generate PDF. Please try again.");
+              } finally {
+                setExporting(false);
+              }
+            }}
+            disabled={exporting || filteredDonations.length === 0}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-ink/20 text-royal rounded-xl font-medium hover:bg-cream transition-all disabled:opacity-50"
+            title="Export to PDF"
+          >
+            <FileDown className={`w-4 h-4 ${exporting ? "animate-bounce" : ""}`} />
+            {exporting ? "Exporting..." : "Export PDF"}
+          </button>
+          <div className="bg-gradient-to-r from-blush to-blush/50 px-6 py-3 rounded-xl">
+            <p className="text-sm text-ink/60">Total Donations</p>
+            <p className="text-2xl font-bold text-royal">${totalAmount.toFixed(2)}</p>
+          </div>
         </div>
       </div>
 

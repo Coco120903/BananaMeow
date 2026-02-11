@@ -9,18 +9,21 @@ import {
   X,
   Save,
   Search,
-  Tag
+  Tag,
+  FileDown
 } from "lucide-react";
+import { generateProductsPDF } from "../../utils/pdfExport.js";
 
 const categories = ["Apparel", "Cat items", "Accessories"];
 
 export default function AdminProductsPage() {
-  const { token } = useAdminAuth();
+  const { token, admin } = useAdminAuth();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [exporting, setExporting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     category: "Apparel",
@@ -151,13 +154,34 @@ export default function AdminProductsPage() {
           </h1>
           <p className="text-ink/60">Manage your Banana Meow shop products</p>
         </div>
-        <button
-          onClick={() => openModal()}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-royal to-royal/90 text-white rounded-xl font-medium hover:shadow-lg transition-all"
-        >
-          <Plus className="w-5 h-5" />
-          Add Product
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              setExporting(true);
+              try {
+                generateProductsPDF(filteredProducts, searchTerm, admin?.username || "Admin");
+              } catch (error) {
+                console.error("Failed to generate PDF:", error);
+                alert("Failed to generate PDF. Please try again.");
+              } finally {
+                setExporting(false);
+              }
+            }}
+            disabled={exporting || filteredProducts.length === 0}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-ink/20 text-royal rounded-xl font-medium hover:bg-cream transition-all disabled:opacity-50"
+            title="Export to PDF"
+          >
+            <FileDown className={`w-4 h-4 ${exporting ? "animate-bounce" : ""}`} />
+            {exporting ? "Exporting..." : "Export PDF"}
+          </button>
+          <button
+            onClick={() => openModal()}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-royal to-royal/90 text-white rounded-xl font-medium hover:shadow-lg transition-all"
+          >
+            <Plus className="w-5 h-5" />
+            Add Product
+          </button>
+        </div>
       </div>
 
       {/* Search */}

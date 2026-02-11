@@ -16,8 +16,10 @@ import {
   Calendar,
   BarChart3,
   PieChart,
-  Activity
+  Activity,
+  FileDown
 } from "lucide-react";
+import { generateDashboardPDF } from "../../utils/pdfExport.js";
 import {
   LineChart,
   Line,
@@ -37,12 +39,13 @@ import {
 const COLORS = ["#7c3aed", "#fbbf24", "#ec4899", "#10b981", "#3b82f6", "#f59e0b"];
 
 export default function AdminDashboard() {
-  const { token } = useAdminAuth();
+  const { token, admin } = useAdminAuth();
   const [stats, setStats] = useState(null);
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState("30d");
   const [refreshing, setRefreshing] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -178,7 +181,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Filters and Refresh */}
+        {/* Filters and Actions */}
         <div className="flex items-center gap-3">
           <select
             value={period}
@@ -196,8 +199,36 @@ export default function AdminDashboard() {
             onClick={fetchData}
             disabled={refreshing}
             className="p-2 rounded-xl bg-white border border-ink/20 hover:bg-cream transition-colors disabled:opacity-50"
+            title="Refresh Data"
           >
             <RefreshCw className={`w-5 h-5 text-royal ${refreshing ? "animate-spin" : ""}`} />
+          </button>
+          <button
+            onClick={async () => {
+              if (!stats || !analytics) {
+                alert("Please wait for data to load before exporting.");
+                return;
+              }
+              setExporting(true);
+              try {
+                // Wait a bit for charts to render
+                await new Promise(resolve => setTimeout(resolve, 500));
+                console.log("Generating PDF with:", { stats, analytics, period });
+                await generateDashboardPDF(stats, analytics, period, admin?.username || "Admin");
+              } catch (error) {
+                console.error("Failed to generate PDF:", error);
+                console.error("Error details:", error.message, error.stack);
+                alert(`Failed to generate PDF: ${error.message || "Unknown error"}. Please check the console for details.`);
+              } finally {
+                setExporting(false);
+              }
+            }}
+            disabled={exporting || !stats || !analytics}
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-royal to-royal/90 text-white hover:shadow-lg transition-all disabled:opacity-50 flex items-center gap-2"
+            title="Export to PDF"
+          >
+            <FileDown className={`w-4 h-4 ${exporting ? "animate-bounce" : ""}`} />
+            {exporting ? "Generating..." : "Export PDF"}
           </button>
         </div>
       </div>
@@ -231,8 +262,9 @@ export default function AdminDashboard() {
             Revenue Over Time
           </h2>
           {analytics?.revenueOverTime?.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={analytics.revenueOverTime}>
+            <div data-chart="revenue">
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={analytics.revenueOverTime}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis dataKey="date" stroke="#6b7280" fontSize={12} />
                 <YAxis stroke="#6b7280" fontSize={12} />
@@ -267,6 +299,7 @@ export default function AdminDashboard() {
                 />
               </LineChart>
             </ResponsiveContainer>
+            </div>
           ) : (
             <div className="h-[300px] flex items-center justify-center text-ink/50">
               No revenue data available
@@ -281,8 +314,9 @@ export default function AdminDashboard() {
             Donation Distribution by Cat
           </h2>
           {analytics?.donationByCat?.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={analytics.donationByCat}>
+            <div data-chart="donations">
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={analytics.donationByCat}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis dataKey="_id" stroke="#6b7280" fontSize={12} angle={-45} textAnchor="end" height={80} />
                 <YAxis stroke="#6b7280" fontSize={12} />
@@ -296,6 +330,7 @@ export default function AdminDashboard() {
                 <Bar dataKey="totalAmount" fill="#ec4899" name="Total Donations ($)" />
               </BarChart>
             </ResponsiveContainer>
+            </div>
           ) : (
             <div className="h-[300px] flex items-center justify-center text-ink/50">
               No donation data available

@@ -58,9 +58,9 @@ setInterval(() => {
 }, 5 * 60 * 1000);
 
 // Generate JWT for users
-const generateUserToken = (userId) => {
+const generateUserToken = (userId, sessionVersion) => {
   return jwt.sign(
-    { id: userId, role: "user" },
+    { id: userId, role: "user", sessionVersion },
     process.env.JWT_SECRET || "banana-meow-secret-key-2024",
     { expiresIn: "7d" }
   );
@@ -108,9 +108,21 @@ export const register = async (req, res) => {
 
     const verificationCode = generateVerificationCode();
 
+    // Trim and normalize password input
+    const trimmedPassword = password.trim();
+    
+    if (trimmedPassword.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters",
+      });
+    }
+
     // Hash password now, store in pending
     const salt = await bcrypt.genSalt(12);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(trimmedPassword, salt);
+    
+    console.log(`[AUTH] Password hashed during registration for email: ${email.toLowerCase()}, hash length: ${hashedPassword.length}`);
 
     // Store whether this is a reactivation of an archived account
     const isReactivation = existingUser && existingUser.isArchived;
@@ -247,7 +259,15 @@ export const verifyRegister = async (req, res) => {
 
     pendingRegistrations.delete(email.toLowerCase());
 
-    const token = generateUserToken(user._id);
+    // Increment sessionVersion for new account or reactivated account
+    // Use findByIdAndUpdate to avoid triggering pre-save hooks that might re-hash password
+    const updatedUser = await User.findByIdAndUpdate(
+      user._id,
+      { $inc: { sessionVersion: 1 } },
+      { new: true }
+    );
+
+    const token = generateUserToken(updatedUser._id, updatedUser.sessionVersion || 1);
 
     // Send welcome email (non-blocking)
     sendWelcomeEmail(user.email, user.name).catch((err) => {
@@ -392,15 +412,39 @@ export const login = async (req, res) => {
       });
     }
 
-    const isMatch = await user.comparePassword(password);
+    // Trim and normalize password input
+    const trimmedPassword = password.trim();
+    
+    if (!trimmedPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Password cannot be empty",
+      });
+    }
+
+    // Log authentication attempt (without exposing password)
+    console.log(`[AUTH] Login attempt for email: ${email.toLowerCase()}, user exists: ${!!user}, isArchived: ${user?.isArchived || false}`);
+
+    const isMatch = await user.comparePassword(trimmedPassword);
     if (!isMatch) {
+      console.log(`[AUTH] Login failed for email: ${email.toLowerCase()}: password mismatch`);
       return res.status(401).json({
         success: false,
         message: "Invalid email or password",
       });
     }
 
-    const token = generateUserToken(user._id);
+    console.log(`[AUTH] Login successful for email: ${email.toLowerCase()}, user ID: ${user._id}`);
+
+    // Increment sessionVersion to invalidate previous sessions
+    // Use findByIdAndUpdate to avoid triggering pre-save hooks
+    const updatedUser = await User.findByIdAndUpdate(
+      user._id,
+      { $inc: { sessionVersion: 1 } },
+      { new: true }
+    );
+
+    const token = generateUserToken(updatedUser._id, updatedUser.sessionVersion || 1);
 
     return res.status(200).json({
       success: true,
@@ -598,14 +642,18 @@ export const resetPassword = async (req, res) => {
       });
     }
 
-    if (password.length < 6) {
+    // Trim and normalize password inputs
+    const trimmedPassword = password.trim();
+    const trimmedConfirmPassword = confirmPassword.trim();
+
+    if (trimmedPassword.length < 6) {
       return res.status(400).json({
         success: false,
         message: "Password must be at least 6 characters",
       });
     }
 
-    if (password !== confirmPassword) {
+    if (trimmedPassword !== trimmedConfirmPassword) {
       return res.status(400).json({
         success: false,
         message: "Passwords do not match",
@@ -641,13 +689,20 @@ export const resetPassword = async (req, res) => {
 
     // Hash new password
     const salt = await bcrypt.genSalt(12);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(trimmedPassword, salt);
 
-    // Update password and clear reset token fields
-    user.password = hashedPassword;
-    user.resetPasswordToken = null;
-    user.resetPasswordExpire = null;
-    await user.save();
+    console.log(`[AUTH] Password reset for user ID: ${user._id}, new hash length: ${hashedPassword.length}`);
+
+    // Update password and clear reset token fields using findByIdAndUpdate
+    await User.findByIdAndUpdate(
+      user._id,
+      { 
+        password: hashedPassword,
+        resetPasswordToken: null,
+        resetPasswordExpire: null
+      },
+      { runValidators: false }
+    );
 
     return res.status(200).json({
       success: true,
@@ -693,6 +748,17 @@ export const protect = async (req, res, next) => {
       return res.status(403).json({ 
         success: false, 
         message: "This account has been archived and cannot access this resource" 
+      });
+    }
+
+    // Verify sessionVersion matches (enforces single-device login)
+    const tokenSessionVersion = decoded.sessionVersion || 0;
+    const userSessionVersion = user.sessionVersion || 0;
+    
+    if (tokenSessionVersion !== userSessionVersion) {
+      return res.status(401).json({ 
+        success: false, 
+        message: "Your session has been invalidated. Please log in again." 
       });
     }
 

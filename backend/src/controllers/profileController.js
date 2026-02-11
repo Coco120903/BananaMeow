@@ -97,9 +97,30 @@ export const changePassword = async (req, res) => {
     // Get user with password
     const user = await User.findById(req.user.id).select("+password");
 
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Trim and normalize password inputs
+    const trimmedCurrentPassword = currentPassword.trim();
+    const trimmedNewPassword = newPassword.trim();
+    const trimmedConfirmPassword = confirmPassword.trim();
+
+    if (!trimmedCurrentPassword || !trimmedNewPassword || !trimmedConfirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "All password fields are required",
+      });
+    }
+
     // Verify current password
-    const isMatch = await user.comparePassword(currentPassword);
+    console.log(`[AUTH] Password change attempt for user ID: ${user._id}`);
+    const isMatch = await user.comparePassword(trimmedCurrentPassword);
     if (!isMatch) {
+      console.log(`[AUTH] Password change failed for user ID: ${user._id}: current password incorrect`);
       return res.status(401).json({
         success: false,
         message: "Current password is incorrect",
@@ -108,11 +129,16 @@ export const changePassword = async (req, res) => {
 
     // Hash new password
     const salt = await bcrypt.genSalt(12);
-    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    const hashedPassword = await bcrypt.hash(trimmedNewPassword, salt);
 
-    // Update password
-    user.password = hashedPassword;
-    await user.save();
+    console.log(`[AUTH] Password changed for user ID: ${user._id}, new hash length: ${hashedPassword.length}`);
+
+    // Update password using findByIdAndUpdate to avoid pre-save hook issues
+    await User.findByIdAndUpdate(
+      user._id,
+      { password: hashedPassword },
+      { runValidators: false }
+    );
 
     // Send password change notification email (non-blocking)
     sendPasswordChangeNotification(user.email, user.name).catch((err) => {

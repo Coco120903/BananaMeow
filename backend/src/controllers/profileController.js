@@ -180,11 +180,60 @@ export const getUserActivity = async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(50);
 
-    // Get liked posts (gallery posts where user ID is in likes array)
-    const likedPosts = await Gallery.find({ likes: req.user.id })
+    // Get liked posts with liked date
+    // Handle both old format (array of ObjectIds) and new format (array of objects)
+    const userId = req.user._id || req.user.id;
+    
+    // Find all posts where user ID appears in likes array (either format)
+    // We'll use $or to match both old and new formats
+    const allLikedPosts = await Gallery.find({
+      $or: [
+        { "likes.userId": userId }, // New format: object with userId
+        { likes: userId } // Old format: direct ObjectId in array
+      ]
+    })
+      .select("title thumbnailUrl createdAt _id mediaUrls likes")
       .sort({ createdAt: -1 })
       .limit(50)
-      .select("title thumbnailUrl createdAt _id");
+      .lean();
+    
+    // Process each post to extract likedAt
+    const likedPosts = allLikedPosts.map(post => {
+      let likedAt = null;
+      
+      // Find the user's like in the likes array
+      if (post.likes && post.likes.length > 0) {
+        const userLike = post.likes.find(like => {
+          // Check if it's new format (object with userId) or old format (direct ObjectId)
+          if (typeof like === 'object' && like.userId) {
+            return like.userId.toString() === userId.toString();
+          } else {
+            return like.toString() === userId.toString();
+          }
+        });
+        
+        // Extract likedAt if it exists (new format)
+        if (userLike && typeof userLike === 'object' && userLike.likedAt) {
+          likedAt = userLike.likedAt;
+        }
+      }
+      
+      return {
+        _id: post._id.toString(),
+        title: post.title,
+        thumbnailUrl: post.thumbnailUrl,
+        createdAt: post.createdAt,
+        mediaUrls: post.mediaUrls,
+        likedAt: likedAt || post.createdAt // Use createdAt as fallback if likedAt is null
+      };
+    });
+    
+    // Sort by likedAt (most recent first), then by createdAt
+    likedPosts.sort((a, b) => {
+      const dateA = a.likedAt ? new Date(a.likedAt) : new Date(a.createdAt);
+      const dateB = b.likedAt ? new Date(b.likedAt) : new Date(b.createdAt);
+      return dateB - dateA; // Descending order
+    });
 
     return res.status(200).json({
       success: true,

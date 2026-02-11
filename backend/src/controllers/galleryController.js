@@ -299,14 +299,43 @@ export async function toggleLike(req, res) {
     }
     
     const userId = req.user._id;
-    const likeIndex = post.likes.indexOf(userId);
+    // Handle both old format (array of ObjectIds) and new format (array of objects)
+    // Find if user already liked
+    let likeIndex = -1;
+    if (post.likes && post.likes.length > 0) {
+      // Check if it's new format (array of objects) or old format (array of IDs)
+      if (typeof post.likes[0] === 'object' && post.likes[0].userId) {
+        // New format: array of objects with userId
+        likeIndex = post.likes.findIndex(like => 
+          like.userId && like.userId.toString() === userId.toString()
+        );
+      } else {
+        // Old format: array of ObjectIds - migrate to new format
+        likeIndex = post.likes.findIndex(likeId => 
+          likeId.toString() === userId.toString()
+        );
+        // If found in old format, convert all likes to new format
+        if (likeIndex > -1 || post.likes.length > 0) {
+          post.likes = post.likes.map(likeId => ({
+            userId: likeId,
+            likedAt: new Date() // Use current date for migrated likes
+          }));
+          likeIndex = post.likes.findIndex(like => 
+            like.userId.toString() === userId.toString()
+          );
+        }
+      }
+    }
     
     if (likeIndex > -1) {
-      // Unlike
+      // Unlike - remove the like object
       post.likes.splice(likeIndex, 1);
     } else {
-      // Like
-      post.likes.push(userId);
+      // Like - add new like object with timestamp
+      post.likes.push({
+        userId: userId,
+        likedAt: new Date()
+      });
     }
     
     await post.save();

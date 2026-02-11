@@ -24,8 +24,7 @@ const gallerySchema = new mongoose.Schema({
     required: true
   },
   likes: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User"
+    type: mongoose.Schema.Types.Mixed // Supports both: ObjectId (old) or {userId, likedAt} (new)
   }],
   createdAt: {
     type: Date,

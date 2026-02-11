@@ -397,11 +397,14 @@ export const login = async (req, res) => {
     // Regular user login
     const user = await User.findOne({ email: email.toLowerCase() }).select("+password");
 
+    // Generic error message to prevent user enumeration
+    const genericError = {
+      success: false,
+      message: "Invalid email or password",
+    };
+
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid email or password",
-      });
+      return res.status(401).json(genericError);
     }
 
     // Check if user is archived
@@ -409,6 +412,15 @@ export const login = async (req, res) => {
       return res.status(403).json({
         success: false,
         message: "This account has been archived and cannot be accessed",
+      });
+    }
+
+    // Check if account is locked BEFORE password validation
+    if (user.isLocked()) {
+      console.log(`[AUTH] Login blocked - account locked for user ${user._id} (email: ${email.toLowerCase()})`);
+      return res.status(403).json({
+        success: false,
+        message: "Too many failed attempts. Please try again later.",
       });
     }
 
@@ -423,17 +435,27 @@ export const login = async (req, res) => {
     }
 
     // Log authentication attempt (without exposing password)
-    console.log(`[AUTH] Login attempt for email: ${email.toLowerCase()}, user exists: ${!!user}, isArchived: ${user?.isArchived || false}`);
+    console.log(`[AUTH] Login attempt for email: ${email.toLowerCase()}, user exists: ${!!user}, isArchived: ${user?.isArchived || false}, failedAttempts: ${user.failedLoginAttempts || 0}`);
 
     const isMatch = await user.comparePassword(trimmedPassword);
     if (!isMatch) {
-      console.log(`[AUTH] Login failed for email: ${email.toLowerCase()}: password mismatch`);
-      return res.status(401).json({
-        success: false,
-        message: "Invalid email or password",
-      });
+      // Increment failed login attempts
+      await user.incLoginAttempts();
+      console.log(`[AUTH] Login failed for email: ${email.toLowerCase()}: password mismatch, failedAttempts: ${user.failedLoginAttempts}`);
+      
+      // If account is now locked after incrementing, return lock message
+      if (user.isLocked()) {
+        return res.status(403).json({
+          success: false,
+          message: "Too many failed attempts. Please try again later.",
+        });
+      }
+      
+      return res.status(401).json(genericError);
     }
 
+    // Successful login - reset failed attempts
+    await user.resetLoginAttempts();
     console.log(`[AUTH] Login successful for email: ${email.toLowerCase()}, user ID: ${user._id}`);
 
     // Increment sessionVersion to invalidate previous sessions

@@ -55,6 +55,14 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0
     },
+    failedLoginAttempts: {
+      type: Number,
+      default: 0
+    },
+    lockUntil: {
+      type: Date,
+      default: null
+    },
     favoriteCats: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: "Cat"
@@ -95,6 +103,50 @@ userSchema.pre("save", async function (next) {
   console.log(`[AUTH] Password hashed for user ${this._id}, hash length: ${this.password.length}`);
   next();
 });
+
+// Method to check if account is locked
+userSchema.methods.isLocked = function () {
+  // Check if lockUntil exists and is in the future
+  return !!(this.lockUntil && this.lockUntil > Date.now());
+};
+
+// Method to get remaining lock time in seconds
+userSchema.methods.getRemainingLockTime = function () {
+  if (!this.isLocked()) {
+    return 0;
+  }
+  return Math.ceil((this.lockUntil - Date.now()) / 1000);
+};
+
+// Method to increment failed login attempts and lock if needed
+userSchema.methods.incLoginAttempts = async function () {
+  // If lock has expired, reset attempts
+  if (this.lockUntil && this.lockUntil < Date.now()) {
+    this.failedLoginAttempts = 0;
+    this.lockUntil = null;
+  }
+
+  // Increment failed attempts
+  this.failedLoginAttempts += 1;
+
+  // Lock account after 5 failed attempts
+  if (this.failedLoginAttempts >= 5 && !this.lockUntil) {
+    this.lockUntil = Date.now() + 5 * 60 * 1000; // 5 minutes from now
+    console.log(`[AUTH] Account locked for user ${this._id} (email: ${this.email}) until ${new Date(this.lockUntil).toISOString()}`);
+  }
+
+  await this.save();
+  return this;
+};
+
+// Method to reset failed login attempts
+userSchema.methods.resetLoginAttempts = async function () {
+  if (this.failedLoginAttempts > 0 || this.lockUntil) {
+    this.failedLoginAttempts = 0;
+    this.lockUntil = null;
+    await this.save();
+  }
+};
 
 // Method to compare passwords
 userSchema.methods.comparePassword = async function (candidatePassword) {

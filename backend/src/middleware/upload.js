@@ -7,38 +7,51 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, "../../uploads/gallery");
+const uploadsDir = path.join(__dirname, "../../uploads");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// Configure storage
+// Storage configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadsDir);
   },
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+    // Sanitize filename and add timestamp
+    const sanitizedName = file.originalname
+      .replace(/[^a-zA-Z0-9.-]/g, "_")
+      .toLowerCase();
+    const timestamp = Date.now();
+    const ext = path.extname(sanitizedName);
+    const nameWithoutExt = path.basename(sanitizedName, ext);
+    cb(null, `${nameWithoutExt}_${timestamp}${ext}`);
   }
 });
 
-// File filter
+// File filter - only allow images
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|gif|webp|mp4|mov|avi|webm/;
-  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = allowedTypes.test(file.mimetype);
-
-  if (mimetype && extname) {
-    return cb(null, true);
+  const allowedMimes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+  
+  if (allowedMimes.includes(file.mimetype)) {
+    cb(null, true);
   } else {
-    cb(new Error("Only images and videos are allowed"));
+    cb(
+      new Error(
+        "Invalid file type. Only JPG, PNG, and WEBP images are allowed."
+      ),
+      false
+    );
   }
 };
 
-// Multer upload configuration
-export const upload = multer({
-  storage: storage,
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
-  fileFilter: fileFilter
+// Multer configuration
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  }
 });
+
+export default upload;

@@ -12,7 +12,7 @@ import {
 } from "../controllers/galleryController.js";
 import { requireAdmin } from "../middleware/adminAuth.js";
 import { protect } from "../controllers/authController.js";
-import { upload } from "../middleware/upload.js";
+import upload from "../middleware/upload.js";
 
 const router = express.Router();
 

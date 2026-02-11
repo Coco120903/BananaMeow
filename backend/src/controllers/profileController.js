@@ -2,6 +2,7 @@ import User from "../models/User.js";
 import Order from "../models/Order.js";
 import Donation from "../models/Donation.js";
 import Gallery from "../models/Gallery.js";
+import Cat from "../models/Cat.js";
 import bcrypt from "bcryptjs";
 import { sendPasswordChangeNotification } from "../utils/emailService.js";
 
@@ -162,7 +163,10 @@ export const changePassword = async (req, res) => {
 // @route   GET /api/profile/activity
 export const getUserActivity = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user.id).populate({
+      path: "favoriteCats",
+      select: "name nickname traits funFact favoriteThing personality imageUrl createdAt",
+    });
     const userEmail = user.email;
 
     // Get purchase history (orders by email)
@@ -235,12 +239,17 @@ export const getUserActivity = async (req, res) => {
       return dateB - dateA; // Descending order
     });
 
+    // Get favorite cats (user already populated above)
+    // Filter out any null values (in case cat was deleted)
+    const favoriteCats = (user.favoriteCats || []).filter((cat) => cat !== null);
+
     return res.status(200).json({
       success: true,
       data: {
         orders,
         donations,
         likedPosts,
+        favoriteCats,
       },
     });
   } catch (error) {

@@ -126,8 +126,9 @@ export default function ShopCategoryPage({ title, category }) {
       filtered.map((product) => ({
         ...product,
         imageUrl:
-          product.imageUrl ||
-          "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='180'><rect width='240' height='180' rx='24' fill='%23FFF7F0'/><circle cx='120' cy='90' r='48' fill='%235A3E85'/><text x='120' y='98' font-size='18' text-anchor='middle' fill='white'>Banana</text></svg>"
+          product.imageUrl
+            ? `${API_BASE}${product.imageUrl}`
+            : "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='180'><rect width='240' height='180' rx='24' fill='%23FFF7F0'/><circle cx='120' cy='90' r='48' fill='%235A3E85'/><text x='120' y='98' font-size='18' text-anchor='middle' fill='white'>Banana</text></svg>"
       })),
     [filtered]
   );

@@ -5,13 +5,13 @@ import { API_BASE } from "../lib/api.js";
 import {
   User, Crown, Mail, Lock, Settings, Camera, Edit2, Trash2, Eye, EyeOff,
   ShoppingBag, Heart, Star, Calendar, CheckCircle, XCircle, AlertCircle,
-  Loader2, Sparkles, Shield, Gift, Image as ImageIcon, ArrowRight, ChevronLeft, ChevronRight
+  Loader2, Sparkles, Shield, Gift, Image as ImageIcon, ArrowRight, ChevronLeft, ChevronRight, LogOut, Cat
 } from "lucide-react";
 import Cropper from "react-easy-crop";
 import { getCroppedImg } from "../utils/imageCrop.js";
 
 export default function ProfilePage() {
-  const { user, token, updateProfile } = useAuth();
+  const { user, token, updateProfile, logout } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -40,14 +40,16 @@ export default function ProfilePage() {
   const [activities, setActivities] = useState({
     orders: [],
     donations: [],
-    likedPosts: []
+    likedPosts: [],
+    favoriteCats: []
   });
   const [loadingActivities, setLoadingActivities] = useState(false);
   const [activeTab, setActiveTab] = useState("purchases");
   const [pagination, setPagination] = useState({
     purchases: 1,
     donations: 1,
-    likedPosts: 1
+    likedPosts: 1,
+    favoriteCats: 1
   });
 
   // Account deletion states
@@ -88,7 +90,7 @@ export default function ProfilePage() {
       });
       if (response.ok) {
         const data = await response.json();
-        setActivities(data.data || { orders: [], donations: [], likedPosts: [] });
+        setActivities(data.data || { orders: [], donations: [], likedPosts: [], favoriteCats: [] });
       }
     } catch (err) {
       console.error("Failed to load activities:", err);
@@ -650,6 +652,21 @@ export default function ProfilePage() {
                   <Star className="h-4 w-4" />
                   Liked Posts
                 </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab("favoriteCats");
+                    setPagination(prev => ({ ...prev, favoriteCats: 1 }));
+                  }}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                    activeTab === "favoriteCats"
+                      ? "bg-gradient-to-r from-banana-100 to-lilac/40 text-royal shadow-soft"
+                      : "text-ink/60 hover:text-royal hover:bg-royal/5"
+                  }`}
+                >
+                  <Cat className="h-4 w-4" />
+                  Favorite Cats
+                </button>
               </div>
 
               {/* Purchase History Content */}
@@ -843,30 +860,108 @@ export default function ProfilePage() {
                   )}
                 </div>
               )}
+
+              {/* Favorite Cats Content */}
+              {activeTab === "favoriteCats" && (
+                <div>
+                  {activities.favoriteCats && activities.favoriteCats.length > 0 ? (
+                    <>
+                      <div className="space-y-3 mb-4">
+                        {getPaginatedItems(activities.favoriteCats, pagination.favoriteCats).map((cat) => (
+                          <div
+                            key={cat._id}
+                            className="rounded-xl bg-lilac/10 p-5 border border-lilac/20 hover:shadow-soft transition-shadow"
+                          >
+                            <div className="flex items-center gap-4">
+                              <div className="w-20 h-20 rounded-xl overflow-hidden bg-gradient-to-br from-banana-200 to-banana-300 flex items-center justify-center flex-shrink-0">
+                                {cat.imageUrl ? (
+                                  <img
+                                    src={`${API_BASE}${cat.imageUrl}`}
+                                    alt={cat.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <Cat className="h-8 w-8 text-royal" />
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-royal mb-1">{cat.name}</p>
+                                <p className="text-xs text-ink/60 mb-1">"{cat.nickname}"</p>
+                                {cat.personality && (
+                                  <p className="text-xs text-ink/50 line-clamp-2">{cat.personality}</p>
+                                )}
+                              </div>
+                              <button
+                                onClick={() => navigate("/cats")}
+                                className="p-2 rounded-xl border-2 border-royal/20 text-royal hover:bg-cream transition-colors flex-shrink-0"
+                                title="View Cat"
+                              >
+                                <ArrowRight className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      {getTotalPages(activities.favoriteCats) > 1 && (
+                        <div className="flex items-center justify-center gap-2 mt-6">
+                          <button
+                            type="button"
+                            onClick={() => setPagination(prev => ({ ...prev, favoriteCats: Math.max(1, prev.favoriteCats - 1) }))}
+                            disabled={pagination.favoriteCats === 1}
+                            className="p-2 rounded-xl border-2 border-royal/20 text-royal hover:bg-cream transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                          </button>
+                          <span className="px-4 py-2 text-sm text-ink/70">
+                            Page {pagination.favoriteCats} of {getTotalPages(activities.favoriteCats)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setPagination(prev => ({ ...prev, favoriteCats: Math.min(getTotalPages(activities.favoriteCats), prev.favoriteCats + 1) }))}
+                            disabled={pagination.favoriteCats === getTotalPages(activities.favoriteCats)}
+                            className="p-2 rounded-xl border-2 border-royal/20 text-royal hover:bg-cream transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-sm text-ink/50 py-8 text-center">You haven't favorited any royal chonks yet.</p>
+                  )}
+                </div>
+              )}
             </>
           )}
         </div>
       </div>
 
-      {/* Account Deletion Section */}
-      <div className="card-cute p-[3px] mb-6 border-2 border-coral/20">
-        <div className="rounded-[1.85rem] bg-white p-6">
-          <h2 className="text-xl font-semibold text-coral mb-4 flex items-center gap-2">
-            <AlertCircle className="h-5 w-5" />
-            Delete Account
-          </h2>
-          
-          <p className="text-sm text-ink/70 mb-4">
-            Once you delete your account, it will be archived and you will not be able to log in again.
-            All your data will be preserved but inaccessible.
-          </p>
-          
+      {/* Account Actions Section */}
+      <div className="mt-8 pt-6 border-t border-ink/10">
+        <div className="flex flex-row gap-2 sm:gap-4">
+          {/* Logout Button - Left */}
+          <button
+            type="button"
+            onClick={() => {
+              logout();
+              // Redirect to home page after logout
+              setTimeout(() => {
+                window.location.href = "/";
+              }, 100);
+            }}
+            className="flex-1 relative rounded-full bg-red-50 px-3 py-2 sm:px-6 sm:py-3 text-xs sm:text-sm font-semibold text-red-500 shadow-soft transition-all duration-300 ease-out hover:bg-red-100 hover:-translate-y-1 hover:scale-105 active:translate-y-0 active:scale-[0.98] flex items-center justify-center gap-1.5 sm:gap-2 border-2 border-red-200"
+          >
+            <LogOut className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            Logout
+          </button>
+
+          {/* Delete Account Button - Right */}
           <button
             type="button"
             onClick={() => setShowDeleteModal(true)}
-            className="btn-secondary text-sm text-coral hover:bg-coral/10 border-coral/20 flex items-center gap-2"
+            className="flex-1 btn-secondary text-coral hover:bg-coral/10 border-coral/20 flex items-center justify-center gap-1.5 sm:gap-2 px-3 py-2 sm:px-6 sm:py-3 text-xs sm:text-sm font-semibold transition-all"
           >
-            <Trash2 className="h-4 w-4" />
+            <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             Delete Account
           </button>
         </div>

@@ -196,9 +196,19 @@ export default function DonatePage() {
                       <Crown className="h-3 w-3 text-banana-400" />
                       <span className="text-xs font-semibold text-royal">Featured Royal</span>
                     </div>
-                    <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-banana-100 to-lilac/50 shadow-soft group-hover:scale-105 transition-transform mt-8">
-                      <Cat className="h-8 w-8 text-royal" />
-                    </div>
+                    {cat.imageUrl ? (
+                      <div className="mb-3 mt-8 flex h-16 w-16 items-center justify-center rounded-xl overflow-hidden shadow-soft group-hover:scale-105 transition-transform">
+                        <img
+                          src={`${API_BASE}${cat.imageUrl}`}
+                          alt={cat.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-banana-100 to-lilac/50 shadow-soft group-hover:scale-105 transition-transform mt-8">
+                        <Cat className="h-8 w-8 text-royal" />
+                      </div>
+                    )}
                     <h3 className="font-semibold text-royal flex items-center gap-1">
                       {cat.name}
                       {isSelected && <Star className="h-3 w-3 text-banana-400 fill-banana-200" />}
@@ -248,9 +258,19 @@ export default function DonatePage() {
                       <Check className="h-4 w-4 text-white" />
                     </div>
                   )}
-                  <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-banana-100 to-lilac/50 shadow-soft group-hover:scale-105 transition-transform">
-                    <Cat className="h-8 w-8 text-royal" />
-                  </div>
+                  {cat.imageUrl ? (
+                    <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-xl overflow-hidden shadow-soft group-hover:scale-105 transition-transform">
+                      <img
+                        src={`${API_BASE}${cat.imageUrl}`}
+                        alt={cat.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-banana-100 to-lilac/50 shadow-soft group-hover:scale-105 transition-transform">
+                      <Cat className="h-8 w-8 text-royal" />
+                    </div>
+                  )}
                   <h3 className="font-semibold text-royal flex items-center gap-1">
                     {cat.name}
                     {isSelected && <Star className="h-3 w-3 text-banana-400 fill-banana-200" />}

@@ -24,7 +24,7 @@ const traitColors = [
 ];
 
 export default function CatsPage() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, token } = useAuth();
   const navigate = useNavigate();
   const [cats, setCats] = useState([]);
   const [likedCats, setLikedCats] = useState({});
@@ -32,6 +32,7 @@ export default function CatsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterTrait, setFilterTrait] = useState("all");
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loadingFavorites, setLoadingFavorites] = useState({});
 
   useEffect(() => {
     const loadCats = async () => {
@@ -50,7 +51,34 @@ export default function CatsPage() {
     loadCats();
   }, []);
 
-  const toggleLike = (catName, e) => {
+  // Load user's favorites when authenticated
+  useEffect(() => {
+    const loadFavorites = async () => {
+      if (!isAuthenticated || !token) return;
+
+      try {
+        const response = await fetch(`${API_BASE}/api/favorites`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          const favoritesMap = {};
+          (data.data?.favoriteCats || []).forEach((cat) => {
+            favoritesMap[cat._id] = true;
+          });
+          setLikedCats(favoritesMap);
+        }
+      } catch (error) {
+        console.error("Failed to load favorites:", error);
+      }
+    };
+
+    loadFavorites();
+  }, [isAuthenticated, token]);
+
+  const toggleLike = async (catId, catName, e) => {
     e.preventDefault();
     e.stopPropagation();
     
@@ -59,12 +87,42 @@ export default function CatsPage() {
       setShowLoginModal(true);
       return;
     }
+
+    if (!token) {
+      setShowLoginModal(true);
+      return;
+    }
     
-    // User is logged in, proceed with like
-    setLikedCats(prev => ({
-      ...prev,
-      [catName]: !prev[catName]
-    }));
+    // Prevent multiple clicks
+    if (loadingFavorites[catId]) return;
+    
+    setLoadingFavorites(prev => ({ ...prev, [catId]: true }));
+    
+    try {
+      const response = await fetch(`${API_BASE}/api/favorites/${catId}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Update local state
+        setLikedCats(prev => ({
+          ...prev,
+          [catId]: data.data.isFavorited
+        }));
+      } else {
+        const errorData = await response.json();
+        console.error("Failed to toggle favorite:", errorData.message);
+      }
+    } catch (error) {
+      console.error("Failed to toggle favorite:", error);
+    } finally {
+      setLoadingFavorites(prev => ({ ...prev, [catId]: false }));
+    }
   };
 
   const handleProceedToLogin = () => {
@@ -237,31 +295,40 @@ export default function CatsPage() {
                 <div className="absolute -inset-[2px] rounded-[1.9rem] bg-gradient-to-r from-royal/20 via-banana-200/30 to-lilac/20 opacity-60 blur-sm -z-10"></div>
                 <div className="flex h-full flex-col rounded-[1.85rem] bg-white card-shine relative overflow-hidden border-2 border-royal/10">
                   {/* Cat Image Area */}
-                  <div className="relative h-52 rounded-t-[1.7rem] bg-gradient-to-br from-royal/10 via-banana-50 to-lilac/30 overflow-hidden img-zoom">
+                  <div className="relative aspect-square rounded-t-[1.7rem] bg-gradient-to-br from-royal/10 via-banana-50 to-lilac/30 overflow-hidden img-zoom">
                     {/* Decorative pattern */}
                     <div className="absolute inset-0 dots-pattern opacity-30" />
                     
-                    {/* Cat icon */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className={`relative transition-all duration-500 ${hoveredCat === cat.name ? 'scale-110' : ''}`}>
-                        <div className="w-24 h-24 rounded-full bg-white/60 backdrop-blur-sm grid place-items-center shadow-soft">
-                          <Cat className="h-12 w-12 text-royal" />
+                    {/* Cat image or placeholder */}
+                    {cat.imageUrl ? (
+                      <img
+                        src={`${API_BASE}${cat.imageUrl}`}
+                        alt={cat.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className={`relative transition-all duration-500 ${hoveredCat === cat.name ? 'scale-110' : ''}`}>
+                          <div className="w-24 h-24 rounded-full bg-white/60 backdrop-blur-sm grid place-items-center shadow-soft">
+                            <Cat className="h-12 w-12 text-royal" />
+                          </div>
+                          {hoveredCat === cat.name && (
+                            <>
+                              <Sparkles className="absolute -top-2 -right-2 h-5 w-5 text-banana-400" style={{ animation: 'sparkle-rotate 2s linear infinite' }} />
+                              <Sparkles className="absolute -bottom-1 -left-3 h-4 w-4 text-lilac" style={{ animation: 'sparkle-rotate 2s linear infinite 0.5s' }} />
+                            </>
+                          )}
                         </div>
-                        {hoveredCat === cat.name && (
-                          <>
-                            <Sparkles className="absolute -top-2 -right-2 h-5 w-5 text-banana-400" style={{ animation: 'sparkle-rotate 2s linear infinite' }} />
-                            <Sparkles className="absolute -bottom-1 -left-3 h-4 w-4 text-lilac" style={{ animation: 'sparkle-rotate 2s linear infinite 0.5s' }} />
-                          </>
-                        )}
                       </div>
-                    </div>
+                    )}
                     
                     {/* Like button */}
                     <button
-                      onClick={(e) => toggleLike(cat.name, e)}
-                      className={`absolute top-4 right-4 w-10 h-10 rounded-xl bg-white/90 backdrop-blur-sm shadow-soft grid place-items-center transition-all duration-300 hover:scale-110 ${likedCats[cat.name] ? 'shadow-warm' : ''}`}
+                      onClick={(e) => toggleLike(cat._id || cat.name, cat.name, e)}
+                      disabled={loadingFavorites[cat._id || cat.name]}
+                      className={`absolute top-4 right-4 w-10 h-10 rounded-xl bg-white/90 backdrop-blur-sm shadow-soft grid place-items-center transition-all duration-300 hover:scale-110 ${likedCats[cat._id || cat.name] ? 'shadow-warm' : ''} ${loadingFavorites[cat._id || cat.name] ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                      <Heart className={`h-5 w-5 transition-all duration-300 ${likedCats[cat.name] ? 'fill-coral text-coral scale-110' : 'text-ink/30 hover:text-coral'}`} />
+                      <Heart className={`h-5 w-5 transition-all duration-300 ${likedCats[cat._id || cat.name] ? 'fill-coral text-coral scale-110' : 'text-ink/30 hover:text-coral'}`} />
                     </button>
                     
                     {/* Featured badge for main cats */}
@@ -278,7 +345,7 @@ export default function CatsPage() {
                       <div>
                         <h2 className="text-xl font-bold text-royal flex items-center gap-2">
                           {cat.name}
-                          {likedCats[cat.name] && (
+                          {likedCats[cat._id || cat.name] && (
                             <span className="w-5 h-5 rounded-full bg-coral/10 grid place-items-center">
                               <Heart className="h-3 w-3 fill-coral text-coral" />
                             </span>
@@ -375,31 +442,40 @@ export default function CatsPage() {
           >
             <div className="flex h-full flex-col rounded-[1.85rem] bg-white card-shine relative overflow-hidden">
               {/* Cat Image Area */}
-              <div className="relative h-52 rounded-t-[1.7rem] bg-gradient-to-br from-banana-50 via-lilac/20 to-blush/30 overflow-hidden img-zoom">
+              <div className="relative aspect-square rounded-t-[1.7rem] bg-gradient-to-br from-banana-50 via-lilac/20 to-blush/30 overflow-hidden img-zoom">
                 {/* Decorative pattern */}
                 <div className="absolute inset-0 dots-pattern opacity-30" />
                 
-                {/* Cat icon */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className={`relative transition-all duration-500 ${hoveredCat === cat.name ? 'scale-110' : ''}`}>
-                    <div className="w-24 h-24 rounded-full bg-white/60 backdrop-blur-sm grid place-items-center shadow-soft">
-                      <Cat className="h-12 w-12 text-royal" />
+                {/* Cat image or placeholder */}
+                {cat.imageUrl ? (
+                  <img
+                    src={`${API_BASE}${cat.imageUrl}`}
+                    alt={cat.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className={`relative transition-all duration-500 ${hoveredCat === cat.name ? 'scale-110' : ''}`}>
+                      <div className="w-24 h-24 rounded-full bg-white/60 backdrop-blur-sm grid place-items-center shadow-soft">
+                        <Cat className="h-12 w-12 text-royal" />
+                      </div>
+                      {hoveredCat === cat.name && (
+                        <>
+                          <Sparkles className="absolute -top-2 -right-2 h-5 w-5 text-banana-400" style={{ animation: 'sparkle-rotate 2s linear infinite' }} />
+                          <Sparkles className="absolute -bottom-1 -left-3 h-4 w-4 text-lilac" style={{ animation: 'sparkle-rotate 2s linear infinite 0.5s' }} />
+                        </>
+                      )}
                     </div>
-                    {hoveredCat === cat.name && (
-                      <>
-                        <Sparkles className="absolute -top-2 -right-2 h-5 w-5 text-banana-400" style={{ animation: 'sparkle-rotate 2s linear infinite' }} />
-                        <Sparkles className="absolute -bottom-1 -left-3 h-4 w-4 text-lilac" style={{ animation: 'sparkle-rotate 2s linear infinite 0.5s' }} />
-                      </>
-                    )}
                   </div>
-                </div>
+                )}
                 
                 {/* Like button */}
                 <button
-                  onClick={(e) => toggleLike(cat.name, e)}
-                  className={`absolute top-4 right-4 w-10 h-10 rounded-xl bg-white/90 backdrop-blur-sm shadow-soft grid place-items-center transition-all duration-300 hover:scale-110 ${likedCats[cat.name] ? 'shadow-warm' : ''}`}
+                  onClick={(e) => toggleLike(cat._id || cat.name, cat.name, e)}
+                  disabled={loadingFavorites[cat._id || cat.name]}
+                  className={`absolute top-4 right-4 w-10 h-10 rounded-xl bg-white/90 backdrop-blur-sm shadow-soft grid place-items-center transition-all duration-300 hover:scale-110 ${likedCats[cat._id || cat.name] ? 'shadow-warm' : ''} ${loadingFavorites[cat._id || cat.name] ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                    <Heart className={`h-5 w-5 transition-all duration-300 ${likedCats[cat.name] ? 'fill-coral text-coral scale-110' : 'text-ink/30 hover:text-coral'}`} />
+                    <Heart className={`h-5 w-5 transition-all duration-300 ${likedCats[cat._id || cat.name] ? 'fill-coral text-coral scale-110' : 'text-ink/30 hover:text-coral'}`} />
                     </button>
                   </div>
 
@@ -410,7 +486,7 @@ export default function CatsPage() {
                   <div>
                     <h2 className="text-xl font-bold text-royal flex items-center gap-2">
                       {cat.name}
-                      {likedCats[cat.name] && (
+                      {likedCats[cat._id || cat.name] && (
                         <span className="w-5 h-5 rounded-full bg-coral/10 grid place-items-center">
                           <Heart className="h-3 w-3 fill-coral text-coral" />
                         </span>

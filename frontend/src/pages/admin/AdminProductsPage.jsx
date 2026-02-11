@@ -16,11 +16,10 @@ import {
 } from "lucide-react";
 import { generateProductsPDF } from "../../utils/pdfExport.js";
 
-const categories = ["Apparel", "Cat items", "Accessories"];
-
 export default function AdminProductsPage() {
   const { token, admin } = useAdminAuth();
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
@@ -28,7 +27,7 @@ export default function AdminProductsPage() {
   const [exporting, setExporting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
-    category: "Apparel",
+    category: "",
     price: "",
     description: "",
     inventory: ""
@@ -53,7 +52,30 @@ export default function AdminProductsPage() {
 
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/api/categories`);
+      if (response.ok) {
+        const data = await response.json();
+        setCategories(data);
+        // Set default category if formData.category is empty
+        if (!formData.category && data.length > 0) {
+          setFormData(prev => ({ ...prev, category: data[0].displayName }));
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch categories:", error);
+      // Fallback to default categories
+      setCategories([
+        { displayName: "Apparel" },
+        { displayName: "Cat items" },
+        { displayName: "Accessories" }
+      ]);
+    }
+  };
 
   const openModal = (product = null) => {
     if (product) {
@@ -71,7 +93,7 @@ export default function AdminProductsPage() {
       setEditingProduct(null);
       setFormData({
         name: "",
-        category: "Apparel",
+        category: categories.length > 0 ? categories[0].displayName : "",
         price: "",
         description: "",
         inventory: ""
@@ -396,8 +418,8 @@ export default function AdminProductsPage() {
                   required
                 >
                   {categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
+                    <option key={cat._id || cat.displayName} value={cat.displayName}>
+                      {cat.displayName}
                     </option>
                   ))}
                 </select>

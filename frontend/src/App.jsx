@@ -31,6 +31,7 @@ import ProtectedAdminRoute from "./components/admin/ProtectedAdminRoute.jsx";
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 import AdminCatsPage from "./pages/admin/AdminCatsPage.jsx";
 import AdminProductsPage from "./pages/admin/AdminProductsPage.jsx";
+import AdminCategoriesPage from "./pages/admin/AdminCategoriesPage.jsx";
 import AdminDonationsPage from "./pages/admin/AdminDonationsPage.jsx";
 import AdminOrdersPage from "./pages/admin/AdminOrdersPage.jsx";
 import AdminGalleryPage from "./pages/AdminGalleryPage.jsx";
@@ -134,6 +135,7 @@ export default function App() {
                 <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="cats" element={<AdminCatsPage />} />
                 <Route path="products" element={<AdminProductsPage />} />
+                <Route path="categories" element={<AdminCategoriesPage />} />
                 <Route path="donations" element={<AdminDonationsPage />} />
                 <Route path="orders" element={<AdminOrdersPage />} />
                 <Route path="gallery" element={<AdminGalleryPage />} />

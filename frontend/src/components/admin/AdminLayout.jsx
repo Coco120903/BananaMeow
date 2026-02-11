@@ -11,7 +11,8 @@ import {
   Crown,
   Menu,
   X,
-  Camera
+  Camera,
+  Tag
 } from "lucide-react";
 import { useState } from "react";
 
@@ -19,6 +20,7 @@ const navItems = [
   { to: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/admin/cats", icon: Cat, label: "Manage Cats" },
   { to: "/admin/products", icon: Package, label: "Products" },
+  { to: "/admin/categories", icon: Tag, label: "Categories" },
   { to: "/admin/donations", icon: Heart, label: "Donations" },
   { to: "/admin/orders", icon: ShoppingCart, label: "Orders" },
   { to: "/admin/gallery", icon: Camera, label: "Gallery" }

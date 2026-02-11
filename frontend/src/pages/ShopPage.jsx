@@ -1,7 +1,10 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Shirt, Sparkles, ShoppingBag, Crown, Star, Heart, ArrowRight, Cat, Gift, Tag, Percent } from "lucide-react";
+import { Shirt, Sparkles, ShoppingBag, Crown, Star, Heart, ArrowRight, Cat, Gift, Tag, Percent, Image as ImageIcon } from "lucide-react";
+import { API_BASE } from "../lib/api.js";
 
-const categories = [
+// Fallback categories if API fails
+const fallbackCategories = [
   {
     id: "apparel",
     title: "Apparel",
@@ -34,7 +37,52 @@ const categories = [
   }
 ];
 
+// Map category names to shop routes
+const getCategoryHref = (name) => {
+  const nameLower = name.toLowerCase();
+  if (nameLower.includes("apparel") || nameLower === "apparel") return "/shop/apparel";
+  if (nameLower.includes("cat") || nameLower === "cat items" || nameLower === "cat-items") return "/shop/cat-items";
+  if (nameLower.includes("accessor") || nameLower === "accessories") return "/shop/accessories";
+  // Default: create URL-friendly path
+  return `/shop/${nameLower.replace(/\s+/g, "-")}`;
+};
+
 export default function ShopPage() {
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/api/categories`);
+        if (response.ok) {
+          const data = await response.json();
+          // Map API categories to display format
+          const mappedCategories = data.map((cat, index) => ({
+            id: cat.name,
+            title: cat.displayName,
+            description: cat.description || fallbackCategories[index]?.description || "",
+            href: getCategoryHref(cat.displayName),
+            icon: fallbackCategories[index]?.icon || Tag,
+            accentIcon: fallbackCategories[index]?.accentIcon || Star,
+            gradient: fallbackCategories[index]?.gradient || "from-banana-100 to-lilac/40",
+            badge: fallbackCategories[index]?.badge || "",
+            imageUrl: cat.imageUrl
+          }));
+          setCategories(mappedCategories.length > 0 ? mappedCategories : fallbackCategories);
+        } else {
+          setCategories(fallbackCategories);
+        }
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+        setCategories(fallbackCategories);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
   return (
     <section className="relative mx-auto max-w-6xl px-4 py-12 md:px-8 overflow-hidden">
       {/* Floating shape decorations */}
@@ -76,7 +124,16 @@ export default function ShopPage() {
                 </div>
                 
                 <div className={`relative flex h-36 items-center justify-center rounded-2xl bg-gradient-to-br ${category.gradient} overflow-hidden`}>
-                  <Icon className="h-12 w-12 text-royal transition-all duration-500 group-hover:scale-125 group-hover:rotate-6" />
+                  {category.imageUrl ? (
+                    <img
+                      src={`${API_BASE}${category.imageUrl}`}
+                      alt={category.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <Icon className="h-12 w-12 text-royal transition-all duration-500 group-hover:scale-125 group-hover:rotate-6" />
+                  )}
                   
                   {/* Decorative elements */}
                   <Sparkles className="absolute top-3 right-3 h-5 w-5 text-banana-400 opacity-0 group-hover:opacity-100 group-hover:animate-sparkle transition-opacity" />
@@ -88,9 +145,11 @@ export default function ShopPage() {
                   </div>
                   
                   {/* Badge */}
-                  <span className="absolute top-3 right-3 badge-soft text-xs">
-                    {category.badge}
-                  </span>
+                  {category.badge && (
+                    <span className="absolute top-3 right-3 badge-soft text-xs">
+                      {category.badge}
+                    </span>
+                  )}
                 </div>
                 
                 <div className="flex-1 relative">

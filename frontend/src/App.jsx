@@ -157,7 +157,7 @@ export default function App() {
                       />
                       <Route
                         path="/shop/cat-items"
-                        element={<ShopCategoryPage title="Cat Items" category="Cat items" />}
+                        element={<ShopCategoryPage title="Cat Items" category="Cat Items" />}
                       />
                       <Route
                         path="/shop/accessories"

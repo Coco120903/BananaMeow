@@ -34,7 +34,7 @@ const fallbackProducts = [
   {
     _id: "toy-1",
     name: "Velvet Throne Toy",
-    category: "Cat items",
+    category: "Cat Items",
     price: 16,
     description: "Plush toy for dramatic pounces.",
     imageUrl:
@@ -43,7 +43,7 @@ const fallbackProducts = [
   {
     _id: "litter-1",
     name: "Lavender Litter Blend",
-    category: "Cat items",
+    category: "Cat Items",
     price: 24,
     description: "Low-dust, royal-approved comfort blend.",
     imageUrl:
@@ -52,7 +52,7 @@ const fallbackProducts = [
   {
     _id: "wand-1",
     name: "Royal Feather Wand",
-    category: "Cat items",
+    category: "Cat Items",
     price: 14,
     description: "Gold handle with irresistible feather flutter.",
     imageUrl:
@@ -126,9 +126,9 @@ export default function ShopCategoryPage({ title, category }) {
       filtered.map((product) => ({
         ...product,
         imageUrl:
-          product.imageUrl
+          product.imageUrl && product.imageUrl.startsWith("/")
             ? `${API_BASE}${product.imageUrl}`
-            : "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='180'><rect width='240' height='180' rx='24' fill='%23FFF7F0'/><circle cx='120' cy='90' r='48' fill='%235A3E85'/><text x='120' y='98' font-size='18' text-anchor='middle' fill='white'>Banana</text></svg>"
+            : product.imageUrl || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='180'><rect width='240' height='180' rx='24' fill='%23FFF7F0'/><circle cx='120' cy='90' r='48' fill='%235A3E85'/><text x='120' y='98' font-size='18' text-anchor='middle' fill='white'>Banana</text></svg>"
       })),
     [filtered]
   );

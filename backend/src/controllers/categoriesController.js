@@ -59,17 +59,18 @@ export async function createCategory(req, res) {
 
     const { name, displayName, description } = req.body;
 
-    // Validate required fields
-    if (!name || !displayName) {
+    // Validate required fields - only displayName is required (name auto-generated if missing)
+    if (!displayName) {
       return res.status(400).json({
-        message: "Name and display name are required"
+        message: "Display name is required"
       });
     }
 
+    // Auto-generate URL-friendly name from displayName if not provided
+    const categoryName = (name || displayName).toLowerCase().trim().replace(/\s+/g, "-");
+
     // Check if category with same name already exists
-    const existingCategory = await Category.findOne({
-      name: name.toLowerCase().trim()
-    });
+    const existingCategory = await Category.findOne({ name: categoryName });
     if (existingCategory) {
       return res.status(400).json({
         message: "Category with this name already exists"
@@ -77,7 +78,7 @@ export async function createCategory(req, res) {
     }
 
     const categoryData = {
-      name: name.toLowerCase().trim(),
+      name: categoryName,
       displayName: displayName.trim(),
       description: description?.trim() || "",
       imageUrl: req.file ? `/uploads/categories/${req.file.filename}` : DEFAULT_CATEGORY_IMAGE
@@ -128,10 +129,13 @@ export async function updateCategory(req, res) {
       return res.status(404).json({ message: "Category not found" });
     }
 
+    // Auto-generate URL-friendly name from displayName if name not explicitly provided
+    const newName = (name || displayName || category.displayName).toLowerCase().trim().replace(/\s+/g, "-");
+
     // Check if name is being changed and if new name already exists
-    if (name && name.toLowerCase().trim() !== category.name) {
+    if (newName !== category.name) {
       const existingCategory = await Category.findOne({
-        name: name.toLowerCase().trim(),
+        name: newName,
         _id: { $ne: req.params.id }
       });
       if (existingCategory) {
@@ -173,7 +177,7 @@ export async function updateCategory(req, res) {
     }
 
     const updateData = {};
-    if (name) updateData.name = name.toLowerCase().trim();
+    updateData.name = newName;
     if (displayName) updateData.displayName = displayName.trim();
     if (description !== undefined) updateData.description = description?.trim() || "";
     updateData.imageUrl = newImageUrl;

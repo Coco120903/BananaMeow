@@ -42,6 +42,8 @@ export default function AdminProductsPage() {
       if (response.ok) {
         const data = await response.json();
         setProducts(data);
+      } else {
+        console.error("Failed to fetch products: HTTP", response.status);
       }
     } catch (error) {
       console.error("Failed to fetch products:", error);
@@ -71,7 +73,7 @@ export default function AdminProductsPage() {
       // Fallback to default categories
       setCategories([
         { displayName: "Apparel" },
-        { displayName: "Cat items" },
+        { displayName: "Cat Items" },
         { displayName: "Accessories" }
       ]);
     }
@@ -417,6 +419,12 @@ export default function AdminProductsPage() {
                   className="w-full px-4 py-2 border border-ink/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-royal/30"
                   required
                 >
+                  {/* Include current product's category if not in the categories list (handles legacy/mismatched names) */}
+                  {formData.category && !categories.some(cat => cat.displayName === formData.category) && (
+                    <option value={formData.category}>
+                      {formData.category} (unlinked)
+                    </option>
+                  )}
                   {categories.map((cat) => (
                     <option key={cat._id || cat.displayName} value={cat.displayName}>
                       {cat.displayName}

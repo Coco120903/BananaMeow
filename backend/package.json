@@ -7,7 +7,8 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "seed:cats": "node src/seed/seedCats.js",
-    "seed:categories": "node src/seed/seedCategories.js"
+    "seed:categories": "node src/seed/seedCategories.js",
+    "seed:products": "node src/seed/seedProducts.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

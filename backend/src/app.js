@@ -14,6 +14,7 @@ import adminRoutes from "./routes/adminRoutes.js";
 import galleryRoutes from "./routes/galleryRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
 import favoritesRoutes from "./routes/favoritesRoutes.js";
+import categoriesRoutes from "./routes/categoriesRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -35,6 +36,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/gallery", galleryRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/favorites", favoritesRoutes);
+app.use("/api/categories", categoriesRoutes);
 app.use("/api/cats", catsRoutes);
 app.use("/api/products", productsRoutes);
 app.use("/api/donations", donationsRoutes);

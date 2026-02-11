@@ -25,9 +25,19 @@ export default function GalleryDetailPage() {
         if (response.ok) {
           const data = await response.json();
           setPost(data);
-          setLikeCount(data.likes?.length || 0);
-          if (user && data.likes) {
-            setLiked(data.likes.includes(user._id || user.id));
+          // Handle both old format (array of IDs) and new format (array of objects)
+          const likesArray = data.likes || [];
+          setLikeCount(likesArray.length);
+          if (user && likesArray.length > 0) {
+            const userId = user._id || user.id;
+            // Check if likes is array of objects with userId, or array of IDs (backward compatibility)
+            const isLiked = likesArray.some(like => {
+              if (typeof like === 'object' && like.userId) {
+                return like.userId.toString() === userId.toString();
+              }
+              return like.toString() === userId.toString();
+            });
+            setLiked(isLiked);
           }
           setCurrentMediaIndex(0);
         }

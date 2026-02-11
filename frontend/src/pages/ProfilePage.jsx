@@ -795,16 +795,19 @@ export default function ProfilePage() {
                             className="w-full text-left rounded-xl bg-banana-50 p-5 border border-banana-200 hover:bg-banana-100 hover:shadow-soft transition-all"
                           >
                             <div className="flex items-center gap-4">
-                              {post.thumbnailUrl && (
+                              {(post.thumbnailUrl || (post.mediaUrls && post.mediaUrls.length > 0)) && (
                                 <img
-                                  src={`${API_BASE}${post.thumbnailUrl}`}
+                                  src={post.thumbnailUrl || post.mediaUrls[0]}
                                   alt={post.title}
                                   className="w-20 h-20 rounded-xl object-cover flex-shrink-0"
                                 />
                               )}
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-semibold text-royal mb-1 truncate">{post.title}</p>
-                                <p className="text-xs text-ink/50">{formatDate(post.createdAt)}</p>
+                                <div className="flex items-center gap-2 text-xs text-ink/50">
+                                  <Star className="h-3 w-3" />
+                                  <span>Liked on {formatDate(post.likedAt || post.createdAt)}</span>
+                                </div>
                               </div>
                               <ArrowRight className="h-5 w-5 text-ink/40 flex-shrink-0" />
                             </div>

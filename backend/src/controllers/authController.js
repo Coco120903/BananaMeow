@@ -1,7 +1,8 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import User from "../models/User.js";
-import { sendVerificationEmail, sendWelcomeEmail } from "../utils/emailService.js";
+import { sendVerificationEmail, sendWelcomeEmail, sendPasswordResetEmail } from "../utils/emailService.js";
 
 /* ===========================
    ADMIN AUTH
@@ -90,12 +91,19 @@ export const register = async (req, res) => {
       });
     }
 
+    // Check if user exists (including archived accounts)
     const existingUser = await User.findOne({ email: email.toLowerCase() });
+    
     if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: "An account with this email already exists",
-      });
+      // If user exists and is NOT archived, reject registration
+      if (!existingUser.isArchived) {
+        return res.status(400).json({
+          success: false,
+          message: "An account with this email already exists",
+        });
+      }
+      // If user is archived, we'll reactivate it in verifyRegister
+      // Continue with registration flow
     }
 
     const verificationCode = generateVerificationCode();
@@ -104,6 +112,10 @@ export const register = async (req, res) => {
     const salt = await bcrypt.genSalt(12);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Store whether this is a reactivation of an archived account
+    const isReactivation = existingUser && existingUser.isArchived;
+    const archivedUserId = isReactivation ? existingUser._id.toString() : null;
+
     pendingRegistrations.set(email.toLowerCase(), {
       name,
       email: email.toLowerCase(),
@@ -111,6 +123,8 @@ export const register = async (req, res) => {
       verificationCode,
       expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
       attempts: 0,
+      isReactivation, // Flag to indicate this is a reactivation
+      archivedUserId, // Store the archived user ID if reactivating
     });
 
     // Send verification email via Resend
@@ -189,14 +203,47 @@ export const verifyRegister = async (req, res) => {
       });
     }
 
-    // Create user with already-hashed password
-    const user = new User({
-      name: pendingData.name,
-      email: pendingData.email,
-      password: pendingData.password,
-    });
-    user.$skipPasswordHash = true;
-    await user.save();
+    let user;
+    let isReactivation = false;
+
+    // Check if this is a reactivation of an archived account
+    if (pendingData.isReactivation && pendingData.archivedUserId) {
+      // Reactivate archived account
+      user = await User.findById(pendingData.archivedUserId).select("+resetPasswordToken +resetPasswordExpire");
+      
+      if (!user) {
+        // Archived user not found, proceed with new registration
+        user = new User({
+          name: pendingData.name,
+          email: pendingData.email,
+          password: pendingData.password,
+        });
+        user.$skipPasswordHash = true;
+        await user.save();
+      } else {
+        // Reactivate the archived account
+        isReactivation = true;
+        // Update user fields
+        user.name = pendingData.name;
+        user.password = pendingData.password;
+        user.isArchived = false;
+        user.resetPasswordToken = null; // Clear any reset tokens
+        user.resetPasswordExpire = null;
+        user.$skipPasswordHash = true; // Password already hashed
+        await user.save({ validateBeforeSave: false });
+        
+        console.log(`Account reactivated for email: ${user.email}`);
+      }
+    } else {
+      // Create new user with already-hashed password
+      user = new User({
+        name: pendingData.name,
+        email: pendingData.email,
+        password: pendingData.password,
+      });
+      user.$skipPasswordHash = true;
+      await user.save();
+    }
 
     pendingRegistrations.delete(email.toLowerCase());
 
@@ -209,7 +256,9 @@ export const verifyRegister = async (req, res) => {
 
     return res.status(201).json({
       success: true,
-      message: "Welcome to the royal court! Account verified successfully.",
+      message: isReactivation 
+        ? "Welcome back! Your account has been reactivated successfully." 
+        : "Welcome to the royal court! Account verified successfully.",
       data: {
         user: {
           id: user._id,
@@ -441,6 +490,175 @@ export const updateProfile = async (req, res) => {
   } catch (error) {
     console.error("Update profile error:", error);
     return res.status(500).json({ success: false, message: "Something went wrong" });
+  }
+};
+
+// @desc    Forgot password - send reset token
+// @route   POST /api/auth/forgot-password
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide an email address",
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
+    if (!emailRegex.test(email)) {
+      // Return generic success to prevent user enumeration
+      return res.status(200).json({
+        success: true,
+        message: "If an account with that email exists, a password reset link has been sent.",
+      });
+    }
+
+    // Find user by email (select password reset fields)
+    const user = await User.findOne({ email: email.toLowerCase() }).select("+resetPasswordToken +resetPasswordExpire");
+
+    // Always return success message to prevent user enumeration
+    // Even if user doesn't exist, return the same message
+    if (!user) {
+      return res.status(200).json({
+        success: true,
+        message: "If an account with that email exists, a password reset link has been sent.",
+      });
+    }
+
+    // Check if user is archived
+    if (user.isArchived) {
+      // Still return generic message
+      return res.status(200).json({
+        success: true,
+        message: "If an account with that email exists, a password reset link has been sent.",
+      });
+    }
+
+    // Generate secure random token using crypto
+    const resetToken = crypto.randomBytes(32).toString("hex");
+
+    // Hash the token before storing
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+
+    // Set expiration (30 minutes)
+    const resetPasswordExpire = Date.now() + 30 * 60 * 1000;
+
+    // Save hashed token and expiration to user
+    user.resetPasswordToken = hashedToken;
+    user.resetPasswordExpire = resetPasswordExpire;
+    await user.save({ validateBeforeSave: false });
+
+    // Create reset URL
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5176";
+    const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
+
+    // Send password reset email (non-blocking)
+    try {
+      await sendPasswordResetEmail(user.email, user.name, resetUrl);
+    } catch (emailError) {
+      // If email fails, clear the reset token
+      user.resetPasswordToken = null;
+      user.resetPasswordExpire = null;
+      await user.save({ validateBeforeSave: false });
+
+      console.error("Password reset email failed:", emailError);
+      // Still return success to user
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "If an account with that email exists, a password reset link has been sent.",
+    });
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong. Please try again.",
+    });
+  }
+};
+
+// @desc    Reset password
+// @route   POST /api/auth/reset-password/:token
+export const resetPassword = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { password, confirmPassword } = req.body;
+
+    if (!password || !confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide password and confirm password",
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters",
+      });
+    }
+
+    if (password !== confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Passwords do not match",
+      });
+    }
+
+    // Hash the incoming token to compare with stored hash
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(token)
+      .digest("hex");
+
+    // Find user with matching token and valid expiration
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpire: { $gt: Date.now() }, // Expiration must be in the future
+    }).select("+resetPasswordToken +resetPasswordExpire");
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired reset token",
+      });
+    }
+
+    // Check if user is archived
+    if (user.isArchived) {
+      return res.status(403).json({
+        success: false,
+        message: "This account has been archived and cannot be reset",
+      });
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(12);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Update password and clear reset token fields
+    user.password = hashedPassword;
+    user.resetPasswordToken = null;
+    user.resetPasswordExpire = null;
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Password reset successfully. You can now login with your new password.",
+    });
+  } catch (error) {
+    console.error("Reset password error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong. Please try again.",
+    });
   }
 };
 

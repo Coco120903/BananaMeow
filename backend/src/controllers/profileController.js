@@ -3,6 +3,7 @@ import Order from "../models/Order.js";
 import Donation from "../models/Donation.js";
 import Gallery from "../models/Gallery.js";
 import bcrypt from "bcryptjs";
+import { sendPasswordChangeNotification } from "../utils/emailService.js";
 
 // @desc    Upload profile image
 // @route   POST /api/profile/upload-image
@@ -112,6 +113,11 @@ export const changePassword = async (req, res) => {
     // Update password
     user.password = hashedPassword;
     await user.save();
+
+    // Send password change notification email (non-blocking)
+    sendPasswordChangeNotification(user.email, user.name).catch((err) => {
+      console.error("Password change notification email failed:", err);
+    });
 
     return res.status(200).json({
       success: true,

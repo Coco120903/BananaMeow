@@ -16,6 +16,8 @@ import CartPage from "./pages/CartPage.jsx";
 import AboutPage from "./pages/AboutPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import SignUpPage from "./pages/SignUpPage.jsx";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage.jsx";
+import ResetPasswordPage from "./pages/ResetPasswordPage.jsx";
 import PrivacyPage from "./pages/PrivacyPage.jsx";
 import TermsPage from "./pages/TermsPage.jsx";
 import GalleryPage from "./pages/GalleryPage.jsx";
@@ -163,6 +165,8 @@ export default function App() {
                       <Route path="/cart" element={<CartPage />} />
                       <Route path="/login" element={<LoginPage />} />
                       <Route path="/signup" element={<SignUpPage />} />
+                      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                      <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
                       <Route path="/about" element={<AboutPage />} />
                       <Route path="/gallery" element={<GalleryPage />} />
                       <Route path="/gallery/:id" element={<GalleryDetailPage />} />

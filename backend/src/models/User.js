@@ -43,6 +43,14 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false
     },
+    resetPasswordToken: {
+      type: String,
+      select: false // Don't include in queries by default
+    },
+    resetPasswordExpire: {
+      type: Date,
+      select: false
+    },
     favoriteCats: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: "Cat"

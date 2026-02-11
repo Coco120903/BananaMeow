@@ -16,6 +16,8 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordSuccess, setPasswordSuccess] = useState("");
 
   // Profile image states
   const [profileImage, setProfileImage] = useState(user?.profileImage || "");
@@ -213,16 +215,16 @@ export default function ProfilePage() {
   // Password change handler
   const handleChangePassword = async (e) => {
     e.preventDefault();
-    setError("");
-    setSuccess("");
+    setPasswordError("");
+    setPasswordSuccess("");
 
     if (newPassword.length < 6) {
-      setError("New password must be at least 6 characters");
+      setPasswordError("New password must be at least 6 characters");
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError("New passwords do not match");
+      setPasswordError("New passwords do not match");
       return;
     }
 
@@ -245,16 +247,16 @@ export default function ProfilePage() {
       const data = await response.json();
       
       if (response.ok) {
-        setSuccess("Password changed successfully!");
+        setPasswordSuccess("Password changed successfully!");
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
-        setTimeout(() => setSuccess(""), 3000);
+        setTimeout(() => setPasswordSuccess(""), 3000);
       } else {
-        setError(data.message || "Failed to change password");
+        setPasswordError(data.message || "Failed to change password");
       }
     } catch (err) {
-      setError("Failed to change password");
+      setPasswordError("Failed to change password");
     } finally {
       setLoading(false);
     }
@@ -479,6 +481,20 @@ export default function ProfilePage() {
             Change Password
           </h2>
           
+          {/* Password-specific error/success messages */}
+          {passwordSuccess && (
+            <div className="mb-4 rounded-2xl bg-mint/10 border border-mint/20 px-4 py-3 text-sm text-royal flex items-center gap-2">
+              <CheckCircle className="h-4 w-4" />
+              {passwordSuccess}
+            </div>
+          )}
+          {passwordError && (
+            <div className="mb-4 rounded-2xl bg-coral/10 border border-coral/20 px-4 py-3 text-sm text-coral flex items-center gap-2">
+              <AlertCircle className="h-4 w-4" />
+              {passwordError}
+            </div>
+          )}
+          
           <form onSubmit={handleChangePassword} className="space-y-4">
             <div>
               <label className="text-sm font-semibold text-ink/60 flex items-center gap-2 mb-2">
@@ -498,7 +514,7 @@ export default function ProfilePage() {
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-ink/40 hover:text-royal"
                 >
-                  {showCurrentPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  {showCurrentPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
                 </button>
               </div>
             </div>
@@ -522,7 +538,7 @@ export default function ProfilePage() {
                   onClick={() => setShowNewPassword(!showNewPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-ink/40 hover:text-royal"
                 >
-                  {showNewPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  {showNewPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
                 </button>
               </div>
               <p className="text-xs text-ink/40 mt-1">Must be at least 6 characters</p>
@@ -547,7 +563,7 @@ export default function ProfilePage() {
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-ink/40 hover:text-royal"
                 >
-                  {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  {showConfirmPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
                 </button>
               </div>
             </div>

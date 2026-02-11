@@ -172,7 +172,7 @@ export default function SignUpPage() {
   if (isAuthenticated) return null;
 
   return (
-    <section className="relative mx-auto max-w-md px-4 py-12 md:px-8 overflow-hidden">
+    <section className="relative mx-auto max-w-md md:max-w-lg lg:max-w-xl px-4 py-12 md:px-8 overflow-hidden">
       {/* Floating decorations */}
       <div className="floating-shape floating-shape-1 -right-20 top-10" />
       <div className="floating-shape floating-shape-2 -left-16 bottom-20" />
@@ -305,9 +305,9 @@ export default function SignUpPage() {
                       className="absolute right-4 top-1/2 -translate-y-1/2 text-ink/40 hover:text-royal transition-colors"
                     >
                       {showPassword ? (
-                        <EyeOff className="h-5 w-5" />
-                      ) : (
                         <Eye className="h-5 w-5" />
+                      ) : (
+                        <EyeOff className="h-5 w-5" />
                       )}
                     </button>
                   </div>
@@ -334,9 +334,9 @@ export default function SignUpPage() {
                       className="absolute right-4 top-1/2 -translate-y-1/2 text-ink/40 hover:text-royal transition-colors"
                     >
                       {showConfirmPassword ? (
-                        <EyeOff className="h-5 w-5" />
-                      ) : (
                         <Eye className="h-5 w-5" />
+                      ) : (
+                        <EyeOff className="h-5 w-5" />
                       )}
                     </button>
                   </div>
@@ -462,10 +462,10 @@ export default function SignUpPage() {
               Already have an account?{" "}
               <Link
                 to="/login"
-                className="font-semibold text-royal transition hover:text-ink inline-flex items-center gap-1 animated-underline"
+                className="font-semibold text-royal transition hover:text-ink inline-flex items-center gap-1.5 animated-underline"
               >
                 Login
-                <Heart className="h-3 w-3" />
+                <Heart className="h-3 w-3 inline align-middle" />
               </Link>
             </div>
           </div>

@@ -335,6 +335,14 @@ export const login = async (req, res) => {
       });
     }
 
+    // Check if user is archived
+    if (user.isArchived) {
+      return res.status(403).json({
+        success: false,
+        message: "This account has been archived and cannot be accessed",
+      });
+    }
+
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(401).json({
@@ -460,6 +468,14 @@ export const protect = async (req, res, next) => {
     const user = await User.findById(decoded.id);
     if (!user) {
       return res.status(401).json({ success: false, message: "User no longer exists" });
+    }
+
+    // Check if user is archived
+    if (user.isArchived) {
+      return res.status(403).json({ 
+        success: false, 
+        message: "This account has been archived and cannot access this resource" 
+      });
     }
 
     req.user = user;

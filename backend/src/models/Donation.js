@@ -7,7 +7,9 @@ const donationSchema = new mongoose.Schema(
     amount: { type: Number, required: true },
     cat: { type: String, required: true },
     status: { type: String, default: "pending" },
-    stripeSessionId: { type: String }
+    stripeSessionId: { type: String },
+    email: { type: String },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" }
   },
   { timestamps: true }
 );

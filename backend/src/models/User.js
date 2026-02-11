@@ -31,6 +31,18 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin"],
       default: "user"
     },
+    profileImage: {
+      type: String,
+      default: ""
+    },
+    joinDate: {
+      type: Date,
+      default: Date.now
+    },
+    isArchived: {
+      type: Boolean,
+      default: false
+    },
     favoriteCats: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: "Cat"

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useNavigate } from "react-router-dom";
 import { API_BASE } from "../lib/api.js";
@@ -27,6 +27,9 @@ export default function ProfilePage() {
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [imageSrc, setImageSrc] = useState(null);
+  const [imageError, setImageError] = useState(false);
+  const fileInputRef = useRef(null);
+  const editFileInputRef = useRef(null);
 
   // Password change states
   const [currentPassword, setCurrentPassword] = useState("");
@@ -64,6 +67,13 @@ export default function ProfilePage() {
     loadProfile();
     loadActivities();
   }, []);
+
+  // Sync profile image with user object when it changes
+  useEffect(() => {
+    if (user?.profileImage) {
+      setProfileImage(user.profileImage);
+    }
+  }, [user?.profileImage]);
 
   const loadProfile = async () => {
     try {
@@ -167,14 +177,20 @@ export default function ProfilePage() {
       const data = await response.json();
       
       if (response.ok) {
-        setProfileImage(data.data.profileImage);
+        const newImageUrl = data.data.profileImage;
+        setProfileImage(newImageUrl);
         setImageError(false);
         setShowCropModal(false);
         setImageSrc(null);
         setImageFile(null);
+        setCrop({ x: 0, y: 0 });
+        setZoom(1);
+        setCroppedAreaPixels(null);
         setSuccess("Profile image updated successfully!");
         setTimeout(() => setSuccess(""), 3000);
-        // Update user in context
+        
+        // Refresh user profile to update context with new image
+        // updateProfile({}) will now refresh the profile from the API
         await updateProfile({});
       } else {
         setError(data.message || "Failed to upload image");
@@ -313,8 +329,6 @@ export default function ProfilePage() {
     });
   };
 
-  const [imageError, setImageError] = useState(false);
-
   // Pagination helpers
   const itemsPerPage = 5;
   const getPaginatedItems = (items, page) => {
@@ -383,6 +397,7 @@ export default function ProfilePage() {
         <div className="flex gap-2 justify-center w-full max-w-md mx-auto">
           <label className="btn-secondary text-xs md:text-sm cursor-pointer flex items-center gap-1.5 px-3 md:px-4 py-2 md:py-2.5 flex-1 justify-center min-w-0">
             <input
+              ref={fileInputRef}
               type="file"
               accept="image/jpeg,image/jpg,image/png,image/webp"
               onChange={onFileChange}
@@ -393,20 +408,17 @@ export default function ProfilePage() {
           </label>
           {profileImage && (
             <>
-              <button
-                type="button"
-                onClick={() => {
-                  // Reopen crop modal with existing image
-                  if (profileImage) {
-                    setImageSrc(`${API_BASE}${profileImage}`);
-                    setShowCropModal(true);
-                  }
-                }}
-                className="btn-secondary text-xs md:text-sm flex items-center gap-1.5 px-3 md:px-4 py-2 md:py-2.5 flex-1 justify-center min-w-0"
-              >
+              <label className="btn-secondary text-xs md:text-sm cursor-pointer flex items-center gap-1.5 px-3 md:px-4 py-2 md:py-2.5 flex-1 justify-center min-w-0">
+                <input
+                  ref={editFileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  onChange={onFileChange}
+                  className="hidden"
+                />
                 <Edit2 className="h-3.5 w-3.5 md:h-4 md:w-4 flex-shrink-0" />
-                <span>Edit</span>
-              </button>
+                <span>Change Photo</span>
+              </label>
               <button
                 type="button"
                 onClick={() => setShowRemoveImageModal(true)}
@@ -986,7 +998,7 @@ export default function ProfilePage() {
               />
             </div>
             <div className="flex items-center gap-4 mb-4">
-              <label className="text-sm font-semibold text-ink/60">Zoom:</label>
+              <label className="text-sm font-semibold text-ink/60 whitespace-nowrap">Zoom:</label>
               <input
                 type="range"
                 min={1}
@@ -996,6 +1008,9 @@ export default function ProfilePage() {
                 onChange={(e) => setZoom(Number(e.target.value))}
                 className="flex-1"
               />
+              <span className="text-sm font-medium text-ink/70 min-w-[3rem] text-right">
+                {zoom.toFixed(1)}x
+              </span>
             </div>
             <div className="flex gap-3">
               <button
@@ -1004,6 +1019,12 @@ export default function ProfilePage() {
                   setShowCropModal(false);
                   setImageSrc(null);
                   setImageFile(null);
+                  setCrop({ x: 0, y: 0 });
+                  setZoom(1);
+                  setCroppedAreaPixels(null);
+                  // Reset file inputs
+                  if (fileInputRef.current) fileInputRef.current.value = "";
+                  if (editFileInputRef.current) editFileInputRef.current.value = "";
                 }}
                 className="btn-secondary flex-1"
               >

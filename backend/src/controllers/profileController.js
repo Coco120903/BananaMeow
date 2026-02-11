@@ -5,6 +5,12 @@ import Gallery from "../models/Gallery.js";
 import Cat from "../models/Cat.js";
 import bcrypt from "bcryptjs";
 import { sendPasswordChangeNotification } from "../utils/emailService.js";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // @desc    Upload profile image
 // @route   POST /api/profile/upload-image
@@ -14,6 +20,31 @@ export const uploadProfileImage = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Please provide an image file",
+      });
+    }
+
+    // Get current user to check for existing image
+    const currentUser = await User.findById(req.user.id);
+    if (!currentUser) {
+      // If file was uploaded but user not found, delete the file
+      const filePath = path.join(__dirname, "../../uploads/profile", req.file.filename);
+      fs.unlink(filePath, (err) => {
+        if (err) console.error("Failed to delete uploaded file:", err);
+      });
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Delete old image if it exists and is not empty
+    if (currentUser.profileImage && currentUser.profileImage.trim() !== "") {
+      const oldImagePath = path.join(__dirname, "../../", currentUser.profileImage);
+      fs.unlink(oldImagePath, (err) => {
+        if (err && err.code !== "ENOENT") {
+          // ENOENT means file doesn't exist, which is fine
+          console.error("Error deleting old profile image:", err);
+        }
       });
     }
 
@@ -35,6 +66,13 @@ export const uploadProfileImage = async (req, res) => {
     });
   } catch (error) {
     console.error("Upload profile image error:", error);
+    // If file was uploaded but update failed, delete the file
+    if (req.file) {
+      const filePath = path.join(__dirname, "../../uploads/profile", req.file.filename);
+      fs.unlink(filePath, (err) => {
+        if (err) console.error("Failed to delete uploaded file:", err);
+      });
+    }
     return res.status(500).json({
       success: false,
       message: "Failed to upload profile image",

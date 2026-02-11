@@ -244,6 +244,32 @@ export function AuthProvider({ children }) {
     setError(null);
 
     try {
+      // If no updates provided, just refresh the profile
+      if (!updates || Object.keys(updates).length === 0) {
+        const profileResponse = await fetch(`${API_BASE}/api/profile`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (profileResponse.ok) {
+          const profileData = await profileResponse.json();
+          if (profileData.data?.user) {
+            const updatedUser = {
+              ...user,
+              ...profileData.data.user
+            };
+            localStorage.setItem("user", JSON.stringify(updatedUser));
+            setUser(updatedUser);
+            setLoading(false);
+            return { success: true, message: "Profile updated" };
+          }
+        }
+        setLoading(false);
+        return { success: false, message: "Failed to refresh profile" };
+      }
+
+      // Otherwise, update via API
       const response = await fetch(`${API_BASE}/api/auth/update`, {
         method: "PUT",
         headers: {

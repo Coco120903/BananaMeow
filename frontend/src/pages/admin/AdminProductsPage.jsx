@@ -9,25 +9,32 @@ import {
   X,
   Save,
   Search,
-  Tag
+  Tag,
+  FileDown,
+  Upload,
+  Image as ImageIcon
 } from "lucide-react";
-
-const categories = ["Apparel", "Cat items", "Accessories"];
+import { generateProductsPDF } from "../../utils/pdfExport.js";
 
 export default function AdminProductsPage() {
-  const { token } = useAdminAuth();
+  const { token, admin } = useAdminAuth();
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [exporting, setExporting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
-    category: "Apparel",
+    category: "",
     price: "",
     description: "",
     inventory: ""
   });
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [removeImage, setRemoveImage] = useState(false);
 
   const fetchProducts = async () => {
     try {
@@ -35,6 +42,8 @@ export default function AdminProductsPage() {
       if (response.ok) {
         const data = await response.json();
         setProducts(data);
+      } else {
+        console.error("Failed to fetch products: HTTP", response.status);
       }
     } catch (error) {
       console.error("Failed to fetch products:", error);
@@ -45,7 +54,30 @@ export default function AdminProductsPage() {
 
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/api/categories`);
+      if (response.ok) {
+        const data = await response.json();
+        setCategories(data);
+        // Set default category if formData.category is empty
+        if (!formData.category && data.length > 0) {
+          setFormData(prev => ({ ...prev, category: data[0].displayName }));
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch categories:", error);
+      // Fallback to default categories
+      setCategories([
+        { displayName: "Apparel" },
+        { displayName: "Cat Items" },
+        { displayName: "Accessories" }
+      ]);
+    }
+  };
 
   const openModal = (product = null) => {
     if (product) {
@@ -57,31 +89,79 @@ export default function AdminProductsPage() {
         description: product.description,
         inventory: product.inventory?.toString() || "0"
       });
+      setImagePreview(product.imageUrl ? `${API_BASE}${product.imageUrl}` : null);
+      setRemoveImage(false);
     } else {
       setEditingProduct(null);
       setFormData({
         name: "",
-        category: "Apparel",
+        category: categories.length > 0 ? categories[0].displayName : "",
         price: "",
         description: "",
         inventory: ""
       });
+      setImagePreview(null);
+      setRemoveImage(false);
     }
+    setImageFile(null);
     setShowModal(true);
   };
 
   const closeModal = () => {
     setShowModal(false);
     setEditingProduct(null);
+    setImageFile(null);
+    setImagePreview(null);
+    setRemoveImage(false);
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.match(/^image\/(jpeg|jpg|png|webp)$/)) {
+        alert("Please select a valid image file (JPG, PNG, or WEBP)");
+        return;
+      }
+      // Validate file size (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Image size must be less than 5MB");
+        return;
+      }
+      setImageFile(file);
+      setRemoveImage(false);
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    setRemoveImage(true);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const productData = {
-      ...formData,
-      price: parseFloat(formData.price),
-      inventory: parseInt(formData.inventory) || 0
-    };
+    
+    const formDataToSend = new FormData();
+    formDataToSend.append("name", formData.name);
+    formDataToSend.append("category", formData.category);
+    formDataToSend.append("price", formData.price);
+    formDataToSend.append("description", formData.description);
+    formDataToSend.append("inventory", formData.inventory || "0");
+    
+    if (imageFile) {
+      formDataToSend.append("image", imageFile);
+    }
+    
+    if (removeImage && editingProduct) {
+      formDataToSend.append("removeImage", "true");
+    }
 
     try {
       const url = editingProduct
@@ -92,18 +172,21 @@ export default function AdminProductsPage() {
       const response = await fetch(url, {
         method,
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify(productData)
+        body: formDataToSend
       });
 
       if (response.ok) {
         fetchProducts();
         closeModal();
+      } else {
+        const errorData = await response.json();
+        alert(errorData.message || "Failed to save product");
       }
     } catch (error) {
       console.error("Failed to save product:", error);
+      alert("Failed to save product. Please try again.");
     }
   };
 
@@ -151,13 +234,34 @@ export default function AdminProductsPage() {
           </h1>
           <p className="text-ink/60">Manage your Banana Meow shop products</p>
         </div>
-        <button
-          onClick={() => openModal()}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-royal to-royal/90 text-white rounded-xl font-medium hover:shadow-lg transition-all"
-        >
-          <Plus className="w-5 h-5" />
-          Add Product
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              setExporting(true);
+              try {
+                generateProductsPDF(filteredProducts, searchTerm, admin?.username || "Admin");
+              } catch (error) {
+                console.error("Failed to generate PDF:", error);
+                alert("Failed to generate PDF. Please try again.");
+              } finally {
+                setExporting(false);
+              }
+            }}
+            disabled={exporting || filteredProducts.length === 0}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-ink/20 text-royal rounded-xl font-medium hover:bg-cream transition-all disabled:opacity-50"
+            title="Export to PDF"
+          >
+            <FileDown className={`w-4 h-4 ${exporting ? "animate-bounce" : ""}`} />
+            {exporting ? "Exporting..." : "Export PDF"}
+          </button>
+          <button
+            onClick={() => openModal()}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-royal to-royal/90 text-white rounded-xl font-medium hover:shadow-lg transition-all"
+          >
+            <Plus className="w-5 h-5" />
+            Add Product
+          </button>
+        </div>
       </div>
 
       {/* Search */}
@@ -201,8 +305,16 @@ export default function AdminProductsPage() {
                   <tr key={product._id} className="hover:bg-cream/30 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-banana-200 to-banana-300 rounded-lg flex items-center justify-center">
-                          <Package className="w-5 h-5 text-royal" />
+                        <div className="w-16 h-16 rounded-lg overflow-hidden bg-gradient-to-br from-banana-200 to-banana-300 flex items-center justify-center flex-shrink-0">
+                          {product.imageUrl ? (
+                            <img
+                              src={`${API_BASE}${product.imageUrl}`}
+                              alt={product.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <Package className="w-6 h-6 text-royal" />
+                          )}
                         </div>
                         <div>
                           <p className="font-medium text-ink">{product.name}</p>
@@ -307,9 +419,15 @@ export default function AdminProductsPage() {
                   className="w-full px-4 py-2 border border-ink/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-royal/30"
                   required
                 >
+                  {/* Include current product's category if not in the categories list (handles legacy/mismatched names) */}
+                  {formData.category && !categories.some(cat => cat.displayName === formData.category) && (
+                    <option value={formData.category}>
+                      {formData.category} (unlinked)
+                    </option>
+                  )}
                   {categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
+                    <option key={cat._id || cat.displayName} value={cat.displayName}>
+                      {cat.displayName}
                     </option>
                   ))}
                 </select>
@@ -360,6 +478,50 @@ export default function AdminProductsPage() {
                   required
                 />
               </div>
+              
+              {/* Image Upload */}
+              <div>
+                <label className="block text-sm font-medium text-ink/70 mb-1">
+                  Product Image
+                </label>
+                {imagePreview ? (
+                  <div className="relative mb-3">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-full h-48 object-cover rounded-xl border border-ink/10"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mb-3 p-8 border-2 border-dashed border-ink/20 rounded-xl text-center">
+                    <ImageIcon className="w-8 h-8 text-ink/30 mx-auto mb-2" />
+                    <p className="text-sm text-ink/50 mb-2">No image uploaded</p>
+                  </div>
+                )}
+                <label className="flex items-center justify-center gap-2 px-4 py-2 border border-ink/20 rounded-xl hover:bg-cream transition-colors cursor-pointer">
+                  <Upload className="w-4 h-4 text-ink/60" />
+                  <span className="text-sm text-ink/70">
+                    {imagePreview ? "Replace Image" : "Upload Image"}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                </label>
+                <p className="text-xs text-ink/40 mt-1">
+                  JPG, PNG, or WEBP. Max 5MB
+                </p>
+              </div>
+              
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"

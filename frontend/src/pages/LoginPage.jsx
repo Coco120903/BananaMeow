@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useAdminAuth } from "../context/AdminAuthContext.jsx";
-import { Crown, Mail, Lock, Sparkles, ArrowRight, Heart, Star, AlertCircle, Loader2 } from "lucide-react";
+import { Crown, Mail, Lock, Sparkles, ArrowRight, Heart, Star, AlertCircle, Loader2, Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const { login, loading, isAuthenticated } = useAuth();
@@ -11,6 +11,17 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [logoutMessage, setLogoutMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Check for logout message from inactivity timeout
+  useEffect(() => {
+    const message = sessionStorage.getItem("logoutMessage");
+    if (message) {
+      setLogoutMessage(message);
+      sessionStorage.removeItem("logoutMessage"); // Clear after displaying
+    }
+  }, []);
 
   // Redirect if already logged in
   if (isAuthenticated) {
@@ -39,7 +50,7 @@ export default function LoginPage() {
   };
 
   return (
-    <section className="relative mx-auto max-w-md px-4 py-12 md:px-8 overflow-hidden">
+    <section className="relative mx-auto max-w-md md:max-w-lg lg:max-w-xl px-4 py-12 md:px-8 overflow-hidden">
       {/* Floating decorations */}
       <div className="floating-shape floating-shape-1 -right-20 top-10" />
       <div className="floating-shape floating-shape-2 -left-16 bottom-20" />
@@ -70,6 +81,13 @@ export default function LoginPage() {
               </p>
             </div>
 
+            {logoutMessage && (
+              <div className="mb-4 rounded-2xl bg-amber/10 border border-amber/20 px-4 py-3 text-sm text-amber-700 flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                {logoutMessage}
+              </div>
+            )}
+
             {error && (
               <div className="mb-4 rounded-2xl bg-coral/10 border border-coral/20 px-4 py-3 text-sm text-coral flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 flex-shrink-0" />
@@ -98,14 +116,27 @@ export default function LoginPage() {
                   <Lock className="h-4 w-4" />
                   Password
                 </span>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  placeholder="••••••••"
-                  className="input-soft"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder="••••••••"
+                    className="input-soft pr-12"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-ink/40 hover:text-royal transition-colors"
+                  >
+                    {showPassword ? (
+                      <Eye className="h-5 w-5" />
+                    ) : (
+                      <EyeOff className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
               </label>
 
               <div className="flex flex-col gap-3 text-sm text-ink/70 sm:flex-row sm:items-center sm:justify-between">
@@ -116,12 +147,12 @@ export default function LoginPage() {
                   />
                   <span className="group-hover:text-royal transition-colors">Remember me</span>
                 </label>
-                <button
-                  type="button"
+                <Link
+                  to="/forgot-password"
                   className="text-royal transition hover:text-ink animated-underline"
                 >
                   Forgot password?
-                </button>
+                </Link>
               </div>
 
               <button 
@@ -151,10 +182,10 @@ export default function LoginPage() {
               New here?{" "}
               <Link
                 to="/signup"
-                className="font-semibold text-royal transition hover:text-ink inline-flex items-center gap-1 animated-underline"
+                className="font-semibold text-royal transition hover:text-ink inline-flex items-center gap-1.5 animated-underline"
               >
                 Create an account
-                <Heart className="h-3 w-3" />
+                <Heart className="h-3 w-3 inline align-middle" />
               </Link>
             </div>
           </div>

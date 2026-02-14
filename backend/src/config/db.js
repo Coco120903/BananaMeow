@@ -1,5 +1,8 @@
 import mongoose from "mongoose";
 
+// Disable mongoose buffering to prevent timeout errors
+mongoose.set("bufferCommands", false);
+
 export async function connectDatabase() {
   const mongoUri = process.env.MONGO_URI;
   if (!mongoUri) {
@@ -14,5 +17,10 @@ export async function connectDatabase() {
     console.error("MongoDB connection error:", error);
   });
 
-  await mongoose.connect(mongoUri);
+  try {
+    await mongoose.connect(mongoUri);
+  } catch (error) {
+    console.error("MongoDB connection failed:", error.message);
+    throw error;
+  }
 }

@@ -1,5 +1,6 @@
 import { createContext, useContext, useMemo, useState, useEffect } from "react";
 import { API_BASE } from "../lib/api.js";
+import { useInactivityTimer } from "../hooks/useInactivityTimer.js";
 
 const AuthContext = createContext(null);
 
@@ -210,20 +211,65 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const logout = () => {
+  const logout = (message = null) => {
+    // Clear all auth data
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     localStorage.removeItem("adminToken");
+    localStorage.removeItem("lastActivityTime"); // Clear inactivity timer data
     setUser(null);
     setToken(null);
     setError(null);
+    
+    // Navigate to login page with message if provided
+    if (message) {
+      // Store logout message in sessionStorage to display on login page
+      sessionStorage.setItem("logoutMessage", message);
+      // Use window.location for reliable navigation (only if not already on login page)
+      const currentPath = window.location.pathname;
+      if (currentPath !== "/login" && !currentPath.startsWith("/login")) {
+        window.location.href = "/login";
+      } else {
+        // If already on login page, trigger a re-render to show message
+        window.dispatchEvent(new Event("storage"));
+      }
+    }
   };
+
+  // Set up inactivity timer - only active when user is authenticated
+  useInactivityTimer(!!user && !!token, logout);
 
   const updateProfile = async (updates) => {
     setLoading(true);
     setError(null);
 
     try {
+      // If no updates provided, just refresh the profile
+      if (!updates || Object.keys(updates).length === 0) {
+        const profileResponse = await fetch(`${API_BASE}/api/profile`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        if (profileResponse.ok) {
+          const profileData = await profileResponse.json();
+          if (profileData.data?.user) {
+            const updatedUser = {
+              ...user,
+              ...profileData.data.user
+            };
+            localStorage.setItem("user", JSON.stringify(updatedUser));
+            setUser(updatedUser);
+            setLoading(false);
+            return { success: true, message: "Profile updated" };
+          }
+        }
+        setLoading(false);
+        return { success: false, message: "Failed to refresh profile" };
+      }
+
+      // Otherwise, update via API
       const response = await fetch(`${API_BASE}/api/auth/update`, {
         method: "PUT",
         headers: {

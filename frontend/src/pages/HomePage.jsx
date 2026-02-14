@@ -1,5 +1,7 @@
-import { Crown, Star, Heart, Sparkles, TrendingUp, Users, Gift, Shield, Quote, ChevronLeft, ChevronRight } from "lucide-react";
+import { Crown, Star, Heart, Sparkles, TrendingUp, Users, Gift, Shield, Quote, ChevronLeft, ChevronRight, Camera, ArrowRight } from "lucide-react";
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { API_BASE } from "../lib/api.js";
 import HeroSection from "../components/HeroSection.jsx";
 import OriginStory from "../components/OriginStory.jsx";
 import CTASection from "../components/CTASection.jsx";
@@ -208,12 +210,144 @@ function FeaturesSection() {
   );
 }
 
+// Gallery Teaser — Latest Royal Moment
+function GalleryTeaser() {
+  const [post, setPost] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchLatest = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/api/gallery`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.length > 0) {
+            // Posts are returned sorted by createdAt desc
+            setPost(data[0]);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load gallery teaser:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLatest();
+  }, []);
+
+  if (loading || !post) return null;
+
+  const likeCount = post.likes?.length || 0;
+  const displayDate = new Date(post.createdAt).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  });
+  const thumbnail = post.thumbnailUrl || (post.mediaUrls && post.mediaUrls[0]) || null;
+
+  return (
+    <section className="relative mx-auto max-w-6xl px-4 py-16 md:px-8">
+      {/* Section Label */}
+      <div className="text-center mb-8">
+        <div className="flex items-center justify-center gap-3 mb-3">
+          <div className="h-1 w-8 rounded-full bg-gradient-to-r from-transparent to-banana-400" />
+          <p className="text-sm font-semibold uppercase tracking-[0.3em] text-ink/50">
+            Latest Royal Moment
+          </p>
+          <div className="h-1 w-8 rounded-full bg-gradient-to-r from-banana-400 to-transparent" />
+        </div>
+        <h2 className="text-3xl font-bold text-royal md:text-4xl flex items-center justify-center gap-3">
+          From the Scrapbook
+          <Camera className="h-7 w-7 text-banana-400" />
+        </h2>
+      </div>
+
+      {/* Teaser Card */}
+      <Link
+        to="/gallery"
+        className="group block max-w-3xl mx-auto"
+      >
+        <div className="card-cute p-[2px]">
+          <div className="rounded-[1.85rem] bg-white overflow-hidden card-shine relative">
+            {/* Decorative tape */}
+            <div className="absolute -top-1 left-8 w-16 h-6 bg-banana-200/70 rounded-b-sm z-10"
+              style={{ transform: "rotate(-3deg)" }}
+            />
+            <div className="absolute -top-1 right-10 w-14 h-5 bg-lilac/40 rounded-b-sm z-10"
+              style={{ transform: "rotate(2deg)" }}
+            />
+
+            <div className="flex flex-col md:flex-row">
+              {/* Left — Image */}
+              <div className="relative md:w-[45%] aspect-square md:aspect-auto md:min-h-[260px] overflow-hidden bg-cream/40">
+                {thumbnail ? (
+                  <img
+                    src={thumbnail}
+                    alt={post.title}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-banana-100 to-lilac/30">
+                    <Camera className="h-16 w-16 text-royal/30" />
+                  </div>
+                )}
+                {/* Subtle vignette */}
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    background:
+                      "radial-gradient(circle, transparent 50%, rgba(0,0,0,0.08) 100%)"
+                  }}
+                />
+                {/* Like badge */}
+                {likeCount > 0 && (
+                  <div className="absolute bottom-3 left-3 bg-white/95 backdrop-blur-sm rounded-full px-3 py-1 shadow-md flex items-center gap-1.5">
+                    <Heart className="h-3.5 w-3.5 fill-coral text-coral" />
+                    <span className="text-xs font-bold text-royal">{likeCount}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Right — Content */}
+              <div className="flex-1 p-6 md:p-8 flex flex-col justify-center">
+                <div className="flex items-center gap-2 mb-3">
+                  <Sparkles className="h-4 w-4 text-banana-400" />
+                  <span className="text-xs font-semibold uppercase tracking-widest text-ink/40">
+                    {displayDate}
+                  </span>
+                </div>
+
+                <h3 className="text-xl md:text-2xl font-bold text-royal mb-3 leading-snug group-hover:text-royal/80 transition-colors">
+                  {post.title}
+                </h3>
+
+                {post.description && (
+                  <p className="text-sm text-ink/60 leading-relaxed mb-5 line-clamp-3">
+                    {post.description}
+                  </p>
+                )}
+
+                <div className="inline-flex items-center gap-2 text-sm font-semibold text-royal group-hover:gap-3 transition-all duration-300">
+                  <span>Explore Royal Moments</span>
+                  <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Link>
+    </section>
+  );
+}
+
 export default function HomePage() {
   return (
     <>
       <AnnouncementBanner />
       <HeroSection />
       <StatsSection />
+      <GalleryTeaser />
       <OriginStory />
       <FeaturesSection />
       <TestimonialsSection />

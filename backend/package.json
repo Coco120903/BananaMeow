@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "seed:cats": "node src/seed/seedCats.js"
+    "seed:cats": "node src/seed/seedCats.js",
+    "seed:categories": "node src/seed/seedCategories.js",
+    "seed:products": "node src/seed/seedProducts.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -15,6 +17,7 @@
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^8.6.1",
+    "multer": "^2.0.2",
     "nodemailer": "^8.0.0",
     "otplib": "^13.2.1",
     "stripe": "^16.8.0"

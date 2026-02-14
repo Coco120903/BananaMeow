@@ -51,3 +51,6 @@ coverage/
 # Misc
 *.pem
 .cache
+
+# Uploads
+backend/uploads/

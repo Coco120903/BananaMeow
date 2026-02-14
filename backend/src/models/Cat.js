@@ -7,7 +7,8 @@ const catSchema = new mongoose.Schema(
     traits: [{ type: String, required: true }],
     funFact: { type: String, required: true, trim: true },
     favoriteThing: { type: String, required: true, trim: true },
-    personality: { type: String, required: true, trim: true }
+    personality: { type: String, required: true, trim: true },
+    imageUrl: { type: String, default: "" }
   },
   { timestamps: true }
 );

@@ -63,6 +63,18 @@ export default function DonatePage() {
 
   const catList = cats.length > 0 ? cats : catBios;
 
+  // Separate main cats (Bane, Nana, Angela) from others - in specific order
+  const mainCatsOrder = ["Bane", "Nana", "Angela"];
+  const highlightedCats = useMemo(() => {
+    return mainCatsOrder
+      .map(name => catList.find(cat => cat.name === name))
+      .filter(Boolean); // Remove undefined if cat not found
+  }, [catList]);
+  
+  const otherCats = useMemo(() => {
+    return catList.filter(cat => !mainCatsOrder.includes(cat.name));
+  }, [catList]);
+
   useEffect(() => {
     if (preselectedCatName) {
       const found = catList.find(
@@ -140,7 +152,7 @@ export default function DonatePage() {
       </div>
 
       {/* Cat Selection */}
-      <div className="mb-8 space-y-4">
+      <div className="mb-12 space-y-4">
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-banana-100 to-lilac flex items-center justify-center">
             <Cat className="h-4 w-4 text-royal" />
@@ -150,40 +162,125 @@ export default function DonatePage() {
           </h2>
           <Sparkles className="h-4 w-4 text-banana-400" />
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {catList.map((cat, index) => {
-            const isSelected = selectedCat?.name === cat.name;
-            return (
-              <button
-                key={cat._id || cat.id || cat.name || index}
-                type="button"
-                onClick={() => {
-                  setSelectedCat(cat);
-                  setError("");
-                }}
-                className={`group relative rounded-2xl p-4 text-left transition-all duration-300 hover:-translate-y-1 ${
-                  isSelected
-                    ? "bg-white shadow-glow border-2 border-royal/20"
-                    : "bg-white/60 backdrop-blur-sm border border-royal/10 hover:bg-white hover:shadow-soft"
-                }`}
-              >
-                {isSelected && (
-                  <div className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full bg-gradient-to-br from-royal to-royal/80 shadow-soft">
-                    <Check className="h-4 w-4 text-white" />
-                  </div>
-                )}
-                <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-banana-100 to-lilac/50 shadow-soft group-hover:scale-105 transition-transform">
-                  <Cat className="h-8 w-8 text-royal" />
-                </div>
-                <h3 className="font-semibold text-royal flex items-center gap-1">
-                  {cat.name}
-                  {isSelected && <Star className="h-3 w-3 text-banana-400 fill-banana-200" />}
-                </h3>
-                <p className="mt-1 text-xs text-ink/60">{cat.nickname}</p>
-              </button>
-            );
-          })}
-        </div>
+
+        {/* The Founding Royals Section */}
+        {highlightedCats.length > 0 && (
+          <div className="mb-6">
+            <div className="flex items-center justify-center gap-2 mb-4">
+              <Crown className="h-5 w-5 text-banana-400" />
+              <h3 className="text-lg font-semibold text-royal">The Founding Royals</h3>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+              {highlightedCats.map((cat, index) => {
+                const isSelected = selectedCat?.name === cat.name;
+                return (
+                  <button
+                    key={cat._id || cat.id || cat.name || index}
+                    type="button"
+                    onClick={() => {
+                      setSelectedCat(cat);
+                      setError("");
+                    }}
+                    className={`group relative rounded-2xl p-4 text-left transition-all duration-300 hover:-translate-y-1 ${
+                      isSelected
+                        ? "bg-white shadow-glow border-2 border-royal/20"
+                        : "bg-white/80 backdrop-blur-sm border-2 border-royal/20 hover:bg-white hover:shadow-soft"
+                    }`}
+                  >
+                    {isSelected && (
+                      <div className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full bg-gradient-to-br from-royal to-royal/80 shadow-soft">
+                        <Check className="h-4 w-4 text-white" />
+                      </div>
+                    )}
+                    <div className="absolute top-3 left-3 flex items-center gap-1.5 rounded-lg bg-white/90 backdrop-blur-sm px-3 py-1.5 shadow-soft">
+                      <Crown className="h-3 w-3 text-banana-400" />
+                      <span className="text-xs font-semibold text-royal">Featured Royal</span>
+                    </div>
+                    {cat.imageUrl ? (
+                      <div className="mb-3 mt-8 flex h-16 w-16 items-center justify-center rounded-xl overflow-hidden shadow-soft group-hover:scale-105 transition-transform">
+                        <img
+                          src={`${API_BASE}${cat.imageUrl}`}
+                          alt={cat.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-banana-100 to-lilac/50 shadow-soft group-hover:scale-105 transition-transform mt-8">
+                        <Cat className="h-8 w-8 text-royal" />
+                      </div>
+                    )}
+                    <h3 className="font-semibold text-royal flex items-center gap-1">
+                      {cat.name}
+                      {isSelected && <Star className="h-3 w-3 text-banana-400 fill-banana-200" />}
+                    </h3>
+                    <p className="mt-1 text-xs text-ink/60">{cat.nickname}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Separator */}
+        {highlightedCats.length > 0 && otherCats.length > 0 && (
+          <div className="my-8 flex items-center gap-4">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-royal/20 to-transparent"></div>
+            <div className="flex items-center gap-2">
+              <Cat className="h-5 w-5 text-royal/40" />
+              <span className="text-sm text-ink/40 font-medium">The Royal Court</span>
+              <Cat className="h-5 w-5 text-royal/40" />
+            </div>
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-royal/20 to-transparent"></div>
+          </div>
+        )}
+
+        {/* Other Cats Grid */}
+        {otherCats.length > 0 && (
+          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+            {otherCats.map((cat, index) => {
+              const isSelected = selectedCat?.name === cat.name;
+              return (
+                <button
+                  key={cat._id || cat.id || cat.name || index}
+                  type="button"
+                  onClick={() => {
+                    setSelectedCat(cat);
+                    setError("");
+                  }}
+                  className={`group relative rounded-2xl p-4 text-left transition-all duration-300 hover:-translate-y-1 ${
+                    isSelected
+                      ? "bg-white shadow-glow border-2 border-royal/20"
+                      : "bg-white/60 backdrop-blur-sm border border-royal/10 hover:bg-white hover:shadow-soft"
+                  }`}
+                >
+                  {isSelected && (
+                    <div className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full bg-gradient-to-br from-royal to-royal/80 shadow-soft">
+                      <Check className="h-4 w-4 text-white" />
+                    </div>
+                  )}
+                  {cat.imageUrl ? (
+                    <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-xl overflow-hidden shadow-soft group-hover:scale-105 transition-transform">
+                      <img
+                        src={`${API_BASE}${cat.imageUrl}`}
+                        alt={cat.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-banana-100 to-lilac/50 shadow-soft group-hover:scale-105 transition-transform">
+                      <Cat className="h-8 w-8 text-royal" />
+                    </div>
+                  )}
+                  <h3 className="font-semibold text-royal flex items-center gap-1">
+                    {cat.name}
+                    {isSelected && <Star className="h-3 w-3 text-banana-400 fill-banana-200" />}
+                  </h3>
+                  <p className="mt-1 text-xs text-ink/60">{cat.nickname}</p>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr,0.8fr]">

@@ -166,15 +166,15 @@ export default function ShopCategoryPage({ title, category }) {
         </p>
       </div>
 
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {withImages.map((product) => {
           const qty = getQuantity(product._id);
           return (
             <article
               key={product._id}
-              className="card-soft flex flex-col gap-4 rounded-[2rem] p-6"
+              className="card-soft flex flex-col gap-3 rounded-[2rem] p-4"
             >
-              <div className="flex h-32 items-center justify-center overflow-hidden rounded-2xl bg-banana-100">
+              <div className="flex h-24 items-center justify-center overflow-hidden rounded-2xl bg-banana-100">
                 <img
                   src={product.imageUrl}
                   alt={product.name}
@@ -188,12 +188,12 @@ export default function ShopCategoryPage({ title, category }) {
                 </p>
                 <Link
                   to={`/shop/${product._id}`}
-                  className="mt-2 block text-xl font-semibold text-royal"
+                  className="mt-1 block text-lg font-semibold text-royal line-clamp-2"
                 >
                   {product.name}
                 </Link>
               </div>
-              <div className="flex items-center justify-between text-lg font-semibold text-royal">
+              <div className="flex items-center justify-between text-base font-semibold text-royal">
                 <span>${product.price}</span>
               </div>
               <div className="flex items-center justify-between gap-3">

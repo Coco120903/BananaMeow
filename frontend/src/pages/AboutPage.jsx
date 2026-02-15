@@ -47,21 +47,21 @@ export default function AboutPage() {
             </p>
             
             {/* Team cards */}
-            <div className="mt-8 flex flex-wrap gap-4">
+            <div className="mt-8 grid grid-cols-3 gap-2 md:flex md:flex-wrap md:gap-4">
               {teamMembers.map((member, index) => {
                 const Icon = member.icon;
                 return (
                   <div
                     key={member.name}
-                    className="group flex items-center gap-3 rounded-2xl bg-gradient-to-br from-banana-50 to-lilac/20 px-5 py-3 shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-glow cursor-pointer"
+                    className="group flex flex-col md:flex-row items-center gap-2 md:gap-3 rounded-lg md:rounded-2xl bg-gradient-to-br from-banana-50 to-lilac/20 px-2 py-2 md:px-5 md:py-3 shadow-soft transition-all duration-300 hover:-translate-y-1 hover:shadow-glow cursor-pointer"
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
-                    <div className="h-10 w-10 rounded-xl bg-white/80 flex items-center justify-center group-hover:rotate-6 transition-transform">
-                      <Icon className="h-5 w-5 text-royal" />
+                    <div className="h-7 w-7 md:h-10 md:w-10 rounded-lg md:rounded-xl bg-white/80 flex items-center justify-center group-hover:rotate-6 transition-transform flex-shrink-0">
+                      <Icon className="h-3.5 w-3.5 md:h-5 md:w-5 text-royal" />
                     </div>
-                    <div>
-                      <p className="font-semibold text-royal">{member.name}</p>
-                      <p className="text-xs text-ink/60">{member.role}</p>
+                    <div className="text-center md:text-left">
+                      <p className="font-semibold text-xs md:text-base text-royal">{member.name}</p>
+                      <p className="text-[0.65rem] md:text-xs text-ink/60">{member.role}</p>
                     </div>
                   </div>
                 );

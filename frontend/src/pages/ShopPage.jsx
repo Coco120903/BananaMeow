@@ -213,7 +213,7 @@ export default function ShopPage() {
       </div>
       
       {/* Trust indicators */}
-      <div className="mt-8 flex flex-wrap justify-center gap-6">
+      <div className="mt-8 flex flex-nowrap sm:flex-wrap justify-center gap-2 sm:gap-6">
         {[
           { icon: Heart, label: "Made with Love" },
           { icon: Star, label: "Premium Quality" },
@@ -221,11 +221,11 @@ export default function ShopPage() {
         ].map((item, index) => {
           const Icon = item.icon;
           return (
-            <div key={index} className={`flex items-center gap-2 text-sm text-ink/60 stagger-${index + 1}`} style={{ animation: 'slide-up-fade 0.5s ease-out backwards' }}>
-              <div className="icon-float h-10 w-10 flex items-center justify-center">
-                <Icon className="h-4 w-4 text-royal" />
+            <div key={index} className={`flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-ink/60 stagger-${index + 1} flex-1 sm:flex-none justify-center`} style={{ animation: 'slide-up-fade 0.5s ease-out backwards' }}>
+              <div className="icon-float h-7 w-7 sm:h-10 sm:w-10 flex items-center justify-center flex-shrink-0">
+                <Icon className="h-3 w-3 sm:h-4 sm:w-4 text-royal" />
               </div>
-              <span className="font-medium">{item.label}</span>
+              <span className="font-medium whitespace-nowrap">{item.label}</span>
             </div>
           );
         })}

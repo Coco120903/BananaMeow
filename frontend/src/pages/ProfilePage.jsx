@@ -620,21 +620,22 @@ export default function ProfilePage() {
           ) : (
             <>
               {/* Tab Navigation */}
-              <div className="flex items-center justify-between mb-6 border-b border-royal/10 pb-2">
+              <div className="flex items-center justify-between mb-6 border-b border-royal/10 pb-2 gap-1 md:gap-0">
                 <button
                   type="button"
                   onClick={() => {
                     setActiveTab("purchases");
                     setPagination(prev => ({ ...prev, purchases: 1 }));
                   }}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                  className={`flex items-center gap-1 md:gap-2 px-1.5 md:px-4 py-2 md:py-2.5 rounded-lg md:rounded-xl text-xs md:text-sm font-semibold transition-all duration-200 whitespace-nowrap ${
                     activeTab === "purchases"
                       ? "bg-gradient-to-r from-banana-100 to-lilac/40 text-royal shadow-soft"
                       : "text-ink/60 hover:text-royal hover:bg-royal/5"
                   }`}
                 >
-                  <ShoppingBag className="h-4 w-4" />
-                  Purchase History
+                  <ShoppingBag className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
+                  <span className="hidden sm:inline">Purchase History</span>
+                  <span className="sm:hidden">Purchases</span>
                 </button>
                 <button
                   type="button"
@@ -642,14 +643,15 @@ export default function ProfilePage() {
                     setActiveTab("donations");
                     setPagination(prev => ({ ...prev, donations: 1 }));
                   }}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                  className={`flex items-center gap-1 md:gap-2 px-1.5 md:px-4 py-2 md:py-2.5 rounded-lg md:rounded-xl text-xs md:text-sm font-semibold transition-all duration-200 whitespace-nowrap ${
                     activeTab === "donations"
                       ? "bg-gradient-to-r from-blush/30 to-coral/20 text-royal shadow-soft"
                       : "text-ink/60 hover:text-royal hover:bg-royal/5"
                   }`}
                 >
-                  <Heart className="h-4 w-4" />
-                  Donation History
+                  <Heart className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
+                  <span className="hidden sm:inline">Donation History</span>
+                  <span className="sm:hidden">Donations</span>
                 </button>
                 <button
                   type="button"
@@ -657,14 +659,15 @@ export default function ProfilePage() {
                     setActiveTab("likedPosts");
                     setPagination(prev => ({ ...prev, likedPosts: 1 }));
                   }}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                  className={`flex items-center gap-1 md:gap-2 px-1.5 md:px-4 py-2 md:py-2.5 rounded-lg md:rounded-xl text-xs md:text-sm font-semibold transition-all duration-200 whitespace-nowrap ${
                     activeTab === "likedPosts"
                       ? "bg-gradient-to-r from-banana-100 to-lilac/40 text-royal shadow-soft"
                       : "text-ink/60 hover:text-royal hover:bg-royal/5"
                   }`}
                 >
-                  <Star className="h-4 w-4" />
-                  Liked Posts
+                  <Star className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
+                  <span className="hidden sm:inline">Liked Posts</span>
+                  <span className="sm:hidden">Likes</span>
                 </button>
                 <button
                   type="button"
@@ -672,14 +675,15 @@ export default function ProfilePage() {
                     setActiveTab("favoriteCats");
                     setPagination(prev => ({ ...prev, favoriteCats: 1 }));
                   }}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                  className={`flex items-center gap-1 md:gap-2 px-1.5 md:px-4 py-2 md:py-2.5 rounded-lg md:rounded-xl text-xs md:text-sm font-semibold transition-all duration-200 whitespace-nowrap ${
                     activeTab === "favoriteCats"
                       ? "bg-gradient-to-r from-banana-100 to-lilac/40 text-royal shadow-soft"
                       : "text-ink/60 hover:text-royal hover:bg-royal/5"
                   }`}
                 >
-                  <Cat className="h-4 w-4" />
-                  Favorite Cats
+                  <Cat className="h-3 w-3 md:h-4 md:w-4 flex-shrink-0" />
+                  <span className="hidden sm:inline">Favorite Cats</span>
+                  <span className="sm:hidden">Cats</span>
                 </button>
               </div>
 

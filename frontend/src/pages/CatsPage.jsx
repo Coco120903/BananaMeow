@@ -228,23 +228,23 @@ export default function CatsPage() {
       </div>
 
       {/* Search and Filter Bar */}
-      <div className="mb-8 flex flex-col sm:flex-row gap-4" style={{ animation: 'slide-up-fade 0.5s ease-out 0.1s backwards' }}>
+      <div className="mb-8 flex flex-row sm:flex-row gap-2 sm:gap-4" style={{ animation: 'slide-up-fade 0.5s ease-out 0.1s backwards' }}>
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-ink/30 pointer-events-none z-10" />
+          <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-ink/30 pointer-events-none z-10" />
           <input
             type="text"
             placeholder="Search by name..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full rounded-2xl border-2 border-royal/10 bg-white pl-11 pr-5 py-3.5 text-ink transition-all duration-300 focus:outline-none focus:border-royal/30 focus:shadow-[0_0_0_4px_rgba(90,62,133,0.1)] placeholder:text-ink/40"
+            className="w-full rounded-2xl border-2 border-royal/10 bg-white pl-9 sm:pl-11 pr-3 sm:pr-5 py-2.5 sm:py-3.5 text-sm sm:text-base text-ink transition-all duration-300 focus:outline-none focus:border-royal/30 focus:shadow-[0_0_0_4px_rgba(90,62,133,0.1)] placeholder:text-ink/40"
           />
         </div>
-        <div className="relative">
-          <Filter className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-ink/30 pointer-events-none z-10" />
+        <div className="relative flex-1 sm:flex-none">
+          <Filter className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-ink/30 pointer-events-none z-10" />
           <select
             value={filterTrait}
             onChange={(e) => setFilterTrait(e.target.value)}
-            className="w-full rounded-2xl border-2 border-royal/10 bg-white pl-11 pr-10 py-3.5 text-ink transition-all duration-300 focus:outline-none focus:border-royal/30 focus:shadow-[0_0_0_4px_rgba(90,62,133,0.1)] appearance-none cursor-pointer min-w-[180px]"
+            className="w-full rounded-2xl border-2 border-royal/10 bg-white pl-9 sm:pl-11 pr-8 sm:pr-10 py-2.5 sm:py-3.5 text-sm sm:text-base text-ink transition-all duration-300 focus:outline-none focus:border-royal/30 focus:shadow-[0_0_0_4px_rgba(90,62,133,0.1)] appearance-none cursor-pointer sm:min-w-[180px]"
           >
             <option value="all">All Traits</option>
             {allTraits.map(trait => (

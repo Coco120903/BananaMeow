@@ -23,6 +23,7 @@ import TermsPage from "./pages/TermsPage.jsx";
 import GalleryPage from "./pages/GalleryPage.jsx";
 import GalleryDetailPage from "./pages/GalleryDetailPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
+import ContactPage from "./pages/ContactPage.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
 // Admin imports
@@ -174,6 +175,7 @@ export default function App() {
                       <Route path="/gallery/:id" element={<GalleryDetailPage />} />
                       <Route path="/privacy" element={<PrivacyPage />} />
                       <Route path="/terms" element={<TermsPage />} />
+                      <Route path="/contact" element={<ContactPage />} />
                       <Route
                         path="/profile"
                         element={

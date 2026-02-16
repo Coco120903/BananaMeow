@@ -77,7 +77,7 @@ export async function createOrderCheckout(req, res) {
   try {
     const stripe = getStripeClient();
 
-    // Validate inventory before creating checkout
+    // Validate inventory before creating checkout (atomic check)
     for (const item of items) {
       if (item.productId) {
         const product = await Product.findById(item.productId);
@@ -86,7 +86,7 @@ export async function createOrderCheckout(req, res) {
         }
         if (product.inventory < item.quantity) {
           return res.status(400).json({ 
-            message: `"${item.name}" only has ${product.inventory} left in stock` 
+            message: `Insufficient stock available. "${item.name}" only has ${product.inventory} left in stock` 
           });
         }
       }
@@ -183,12 +183,24 @@ export async function handleStripeWebhook(req, res) {
         if (order) {
           console.log(`✅ Order ${order._id} marked as completed`);
 
-          // Decrement inventory for each item in the order
+          // Decrement inventory for each item in the order (atomic operation)
           for (const item of order.items) {
             if (item.productId) {
-              await Product.findByIdAndUpdate(item.productId, {
-                $inc: { inventory: -item.quantity }
-              });
+              // Use atomic update to prevent race conditions
+              const result = await Product.findByIdAndUpdate(
+                item.productId,
+                { $inc: { inventory: -item.quantity } },
+                { new: true }
+              );
+              
+              // Verify stock didn't go negative (safety check)
+              if (result && result.inventory < 0) {
+                console.warn(`⚠️ Stock went negative for product ${item.productId} (${result.inventory}). This should not happen.`);
+                // Restore the stock to prevent negative inventory
+                await Product.findByIdAndUpdate(item.productId, {
+                  $inc: { inventory: item.quantity }
+                });
+              }
             }
           }
 

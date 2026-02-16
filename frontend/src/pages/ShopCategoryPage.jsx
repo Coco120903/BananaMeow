@@ -135,18 +135,30 @@ export default function ShopCategoryPage({ title, category }) {
 
   const getQuantity = (productId) => quantities[productId] ?? 1;
 
-  const updateQuantity = (productId, nextValue) => {
-    const clamped = Math.max(1, Math.min(99, nextValue));
+  const updateQuantity = (productId, nextValue, maxStock) => {
+    const maxAllowed = maxStock !== undefined ? Math.min(maxStock, 99) : 99;
+    const clamped = Math.max(1, Math.min(maxAllowed, nextValue));
     setQuantities((prev) => ({ ...prev, [productId]: clamped }));
   };
 
   const handleAddToCart = (productId, product) => {
     const qty = getQuantity(productId);
-    for (let i = 0; i < qty; i += 1) {
+    const stock = product.inventory ?? 0;
+    
+    // Check stock availability
+    if (stock <= 0) {
+      return; // Do nothing if out of stock
+    }
+    
+    // Limit quantity to available stock
+    const actualQty = Math.min(qty, stock);
+    
+    for (let i = 0; i < actualQty; i += 1) {
       dispatch({
         type: "ADD_ITEM",
         payload: {
           id: product._id,
+          productId: product._id, // Include productId for stock validation
           name: product.name,
           price: product.price
         }
@@ -169,6 +181,10 @@ export default function ShopCategoryPage({ title, category }) {
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {withImages.map((product) => {
           const qty = getQuantity(product._id);
+          const stock = product.inventory ?? 0;
+          const inStock = stock > 0;
+          const isLowStock = stock > 0 && stock <= 5;
+          
           return (
             <article
               key={product._id}
@@ -195,12 +211,27 @@ export default function ShopCategoryPage({ title, category }) {
               </div>
               <div className="flex items-center justify-between text-base font-semibold text-royal">
                 <span>${product.price}</span>
+                {/* Stock indicator */}
+                {inStock ? (
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                    isLowStock 
+                      ? 'bg-coral/20 text-coral' 
+                      : 'bg-mint/30 text-emerald-700'
+                  }`}>
+                    {isLowStock ? `Only ${stock} left!` : `In Stock: ${stock}`}
+                  </span>
+                ) : (
+                  <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-blush/50 text-coral">
+                    Out of Stock
+                  </span>
+                )}
               </div>
               <div className="flex items-center justify-between gap-3">
                 <button
                   type="button"
-                  onClick={() => updateQuantity(product._id, qty - 1)}
-                  className="rounded-full bg-cream px-3 py-2 text-base font-semibold text-ink/70 transition hover:-translate-y-0.5"
+                  onClick={() => updateQuantity(product._id, qty - 1, stock)}
+                  disabled={!inStock}
+                  className="rounded-full bg-cream px-3 py-2 text-base font-semibold text-ink/70 transition hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Decrease quantity"
                 >
                   −
@@ -210,8 +241,9 @@ export default function ShopCategoryPage({ title, category }) {
                 </span>
                 <button
                   type="button"
-                  onClick={() => updateQuantity(product._id, qty + 1)}
-                  className="rounded-full bg-cream px-3 py-2 text-base font-semibold text-ink/70 transition hover:-translate-y-0.5"
+                  onClick={() => updateQuantity(product._id, qty + 1, stock)}
+                  disabled={!inStock || qty >= stock}
+                  className="rounded-full bg-cream px-3 py-2 text-base font-semibold text-ink/70 transition hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Increase quantity"
                 >
                   +
@@ -219,10 +251,11 @@ export default function ShopCategoryPage({ title, category }) {
               </div>
               <button
                 type="button"
-                className="btn-secondary text-sm"
+                className="btn-secondary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() => handleAddToCart(product._id, product)}
+                disabled={!inStock}
               >
-                Add to cart
+                {inStock ? 'Add to cart' : 'Out of Stock'}
               </button>
             </article>
           );

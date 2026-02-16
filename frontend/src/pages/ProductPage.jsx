@@ -39,6 +39,7 @@ export default function ProductPage() {
       type: "ADD_ITEM",
       payload: {
         id: product._id,
+        productId: product._id, // Include productId for stock validation
         name: product.name,
         price: product.price,
         imageUrl: product.imageUrl

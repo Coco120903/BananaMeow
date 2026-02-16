@@ -33,6 +33,14 @@ export default function CartPage() {
     setError("");
     setLoading(true);
     try {
+      // Map cart items to include productId for stock validation
+      const checkoutItems = state.items.map(item => ({
+        productId: item.productId || item.id, // Use productId if available, fallback to id
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity
+      }));
+      
       const response = await fetch(
         `${API_BASE}/api/payments/create-order-session`,
         {
@@ -40,7 +48,7 @@ export default function CartPage() {
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({ items: state.items, email })
+          body: JSON.stringify({ items: checkoutItems, email })
         }
       );
 

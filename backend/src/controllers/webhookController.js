@@ -77,12 +77,24 @@ async function handleCheckoutComplete(session) {
     order.email = order.email || session.customer_email || session.customer_details?.email;
     await order.save();
 
-    // Decrement inventory for each item
+    // Decrement inventory for each item (atomic operation)
     for (const item of order.items) {
       if (item.productId) {
-        await Product.findByIdAndUpdate(item.productId, {
-          $inc: { inventory: -item.quantity }
-        });
+        // Use atomic update to prevent race conditions
+        const result = await Product.findByIdAndUpdate(
+          item.productId,
+          { $inc: { inventory: -item.quantity } },
+          { new: true }
+        );
+        
+        // Verify stock didn't go negative (safety check)
+        if (result && result.inventory < 0) {
+          console.warn(`⚠️ Stock went negative for product ${item.productId} (${result.inventory}). This should not happen.`);
+          // Restore the stock to prevent negative inventory
+          await Product.findByIdAndUpdate(item.productId, {
+            $inc: { inventory: item.quantity }
+          });
+        }
       }
     }
 

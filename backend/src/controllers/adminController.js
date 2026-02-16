@@ -405,6 +405,80 @@ export async function getAnalytics(req, res) {
       { $sort: { _id: 1 } }
     ]);
 
+    // ─── NEW: Engagement Analytics ───────────────────
+
+    // Recent likes (last 7 days) — based on actual likedAt timestamps
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const recentLikesResult = await Gallery.aggregate([
+      { $unwind: { path: "$likes", preserveNullAndEmptyArrays: false } },
+      { $match: { "likes.likedAt": { $exists: true, $ne: null, $gte: sevenDaysAgo } } },
+      { $group: { _id: null, count: { $sum: 1 } } }
+    ]);
+    const recentLikes7d = recentLikesResult[0]?.count || 0;
+
+    // Top liked posts (for bar chart — top 10)
+    const topLikedPosts = galleryEngagement.slice(0, 10).map(post => ({
+      title: post.title?.length > 20 ? post.title.substring(0, 20) + "…" : post.title,
+      fullTitle: post.title,
+      likesCount: post.likesCount,
+      _id: post._id
+    }));
+
+    // Likes over time (daily/monthly based on actual likedAt timestamps)
+    const dateFormat = period === "7d" ? "%Y-%m-%d" : period === "30d" ? "%Y-%m-%d" : "%Y-%m";
+    const likesOverTime = await Gallery.aggregate([
+      { $unwind: { path: "$likes", preserveNullAndEmptyArrays: false } },
+      { $match: { "likes.likedAt": { $exists: true, $ne: null, $gte: startDate, $lte: endDate } } },
+      {
+        $group: {
+          _id: { $dateToString: { format: dateFormat, date: "$likes.likedAt", timezone: "UTC" } },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    // Top donated cat (all time)
+    const topDonatedCatAgg = await Donation.aggregate([
+      { $group: { _id: "$cat", totalAmount: { $sum: "$amount" }, count: { $sum: 1 } } },
+      { $sort: { totalAmount: -1 } },
+      { $limit: 1 }
+    ]);
+    const topDonatedCat = topDonatedCatAgg[0] || null;
+
+    // All-time donations by cat (for dedicated pie chart)
+    const donationByCatAll = await Donation.aggregate([
+      { $group: { _id: "$cat", totalAmount: { $sum: "$amount" }, count: { $sum: 1 } } },
+      { $sort: { totalAmount: -1 } }
+    ]);
+
+    // Recent engagements (recently posted with engagement info)
+    const recentEngagements = await Gallery.aggregate([
+      {
+        $project: {
+          title: 1,
+          likesCount: { $size: { $ifNull: ["$likes", []] } },
+          createdAt: 1,
+          recentLikes: {
+            $size: {
+              $filter: {
+                input: { $ifNull: ["$likes", []] },
+                as: "like",
+                cond: {
+                  $and: [
+                    { $ifNull: ["$$like.likedAt", false] },
+                    { $gte: ["$$like.likedAt", sevenDaysAgo] }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      { $sort: { createdAt: -1 } },
+      { $limit: 10 }
+    ]);
+
     res.json({
       revenueOverTime: revenueData,
       donationByCat,
@@ -418,7 +492,14 @@ export async function getAnalytics(req, res) {
       galleryEngagement,
       totalLikes,
       mostLikedPost,
-      engagementOverTime
+      engagementOverTime,
+      // New engagement analytics
+      recentLikes7d,
+      topLikedPosts,
+      likesOverTime,
+      topDonatedCat,
+      donationByCatAll,
+      recentEngagements
     });
   } catch (error) {
     console.error("Analytics error:", error);

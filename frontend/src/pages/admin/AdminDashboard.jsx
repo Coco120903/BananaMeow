@@ -17,7 +17,9 @@ import {
   BarChart3,
   PieChart,
   Activity,
-  FileDown
+  FileDown,
+  ThumbsUp,
+  Image
 } from "lucide-react";
 import { generateDashboardPDF } from "../../utils/pdfExport.js";
 import {
@@ -25,6 +27,8 @@ import {
   Line,
   BarChart,
   Bar,
+  AreaChart,
+  Area,
   PieChart as RechartsPieChart,
   Pie,
   Cell,
@@ -149,6 +153,42 @@ export default function AdminDashboard() {
       color: "from-amber-200 to-amber-100",
       iconColor: "text-amber-600",
       subValue: `$${parseFloat(stats?.stats?.topSpenderAmount || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    },
+    {
+      title: "Total Gallery Likes",
+      value: analytics?.totalLikes || 0,
+      icon: ThumbsUp,
+      color: "from-pink-200 to-pink-100",
+      iconColor: "text-pink-500"
+    },
+    {
+      title: "Most Liked Post",
+      value: analytics?.mostLikedPost?.title
+        ? (analytics.mostLikedPost.title.length > 18
+          ? analytics.mostLikedPost.title.substring(0, 18) + "…"
+          : analytics.mostLikedPost.title)
+        : "N/A",
+      icon: Sparkles,
+      color: "from-lilac/20 to-lilac/10",
+      iconColor: "text-purple-600",
+      subValue: analytics?.mostLikedPost ? `${analytics.mostLikedPost.likesCount || 0} likes` : null
+    },
+    {
+      title: "Recent Likes (7d)",
+      value: analytics?.recentLikes7d || 0,
+      icon: TrendingUp,
+      color: "from-coral/20 to-coral/10",
+      iconColor: "text-coral"
+    },
+    {
+      title: "Top Donated Cat",
+      value: analytics?.topDonatedCat?._id || "N/A",
+      icon: Cat,
+      color: "from-banana-200 to-banana-100",
+      iconColor: "text-amber-600",
+      subValue: analytics?.topDonatedCat
+        ? `$${parseFloat(analytics.topDonatedCat.totalAmount || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · ${analytics.topDonatedCat.count} donations`
+        : null
     }
   ];
 
@@ -335,6 +375,166 @@ export default function AdminDashboard() {
             <div className="h-[300px] flex items-center justify-center text-ink/50">
               No donation data available
             </div>
+          )}
+        </div>
+      </div>
+
+      {/* Gallery Engagement Analytics */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Top Liked Gallery Posts */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-white/50">
+          <h2 className="text-lg font-semibold text-royal mb-4 flex items-center gap-2">
+            <ThumbsUp className="w-5 h-5 text-pink-500" />
+            Top Liked Gallery Posts
+          </h2>
+          {analytics?.topLikedPosts?.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={analytics.topLikedPosts}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="title" stroke="#6b7280" fontSize={11} angle={-35} textAnchor="end" height={90} />
+                <YAxis stroke="#6b7280" fontSize={12} allowDecimals={false} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "white",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "8px"
+                  }}
+                  formatter={(value) => [value, "Likes"]}
+                  labelFormatter={(label) => {
+                    const post = analytics.topLikedPosts.find(p => p.title === label);
+                    return post?.fullTitle || label;
+                  }}
+                />
+                <Bar dataKey="likesCount" fill="#ec4899" name="Likes" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-[300px] flex items-center justify-center text-ink/50">
+              No gallery engagement data yet
+            </div>
+          )}
+        </div>
+
+        {/* Recent Likes Activity */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-white/50">
+          <h2 className="text-lg font-semibold text-royal mb-4 flex items-center gap-2">
+            <Activity className="w-5 h-5 text-pink-500" />
+            Recent Likes Activity
+          </h2>
+          {analytics?.likesOverTime?.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={analytics.likesOverTime}>
+                <defs>
+                  <linearGradient id="likesGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#ec4899" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#ec4899" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="_id" stroke="#6b7280" fontSize={12} />
+                <YAxis stroke="#6b7280" fontSize={12} allowDecimals={false} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "white",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "8px"
+                  }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="count"
+                  stroke="#ec4899"
+                  strokeWidth={2}
+                  fill="url(#likesGradient)"
+                  name="Likes"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-[300px] flex items-center justify-center text-ink/50">
+              No recent likes activity data
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Donations Per Royal Cat */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Pie Chart */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-white/50">
+          <h2 className="text-lg font-semibold text-royal mb-4 flex items-center gap-2">
+            <PieChart className="w-5 h-5 text-pink-500" />
+            Donations Per Royal Cat
+          </h2>
+          {analytics?.donationByCatAll?.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <RechartsPieChart>
+                <Pie
+                  data={analytics.donationByCatAll}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ _id, percent }) => `${_id}: ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={100}
+                  fill="#8884d8"
+                  dataKey="totalAmount"
+                  nameKey="_id"
+                >
+                  {analytics.donationByCatAll.map((entry, index) => (
+                    <Cell key={`cat-pie-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(value) => [`$${parseFloat(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, "Donations"]}
+                />
+                <Legend />
+              </RechartsPieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-[300px] flex items-center justify-center text-ink/50">
+              No donation data available
+            </div>
+          )}
+        </div>
+
+        {/* Cat Donation Summary */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-white/50">
+          <h2 className="text-lg font-semibold text-royal mb-4 flex items-center gap-2">
+            <Heart className="w-5 h-5 text-pink-500" />
+            Cat Donation Summary
+          </h2>
+          {analytics?.donationByCatAll?.length > 0 ? (
+            <div className="space-y-3">
+              {analytics.donationByCatAll.map((cat, index) => {
+                const totalAll = analytics.donationByCatAll.reduce((sum, c) => sum + c.totalAmount, 0);
+                const pct = totalAll > 0 ? ((cat.totalAmount / totalAll) * 100).toFixed(1) : 0;
+                return (
+                  <div
+                    key={cat._id}
+                    className="flex items-center justify-between p-3 bg-cream/50 rounded-xl"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-3 h-3 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                      />
+                      <div>
+                        <p className="font-medium text-ink">{cat._id}</p>
+                        <p className="text-xs text-ink/50">{cat.count} donations</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-royal">
+                        ${parseFloat(cat.totalAmount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                      <p className="text-xs text-ink/50">{pct}% of total</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-ink/50 text-center py-8">No donation data available</p>
           )}
         </div>
       </div>
@@ -593,6 +793,58 @@ export default function AdminDashboard() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Recent Engagements Table */}
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-white/50">
+        <h2 className="text-lg font-semibold text-royal mb-4 flex items-center gap-2">
+          <Image className="w-5 h-5 text-pink-500" />
+          Recent Engagements
+        </h2>
+        {analytics?.recentEngagements?.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-ink/10">
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-ink/60">Post Title</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-ink/60">Total Likes</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-ink/60">Date Posted</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-ink/60">Recent Activity (7d)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {analytics.recentEngagements.map((post) => (
+                  <tr key={post._id} className="border-b border-ink/5 hover:bg-cream/30">
+                    <td className="py-3 px-4 font-medium text-ink">
+                      {post.title?.length > 40 ? post.title.substring(0, 40) + "…" : post.title}
+                    </td>
+                    <td className="py-3 px-4 text-ink">
+                      <span className="inline-flex items-center gap-1">
+                        <Heart className="w-3.5 h-3.5 text-pink-400" />
+                        {post.likesCount}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-ink/60 text-sm">
+                      {new Date(post.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="py-3 px-4">
+                      {post.recentLikes > 0 ? (
+                        <span className="inline-flex items-center gap-1 text-emerald-600 font-medium text-sm">
+                          <TrendingUp className="w-3.5 h-3.5" />
+                          +{post.recentLikes} likes
+                        </span>
+                      ) : (
+                        <span className="text-ink/40 text-sm">No recent activity</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="text-ink/50 text-center py-8">No engagement data yet</p>
+        )}
       </div>
 
       {/* Recent Activity */}

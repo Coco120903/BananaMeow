@@ -19,6 +19,7 @@ import reviewsRoutes from "./routes/reviewsRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
 import newsletterRoutes from "./routes/newsletterRoutes.js";
 import webhookRoutes from "./routes/webhookRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -69,6 +70,7 @@ app.use("/api/payments", paymentsRoutes);
 app.use("/api/reviews", reviewsRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/newsletter", newsletterRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // 404 handler — return JSON, not HTML
 app.use((req, res) => {

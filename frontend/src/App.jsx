@@ -36,6 +36,9 @@ import AdminCategoriesPage from "./pages/admin/AdminCategoriesPage.jsx";
 import AdminDonationsPage from "./pages/admin/AdminDonationsPage.jsx";
 import AdminOrdersPage from "./pages/admin/AdminOrdersPage.jsx";
 import AdminGalleryPage from "./pages/AdminGalleryPage.jsx";
+import AdminNotificationsPage from "./pages/admin/AdminNotificationsPage.jsx";
+import NotificationsPage from "./pages/NotificationsPage.jsx";
+import NotificationPopup from "./components/NotificationPopup.jsx";
 
 function PublicLayout({ children }) {
   return (
@@ -135,6 +138,7 @@ export default function App() {
       <AdminAuthProvider>
         <AuthProvider>
           <CartProvider>
+            <NotificationPopup />
             <Routes>
               {/* Admin Routes - redirect old admin login to unified login */}
               <Route
@@ -157,6 +161,7 @@ export default function App() {
                 <Route path="donations" element={<AdminDonationsPage />} />
                 <Route path="orders" element={<AdminOrdersPage />} />
                 <Route path="gallery" element={<AdminGalleryPage />} />
+                <Route path="notifications" element={<AdminNotificationsPage />} />
               </Route>
 
               {/* Public Routes */}
@@ -225,6 +230,14 @@ export default function App() {
                         element={
                           <ProtectedRoute>
                             <ProfilePage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/notifications"
+                        element={
+                          <ProtectedRoute>
+                            <NotificationsPage />
                           </ProtectedRoute>
                         }
                       />

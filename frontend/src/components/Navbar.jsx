@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
-import { Cat, Crown, ShoppingCart, User, Heart, Sparkles, Menu, X, LogOut, Settings, ChevronDown, Star, Camera, Mail } from "lucide-react";
+import { Cat, Crown, ShoppingCart, User, Heart, Sparkles, Menu, X, LogOut, Settings, ChevronDown, Star, Camera, Mail, Bell } from "lucide-react";
 
 const navLinks = [
   { label: "Home", href: "/", icon: Sparkles },
@@ -230,6 +230,14 @@ export default function Navbar() {
                 >
                   <Settings className="h-4 w-4" />
                   <span>Profile Settings</span>
+                </Link>
+                <Link
+                  to="/notifications"
+                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-ink/70 transition-all duration-200 hover:bg-gradient-to-r hover:from-banana-50 hover:to-lilac/20 hover:text-royal"
+                  onClick={() => setIsLoginOpen(false)}
+                >
+                  <Bell className="h-4 w-4" />
+                  <span>Notifications</span>
                 </Link>
                 <button
                   type="button"

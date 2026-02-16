@@ -12,7 +12,8 @@ import {
   Menu,
   X,
   Camera,
-  Tag
+  Tag,
+  Megaphone
 } from "lucide-react";
 import { useState } from "react";
 
@@ -23,7 +24,8 @@ const navItems = [
   { to: "/admin/categories", icon: Tag, label: "Categories" },
   { to: "/admin/donations", icon: Heart, label: "Donations" },
   { to: "/admin/orders", icon: ShoppingCart, label: "Orders" },
-  { to: "/admin/gallery", icon: Camera, label: "Gallery" }
+  { to: "/admin/gallery", icon: Camera, label: "Gallery" },
+  { to: "/admin/notifications", icon: Megaphone, label: "Notifications" }
 ];
 
 export default function AdminLayout() {

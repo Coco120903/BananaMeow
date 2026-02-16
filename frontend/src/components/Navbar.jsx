@@ -88,7 +88,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/95 backdrop-blur-lg shadow-soft' : 'bg-white/80 backdrop-blur-md'}`}>
+    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/95 backdrop-blur-lg shadow-soft' : 'bg-white/80 backdrop-blur-md'}`}>
       {/* Scroll Progress Bar with paw prints */}
       <div className="absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-royal via-banana-400 to-coral transition-all duration-150" style={{ width: `${scrollProgress}%` }}>
         {scrollProgress > 5 && (

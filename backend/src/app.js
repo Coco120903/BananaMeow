@@ -15,13 +15,35 @@ import galleryRoutes from "./routes/galleryRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
 import favoritesRoutes from "./routes/favoritesRoutes.js";
 import categoriesRoutes from "./routes/categoriesRoutes.js";
+import contactRoutes from "./routes/contactRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 
-app.use(cors());
+const allowedOrigins = [
+  process.env.FRONTEND_URL || "http://localhost:5173",
+  "http://localhost:5173",
+  "http://localhost:5174"
+].filter(Boolean);
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, Stripe webhooks)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    callback(new Error("Not allowed by CORS"));
+  },
+  credentials: true
+}));
+
+// Stripe webhook needs raw body — must be before express.json()
+import { handleStripeWebhook } from "./controllers/paymentsController.js";
+app.post("/api/payments/webhook", express.raw({ type: "application/json" }), handleStripeWebhook);
+
 app.use(express.json());
 
 // Serve uploaded files
@@ -42,6 +64,7 @@ app.use("/api/products", productsRoutes);
 app.use("/api/donations", donationsRoutes);
 app.use("/api/orders", ordersRoutes);
 app.use("/api/payments", paymentsRoutes);
+app.use("/api/contact", contactRoutes);
 
 // 404 handler — return JSON, not HTML
 app.use((req, res) => {

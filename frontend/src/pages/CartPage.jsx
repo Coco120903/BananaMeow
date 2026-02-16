@@ -14,12 +14,20 @@ export default function CartPage() {
   const isSuccess = searchParams.get("success") === "true";
   const isCanceled = searchParams.get("canceled") === "true";
 
-  // Clear cart on successful payment and clean URL params
+  // Show success UI when Stripe redirects back, clear cart and remove URL params
+  const [showSuccess, setShowSuccess] = useState(isSuccess);
   useEffect(() => {
+    let timer;
     if (isSuccess) {
       dispatch({ type: "CLEAR_CART" });
+      setShowSuccess(true);
+      // Remove the query param so refresh won't re-trigger the success state
+      setSearchParams({}, { replace: true });
+      // Keep showing confirmation briefly (8s) so users have time to read
+      timer = setTimeout(() => setShowSuccess(false), 8000);
     }
-  }, [isSuccess, dispatch]);
+    return () => clearTimeout(timer);
+  }, [isSuccess, dispatch, setSearchParams]);
 
   const handleCheckout = async () => {
     setError("");
@@ -51,7 +59,7 @@ export default function CartPage() {
   };
 
   // Success state — after Stripe redirect
-  if (isSuccess) {
+  if (isSuccess || showSuccess) {
     return (
       <section className="mx-auto max-w-2xl px-4 py-16 md:px-8 text-center">
         <div className="card-soft rounded-[2.5rem] p-10">

@@ -165,7 +165,7 @@ export async function sendWelcomeEmail(to, name) {
  * Send password reset email
  */
 export async function sendPasswordResetEmail(to, name, resetUrl) {
-  const transporter = getTransporter();
+  const transporter = createTransporter();
   
   if (!transporter) {
     console.log(`[DEV] Password reset link for ${to}: ${resetUrl}`);
@@ -238,7 +238,7 @@ export async function sendPasswordResetEmail(to, name, resetUrl) {
  * Send password change notification email
  */
 export async function sendPasswordChangeNotification(to, name) {
-  const transporter = getTransporter();
+  const transporter = createTransporter();
   
   if (!transporter) {
     console.log(`[DEV] Password change notification would be sent to ${to}`);

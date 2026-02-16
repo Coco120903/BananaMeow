@@ -88,14 +88,27 @@ export default function Navbar() {
 
   return (
     <header className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/95 backdrop-blur-lg shadow-soft' : 'bg-white/80 backdrop-blur-md'}`}>
-      {/* Scroll Progress Bar */}
-      <div className="absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-royal via-banana-400 to-coral transition-all duration-150" style={{ width: `${scrollProgress}%` }} />
+      {/* Scroll Progress Bar with paw prints */}
+      <div className="absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-royal via-banana-400 to-coral transition-all duration-150" style={{ width: `${scrollProgress}%` }}>
+        {scrollProgress > 5 && (
+          <span className="absolute -right-2 -top-2 transition-all duration-150" style={{ filter: 'drop-shadow(0 1px 2px rgba(90,62,133,0.3))' }}>
+            <svg viewBox="0 0 48 48" fill="currentColor" className="w-3 h-3 text-royal">
+              <ellipse cx="24" cy="34" rx="10" ry="8" />
+              <ellipse cx="14" cy="21" rx="4.5" ry="5" />
+              <ellipse cx="24" cy="17" rx="4.5" ry="5" />
+              <ellipse cx="34" cy="21" rx="4.5" ry="5" />
+              <ellipse cx="9" cy="28" rx="3.5" ry="4" />
+              <ellipse cx="39" cy="28" rx="3.5" ry="4" />
+            </svg>
+          </span>
+        )}
+      </div>
       
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:px-8 md:py-4">
         {/* Logo */}
         <Link to="/" onClick={handleLogoClick} className="group flex items-center gap-3 transition-transform duration-300 hover:scale-105">
-          <div className="relative">
-            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-banana-200 via-banana-100 to-lilac/40 shadow-soft transition-all duration-300 group-hover:shadow-glow">
+          <div className="relative cat-ears cat-ears-inner">
+            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-banana-200 via-banana-100 to-lilac/40 shadow-soft transition-all duration-300 group-hover:shadow-glow purr-hover">
               <Cat className="h-5 w-5 text-royal transition-transform duration-300 group-hover:scale-110" />
             </div>
             <div className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-white shadow-sm">
@@ -106,8 +119,16 @@ export default function Navbar() {
             <p className="text-lg font-bold text-royal transition-colors">
               Banana Meow
             </p>
-            <p className="text-[10px] uppercase tracking-[0.25em] text-ink/50 font-medium">
+            <p className="text-[10px] uppercase tracking-[0.25em] text-ink/50 font-medium flex items-center gap-1">
               Chonky Royals
+              <svg viewBox="0 0 48 48" fill="currentColor" className="w-2.5 h-2.5 text-royal/40 inline-block">
+                <ellipse cx="24" cy="34" rx="10" ry="8" />
+                <ellipse cx="14" cy="21" rx="4.5" ry="5" />
+                <ellipse cx="24" cy="17" rx="4.5" ry="5" />
+                <ellipse cx="34" cy="21" rx="4.5" ry="5" />
+                <ellipse cx="9" cy="28" rx="3.5" ry="4" />
+                <ellipse cx="39" cy="28" rx="3.5" ry="4" />
+              </svg>
             </p>
           </div>
         </Link>

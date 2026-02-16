@@ -112,8 +112,10 @@ export default function AdminLoginPage() {
           </form>
 
           <div className="mt-6 pt-6 border-t border-ink/10 text-center">
-            <p className="text-xs text-ink/50">
-              🐱 Only authorized royal servants may enter 🐱
+            <p className="text-xs text-ink/50 flex items-center justify-center gap-2">
+              <Cat className="w-3.5 h-3.5 text-royal/40" />
+              Only authorized royal servants may enter
+              <Cat className="w-3.5 h-3.5 text-royal/40" />
             </p>
           </div>
         </div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Shirt, Sparkles, ShoppingBag, Crown, Star, Heart, ArrowRight, Cat, Gift, Tag, Percent, Image as ImageIcon } from "lucide-react";
 import { API_BASE } from "../lib/api.js";
+import { FloatingCats } from "../components/CatDecorations.jsx";
 
 // Fallback categories if API fails
 const fallbackCategories = [
@@ -85,6 +86,9 @@ export default function ShopPage() {
   }, []);
   return (
     <section className="relative mx-auto max-w-6xl px-4 py-12 md:px-8 overflow-hidden">
+      {/* Floating cat silhouettes */}
+      <FloatingCats count={4} />
+      
       {/* Floating shape decorations */}
       <div className="floating-shape floating-shape-1 top-20 right-10" />
       <div className="floating-shape floating-shape-2 top-40 left-10" />
@@ -114,7 +118,7 @@ export default function ShopPage() {
           return (
             <article
               key={category.id}
-              className="card-cute p-[3px] group magnetic-hover"
+              className="card-cute p-[3px] group magnetic-hover cat-face-card"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className="flex flex-col gap-4 rounded-[1.8rem] bg-white p-6 h-full relative overflow-hidden card-shine">

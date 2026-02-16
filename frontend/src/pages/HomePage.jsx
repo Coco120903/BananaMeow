@@ -5,6 +5,7 @@ import { API_BASE } from "../lib/api.js";
 import HeroSection from "../components/HeroSection.jsx";
 import OriginStory from "../components/OriginStory.jsx";
 import CTASection from "../components/CTASection.jsx";
+import { WhiskerDivider, FloatingCats, PawTrail, CatEars } from "../components/CatDecorations.jsx";
 
 // Announcement Banner Component
 function AnnouncementBanner() {
@@ -26,11 +27,13 @@ function AnnouncementBanner() {
     <div className="relative overflow-hidden bg-gradient-to-r from-royal via-royal/90 to-royal py-2.5">
       <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-[shimmer_3s_ease-in-out_infinite]" />
       <div className="mx-auto max-w-6xl px-4 flex items-center justify-center gap-3">
+        <span className="text-sm">🐾</span>
         <Sparkles className="h-4 w-4 text-banana-300 animate-pulse" />
         <p className="text-sm font-medium text-white text-center transition-all duration-500">
           {announcements[current]}
         </p>
         <Sparkles className="h-4 w-4 text-banana-300 animate-pulse" />
+        <span className="text-sm">🐾</span>
       </div>
     </div>
   );
@@ -47,13 +50,14 @@ function StatsSection() {
 
   return (
     <section className="relative mx-auto max-w-6xl px-4 py-16 md:px-8">
+      <FloatingCats count={3} />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
           return (
             <div
               key={stat.label}
-              className="feature-card hover-bounce text-center"
+              className="feature-card hover-bounce text-center cat-face-card purr-hover"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className={`mx-auto mb-4 h-16 w-16 rounded-2xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-soft`}>
@@ -111,7 +115,7 @@ function TestimonialsSection() {
         </div>
         
         <div className="relative max-w-3xl mx-auto">
-          <div className="card-cute p-[2px]">
+          <div className="card-cute p-[2px] cat-face-card">
             <div className="rounded-[1.85rem] bg-white p-8 md:p-10 text-center">
               <Quote className="h-10 w-10 text-lilac/40 mx-auto mb-4" />
               <p className="text-lg md:text-xl text-ink/80 leading-relaxed mb-6 transition-all duration-500">
@@ -346,10 +350,13 @@ export default function HomePage() {
     <>
       <AnnouncementBanner />
       <HeroSection />
+      <WhiskerDivider />
       <StatsSection />
       <GalleryTeaser />
+      <WhiskerDivider />
       <OriginStory />
       <FeaturesSection />
+      <WhiskerDivider />
       <TestimonialsSection />
       <CTASection />
     </>

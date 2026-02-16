@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { API_BASE } from "../lib/api.js";
 import { Utensils, Pill, HeartPulse, Heart, Cat, Crown, Check, Sparkles, Star, Shield, Gift, ArrowRight } from "lucide-react";
 import { catBios } from "../content/catBios.js";
+import { FloatingCats } from "../components/CatDecorations.jsx";
 
 const donationTypes = [
   {
@@ -126,6 +127,9 @@ export default function DonatePage() {
 
   return (
     <section className="relative mx-auto max-w-6xl px-4 py-12 md:px-8 overflow-hidden">
+      {/* Floating cat silhouettes */}
+      <FloatingCats count={4} />
+      
       {/* Floating decorations */}
       <div className="floating-shape floating-shape-1 top-20 right-10" />
       <div className="floating-shape floating-shape-2 bottom-40 left-10" />

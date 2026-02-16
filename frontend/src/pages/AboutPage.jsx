@@ -2,6 +2,7 @@ import { funnyQuotes } from "../content/funnyQuotes.js";
 import { educationalPosts } from "../content/educationalPosts.js";
 import { memeCaptions } from "../content/memeCaptions.js";
 import { Crown, Sparkles, Heart, Star, Quote, BookOpen, MessageCircle, Cat, Users, Gift, Award } from "lucide-react";
+import { FloatingCats, WhiskerDivider } from "../components/CatDecorations.jsx";
 
 export default function AboutPage() {
   const teamMembers = [
@@ -12,6 +13,9 @@ export default function AboutPage() {
 
   return (
     <section className="relative mx-auto max-w-6xl px-4 py-12 md:px-8 overflow-hidden">
+      {/* Floating cat silhouettes */}
+      <FloatingCats count={5} />
+      
       {/* Floating decorations */}
       <div className="floating-shape floating-shape-1 top-20 right-10" />
       <div className="floating-shape floating-shape-2 bottom-40 left-10" />

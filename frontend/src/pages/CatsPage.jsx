@@ -4,6 +4,7 @@ import { Cat, Heart, Crown, Sparkles, Star, Filter, Search, Award, Zap, Coffee, 
 import { catBios } from "../content/catBios.js";
 import { API_BASE } from "../lib/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
+import { FloatingCats, WhiskerDivider, PawTrail } from "../components/CatDecorations.jsx";
 
 const traitIcons = {
   default: Sparkles,
@@ -198,6 +199,9 @@ export default function CatsPage() {
       )}
 
       <section className="relative mx-auto max-w-6xl px-4 py-12 md:px-8 overflow-hidden">
+      {/* Floating cat silhouettes */}
+      <FloatingCats count={6} />
+      
       {/* Floating decorative shapes */}
       <div className="floating-shape floating-shape-1 -right-20 top-40" />
       <div className="floating-shape floating-shape-2 -left-16 top-80" />
@@ -275,7 +279,7 @@ export default function CatsPage() {
         <div className="mb-12">
           <div className="flex items-center gap-3 mb-6">
             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-royal/20 to-transparent"></div>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-banana-100 to-lilac/40 border border-royal/10">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-banana-100 to-lilac/40 border border-royal/10 whiskers whiskers-sm">
               <Crown className="h-4 w-4 text-royal" />
               <span className="text-sm font-bold text-royal uppercase tracking-wider">The Founding Royals</span>
               <Crown className="h-4 w-4 text-royal" />

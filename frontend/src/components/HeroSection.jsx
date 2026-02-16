@@ -12,8 +12,8 @@ export default function HeroSection() {
       <div className="floating-shape floating-shape-2 left-10 top-1/2" style={{ animationDelay: '2s' }} />
       
       <div className="relative z-10 space-y-8">
-        {/* Premium badge */}
-        <div className="inline-flex items-center gap-3 rounded-full bg-white/80 backdrop-blur-sm px-5 py-2.5 shadow-soft border border-royal/5" style={{ animation: 'slide-up-fade 0.6s ease-out' }}>
+        {/* Premium badge with whiskers */}
+        <div className="inline-flex items-center gap-3 rounded-full bg-white/80 backdrop-blur-sm px-5 py-2.5 shadow-soft border border-royal/5 whiskers whiskers-sm" style={{ animation: 'slide-up-fade 0.6s ease-out' }}>
           <div className="flex items-center gap-1">
             <div className="w-2 h-2 rounded-full bg-mint animate-pulse" />
             <div className="w-2 h-2 rounded-full bg-banana-300 animate-pulse" style={{ animationDelay: '0.2s' }} />
@@ -50,15 +50,15 @@ export default function HeroSection() {
         
         {/* CTA Buttons */}
         <div className="flex flex-col gap-4 sm:flex-row" style={{ animation: 'slide-up-fade 0.6s ease-out 0.3s backwards' }}>
-          <Link to="/cats" className="btn-primary group flex items-center justify-center gap-2">
+          <Link to="/cats" className="btn-primary group flex items-center justify-center gap-2 paw-click cat-stretch">
             <Cat className="h-5 w-5 transition-transform duration-300 group-hover:scale-110" />
             <span>Meet the Cats</span>
           </Link>
-          <Link to="/donate" className="btn-cute group flex items-center justify-center gap-2">
+          <Link to="/donate" className="btn-cute group flex items-center justify-center gap-2 paw-click">
             <Heart className="h-5 w-5 text-coral transition-all duration-300 group-hover:fill-coral group-hover:scale-110" />
             <span className="relative z-10">Donate for Their Care</span>
           </Link>
-          <Link to="/shop" className="btn-glass group flex items-center justify-center gap-2">
+          <Link to="/shop" className="btn-glass group flex items-center justify-center gap-2 paw-click">
             <Sparkles className="h-5 w-5 transition-transform duration-300 group-hover:rotate-12" />
             <span>Shop Merch</span>
           </Link>
@@ -94,7 +94,7 @@ export default function HeroSection() {
         <div className="absolute -bottom-8 right-6 w-20 h-20 rounded-3xl bg-gradient-to-br from-banana-200/60 to-banana-100/50 blur-sm" style={{ animation: 'float 8s ease-in-out infinite reverse' }} />
         <div className="absolute top-1/2 -right-10 w-14 h-14 rounded-full bg-gradient-to-br from-mint/40 to-sky/30 blur-sm" style={{ animation: 'pulse-soft 4s ease-in-out infinite' }} />
         
-        <div className="card-cute p-[2px]">
+        <div className="card-cute p-[2px] cat-face-card">
           <div className="rounded-[1.85rem] bg-white p-6 md:p-8">
             {/* Card header */}
             <div className="flex items-center justify-between mb-6">
@@ -135,15 +135,15 @@ export default function HeroSection() {
               ))}
             </div>
             
-            {/* Quote footer */}
-            <div className="mt-6 p-4 rounded-2xl bg-gradient-to-r from-royal to-royal/90 relative overflow-hidden">
+            {/* Quote footer with cat tail */}
+            <div className="mt-6 p-4 rounded-2xl bg-gradient-to-r from-royal to-royal/90 relative overflow-hidden cat-tail">
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full" style={{ animation: 'shimmer 3s ease-in-out infinite' }} />
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm grid place-items-center">
+                <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm grid place-items-center cat-eye-glow">
                   <Cat className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-white">"Your presence is accepted."</p>
+                  <p className="text-sm font-semibold text-white">"👑 Your presence is accepted."</p>
                   <p className="text-xs text-white/70">— Nana, Head of Judgment</p>
                 </div>
               </div>

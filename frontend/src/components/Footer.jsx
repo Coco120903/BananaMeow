@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Cat, Heart, Instagram, Twitter, Youtube, Mail, Sparkles, Crown, MapPin, Phone, ArrowUpRight, Star, X } from "lucide-react";
+import { PawTrail, CatEars, FloatingCats } from "./CatDecorations.jsx";
 
 const quickLinks = [
   { label: "Meet the Cats", href: "/cats", icon: Cat },
@@ -79,6 +80,9 @@ export default function Footer() {
       )}
 
       <footer className="relative border-t border-royal/5 bg-gradient-to-b from-cream to-white overflow-hidden">
+      {/* Floating cat silhouettes in footer background */}
+      <FloatingCats count={4} />
+      
       {/* Decorative shapes */}
       <div className="floating-shape floating-shape-1 -left-20 top-20 opacity-30" />
       <div className="floating-shape floating-shape-2 right-10 top-40 opacity-20" />
@@ -89,15 +93,15 @@ export default function Footer() {
           {/* Brand Column */}
           <div className="lg:col-span-1">
             <Link to="/" className="group flex items-center gap-3 mb-5">
-              <div className="relative">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-banana-200 via-banana-100 to-lilac/40 grid place-items-center shadow-soft transition-transform duration-300 group-hover:scale-105">
+              <CatEars small>
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-banana-200 via-banana-100 to-lilac/40 grid place-items-center shadow-soft transition-transform duration-300 group-hover:scale-105 purr-hover">
                   <Cat className="h-6 w-6 text-royal" />
                 </div>
-                <div className="absolute -right-1 -top-1 w-5 h-5 rounded-full bg-white shadow-sm grid place-items-center">
+              </CatEars>
+              <div className="ml-1">
+                <div className="absolute -right-1 -top-1 w-5 h-5 rounded-full bg-white shadow-sm grid place-items-center" style={{position: 'relative', display: 'inline-block', marginBottom: '-4px'}}>
                   <Crown className="h-3 w-3 text-banana-500" />
                 </div>
-              </div>
-              <div>
                 <p className="text-lg font-bold text-royal">Banana Meow</p>
                 <p className="text-[10px] uppercase tracking-[0.25em] text-ink/50 font-medium">Chonky Royals</p>
               </div>
@@ -233,11 +237,11 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Divider */}
-        <div className="divider-elegant mt-12 mb-8">
-          <div className="divider-icon">
-            <Cat className="h-4 w-4 text-royal" />
-          </div>
+        {/* Paw trail divider */}
+        <div className="flex items-center justify-center mt-12 mb-8">
+          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-royal/10 to-transparent" />
+          <PawTrail count={5} className="px-4" />
+          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-royal/10 to-transparent" />
         </div>
 
         {/* Bottom Bar */}
@@ -248,8 +252,9 @@ export default function Footer() {
           </div>
           <div className="flex items-center gap-1.5">
             <span>Crafted with</span>
-            <Heart className="h-4 w-4 fill-coral text-coral" />
+            <Heart className="h-4 w-4 fill-coral text-coral" style={{ animation: 'purr 1.5s ease-in-out infinite' }} />
             <span>for our chonky royals</span>
+            <span className="ml-1">🐾</span>
           </div>
           <div className="flex items-center gap-4">
             <Link to="/privacy" className="hover:text-royal transition-colors">Privacy</Link>

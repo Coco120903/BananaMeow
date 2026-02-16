@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Cat, Heart, ShoppingBag, Sparkles, Crown, Star, ArrowRight, Gift, Users } from "lucide-react";
+import { WhiskerDivider, MeowBubble } from "./CatDecorations.jsx";
 
 const ctas = [
   {
@@ -71,7 +72,7 @@ export default function CTASection() {
           return (
             <div
               key={card.title}
-              className={`group relative flex flex-col justify-between gap-6 rounded-[2rem] bg-gradient-to-br ${card.tone} p-6 shadow-soft transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-glow overflow-hidden`}
+              className={`group relative flex flex-col justify-between gap-6 rounded-[2rem] bg-gradient-to-br ${card.tone} p-6 shadow-soft transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-glow overflow-hidden cat-face-card purr-hover`}
               style={{ animationDelay: `${index * 100}ms` }}
             >
               {/* Background pattern */}
@@ -101,7 +102,7 @@ export default function CTASection() {
               </div>
               
               <Link 
-                className="btn-primary w-full text-center flex items-center justify-center gap-2 group/btn" 
+                className="btn-primary w-full text-center flex items-center justify-center gap-2 group/btn paw-click" 
                 to={card.link}
               >
                 <Star className="h-4 w-4 opacity-0 group-hover/btn:opacity-100 group-hover/btn:animate-sparkle transition-opacity" />
@@ -113,18 +114,22 @@ export default function CTASection() {
         })}
       </div>
       
-      {/* Bottom accent */}
+      {/* Bottom accent with paw */}
       <div className="flex justify-center mt-10">
-        <div className="flex items-center gap-4 px-6 py-3 rounded-full bg-white/60 backdrop-blur-sm shadow-soft">
-          <div className="flex -space-x-2">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-8 w-8 rounded-full bg-gradient-to-br from-banana-200 to-lilac border-2 border-white" />
-            ))}
+        <MeowBubble text="Purrfect! Join our kingdom! 👑">
+          <div className="flex items-center gap-4 px-6 py-3 rounded-full bg-white/60 backdrop-blur-sm shadow-soft cursor-default">
+            <div className="flex -space-x-2">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-8 w-8 rounded-full bg-gradient-to-br from-banana-200 to-lilac border-2 border-white grid place-items-center">
+                  <Cat className="h-4 w-4 text-royal" />
+                </div>
+              ))}
+            </div>
+            <p className="text-sm text-ink/70">
+              <span className="font-semibold text-royal">5,000+</span> supporters in the kingdom 🐾
+            </p>
           </div>
-          <p className="text-sm text-ink/70">
-            <span className="font-semibold text-royal">5,000+</span> supporters in the kingdom
-          </p>
-        </div>
+        </MeowBubble>
       </div>
     </section>
   );

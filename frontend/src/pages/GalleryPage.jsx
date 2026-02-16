@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Camera, Heart, Play, Images as ImagesIcon, Film, Sparkles } from "lucide-react";
 import { API_BASE } from "../lib/api.js";
+import { FloatingCats } from "../components/CatDecorations.jsx";
 
 export default function GalleryPage() {
   const [posts, setPosts] = useState([]);
@@ -40,6 +41,9 @@ export default function GalleryPage() {
 
   return (
     <section className="relative mx-auto max-w-6xl px-4 py-12 md:px-8">
+      {/* Floating cat silhouettes */}
+      <FloatingCats count={4} />
+      
       {/* Enhanced Scrapbook Background Texture */}
       <div className="fixed inset-0 pointer-events-none opacity-30 mix-blend-multiply" style={{
         backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.15'/%3E%3C/svg%3E")`

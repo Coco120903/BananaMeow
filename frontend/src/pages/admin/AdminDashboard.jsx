@@ -622,7 +622,23 @@ export default function AdminDashboard() {
               ))}
             </div>
           ) : (
-            <p className="text-ink/50 text-center py-8">No donations yet 🐱</p>
+            <p className="text-ink/50 text-center py-8 flex items-center justify-center gap-2">
+              No donations yet
+              <svg viewBox="0 0 64 64" width="18" height="18" fill="none" className="text-royal/40 inline-block">
+                <path d="M14 24L8 6l14 12" fill="currentColor" opacity="0.85" />
+                <path d="M50 24l6-18-14 12" fill="currentColor" opacity="0.85" />
+                <ellipse cx="32" cy="36" rx="22" ry="20" fill="currentColor" opacity="0.9" />
+                <ellipse cx="24" cy="32" rx="3.5" ry="4" fill="white" />
+                <ellipse cx="40" cy="32" rx="3.5" ry="4" fill="white" />
+                <ellipse cx="24.5" cy="32.5" rx="2" ry="2.5" fill="#2E2437" />
+                <ellipse cx="40.5" cy="32.5" rx="2" ry="2.5" fill="#2E2437" />
+                <circle cx="23" cy="31" r="1" fill="white" />
+                <circle cx="39" cy="31" r="1" fill="white" />
+                <path d="M30 38l2 2.5 2-2.5" fill="#FFB5A7" />
+                <path d="M32 40.5c-2 2-4 2-5 1" stroke="#2E2437" strokeWidth="0.8" fill="none" strokeLinecap="round" />
+                <path d="M32 40.5c2 2 4 2 5 1" stroke="#2E2437" strokeWidth="0.8" fill="none" strokeLinecap="round" />
+              </svg>
+            </p>
           )}
         </div>
 

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Cat, Heart, Instagram, Twitter, Youtube, Mail, Sparkles, Crown, MapPin, Phone, ArrowUpRight, Star, X } from "lucide-react";
+import { Cat, Heart, Instagram, Twitter, Youtube, Mail, Sparkles, Crown, MapPin, Phone, ArrowUpRight, Star, X, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { PawTrail, CatEars, FloatingCats } from "./CatDecorations.jsx";
+import { API_BASE } from "../lib/api.js";
 
 const quickLinks = [
   { label: "Meet the Cats", href: "/cats", icon: Cat },
@@ -16,8 +17,35 @@ const socialLinks = [
   { icon: Youtube, href: "#", label: "Youtube" }
 ];
 
+// ── Toast Notification Component (non-intrusive) ─────────────────────────
+function Toast({ isVisible, message, type = "success" }) {
+  if (!isVisible) return null;
+
+  return (
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[70] animate-in slide-in-from-bottom-2 fade-in">
+      <div className={`flex items-center gap-2.5 px-5 py-3 rounded-xl shadow-lg border max-w-sm ${
+        type === "success"
+          ? "bg-green-50 border-green-200 text-green-700"
+          : "bg-red-50 border-red-200 text-red-700"
+      }`}>
+        {type === "success" ? (
+          <CheckCircle className="h-4.5 w-4.5 flex-shrink-0" />
+        ) : (
+          <AlertCircle className="h-4.5 w-4.5 flex-shrink-0" />
+        )}
+        <span className="text-sm font-medium">{message}</span>
+      </div>
+    </div>
+  );
+}
+
 export default function Footer() {
   const [showEmailModal, setShowEmailModal] = useState(false);
+  
+  // Newsletter subscription state
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [newsletterLoading, setNewsletterLoading] = useState(false);
+  const [toast, setToast] = useState({ isVisible: false, message: "", type: "success" });
 
   const handleEmailClick = (e) => {
     e.preventDefault();
@@ -33,8 +61,63 @@ export default function Footer() {
     setShowEmailModal(false);
   };
 
+  // Show toast notification (auto-dismiss after 4 seconds)
+  const showToast = (message, type = "success") => {
+    setToast({ isVisible: true, message, type });
+    setTimeout(() => {
+      setToast({ isVisible: false, message: "", type: "success" });
+    }, 4000);
+  };
+
+  // Handle newsletter subscription
+  const handleNewsletterSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!newsletterEmail.trim()) {
+      showToast("Please enter your email address", "error");
+      return;
+    }
+    if (!emailRegex.test(newsletterEmail.trim())) {
+      showToast("Please enter a valid email address", "error");
+      return;
+    }
+
+    setNewsletterLoading(true);
+
+    try {
+      const response = await fetch(`${API_BASE}/api/newsletter/subscribe`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: newsletterEmail.trim(),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setNewsletterEmail("");
+        showToast(data.message || "Successfully subscribed! Check your email for confirmation.", "success");
+      } else {
+        showToast(data.message || "Something went wrong. Please try again.", "error");
+      }
+    } catch (error) {
+      console.error("Newsletter subscription error:", error);
+      showToast("Failed to subscribe. Please check your connection and try again.", "error");
+    } finally {
+      setNewsletterLoading(false);
+    }
+  };
+
   return (
     <>
+      {/* Toast Notification */}
+      <Toast isVisible={toast.isVisible} message={toast.message} type={toast.type} />
+
       {/* Email Confirmation Modal */}
       {showEmailModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm transition-opacity duration-200">
@@ -114,16 +197,31 @@ export default function Footer() {
             <div className="p-4 rounded-2xl bg-gradient-to-r from-banana-50/80 to-lilac/20 border border-royal/5 overflow-hidden">
               <p className="text-sm font-semibold text-royal mb-2">Join the Royal Court</p>
               <p className="text-xs text-ink/50 mb-3">Get updates on our fluffy royals</p>
-              <div className="flex gap-2 w-full">
+              <form onSubmit={handleNewsletterSubmit} className="flex gap-2 w-full">
                 <input 
                   type="email" 
+                  value={newsletterEmail}
+                  onChange={(e) => setNewsletterEmail(e.target.value)}
                   placeholder="your@email.com"
-                  className="flex-1 min-w-0 px-3 py-2 text-sm rounded-xl border border-royal/10 bg-white focus:outline-none focus:border-royal/30"
+                  disabled={newsletterLoading}
+                  className="flex-1 min-w-0 px-3 py-2 text-sm rounded-xl border border-royal/10 bg-white focus:outline-none focus:border-royal/30 disabled:opacity-60 disabled:cursor-not-allowed"
+                  required
                 />
-                <button className="flex-shrink-0 px-4 py-2 rounded-xl bg-royal text-white text-sm font-medium hover:bg-ink transition-colors whitespace-nowrap">
-                  Join
+                <button 
+                  type="submit"
+                  disabled={newsletterLoading}
+                  className="flex-shrink-0 px-4 py-2 rounded-xl bg-royal text-white text-sm font-medium hover:bg-ink transition-colors whitespace-nowrap disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-1.5"
+                >
+                  {newsletterLoading ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      <span className="hidden sm:inline">Joining...</span>
+                    </>
+                  ) : (
+                    "Join"
+                  )}
                 </button>
-              </div>
+              </form>
             </div>
           </div>
 

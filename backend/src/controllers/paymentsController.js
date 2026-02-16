@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import Donation from "../models/Donation.js";
 import Order from "../models/Order.js";
+import Product from "../models/Product.js";
 
 function getStripeClient() {
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
@@ -72,9 +73,25 @@ export async function createDonationCheckout(req, res) {
 export async function createOrderCheckout(req, res) {
   const { items, email } = req.body;
 
-  const stripe = getStripeClient();
+  try {
+    const stripe = getStripeClient();
 
-  const lineItems = items.map((item) => ({
+    // Validate inventory before creating checkout
+    for (const item of items) {
+      if (item.productId) {
+        const product = await Product.findById(item.productId);
+        if (!product) {
+          return res.status(400).json({ message: `Product "${item.name}" no longer exists` });
+        }
+        if (product.inventory < item.quantity) {
+          return res.status(400).json({ 
+            message: `"${item.name}" only has ${product.inventory} left in stock` 
+          });
+        }
+      }
+    }
+
+    const lineItems = items.map((item) => ({
     price_data: {
       currency: "usd",
       product_data: {
@@ -107,4 +124,106 @@ export async function createOrderCheckout(req, res) {
   });
 
   res.json({ url: session.url });
+  } catch (error) {
+    console.error("Stripe order checkout error:", error);
+    res.status(500).json({ message: "Unable to start checkout" });
+  }
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  let event;
+
+  if (webhookSecret) {
+    const sig = req.headers["stripe-signature"];
+    try {
+      event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+    } catch (err) {
+      console.error("Webhook signature verification failed:", err.message);
+      return res.status(400).json({ message: `Webhook Error: ${err.message}` });
+    }
+  } else {
+    // In development without webhook secret, parse event directly
+    event = req.body;
+    console.warn("⚠️ No STRIPE_WEBHOOK_SECRET set — skipping signature verification (dev only)");
+  }
+
+  try {
+    switch (event.type) {
+      case "checkout.session.completed": {
+        const session = event.data.object;
+        const sessionId = session.id;
+
+        // Check for idempotency — skip if already processed
+        const existingOrder = await Order.findOne({ stripeSessionId: sessionId, status: "completed" });
+        const existingDonation = await Donation.findOne({ stripeSessionId: sessionId, status: "completed" });
+
+        if (existingOrder || existingDonation) {
+          console.log(`ℹ️ Session ${sessionId} already processed — skipping (idempotent)`);
+          return res.json({ received: true });
+        }
+
+        // Try to update an order
+        const order = await Order.findOneAndUpdate(
+          { stripeSessionId: sessionId, status: "pending" },
+          { status: "completed", email: session.customer_email || undefined },
+          { new: true }
+        );
+
+        if (order) {
+          console.log(`✅ Order ${order._id} marked as completed`);
+
+          // Decrement inventory for each item in the order
+          for (const item of order.items) {
+            if (item.productId) {
+              await Product.findByIdAndUpdate(item.productId, {
+                $inc: { inventory: -item.quantity }
+              });
+            }
+          }
+        }
+
+        // Try to update a donation
+        const donation = await Donation.findOneAndUpdate(
+          { stripeSessionId: sessionId, status: "pending" },
+          { status: "completed", email: session.customer_email || undefined },
+          { new: true }
+        );
+
+        if (donation) {
+          console.log(`✅ Donation ${donation._id} marked as completed`);
+        }
+
+        if (!order && !donation) {
+          console.warn(`⚠️ No pending order or donation found for session ${sessionId}`);
+        }
+
+        break;
+      }
+
+      case "checkout.session.expired": {
+        const session = event.data.object;
+        const sessionId = session.id;
+
+        // Mark expired sessions as cancelled
+        await Order.findOneAndUpdate(
+          { stripeSessionId: sessionId, status: "pending" },
+          { status: "cancelled" }
+        );
+        await Donation.findOneAndUpdate(
+          { stripeSessionId: sessionId, status: "pending" },
+          { status: "cancelled" }
+        );
+
+        console.log(`❌ Session ${sessionId} expired — marked as cancelled`);
+        break;
+      }
+
+      default:
+        console.log(`Unhandled event type: ${event.type}`);
+    }
+
+    res.json({ received: true });
+  } catch (err) {
+    console.error("Webhook processing error:", err);
+    res.status(500).json({ message: "Webhook processing failed" });
+  }
 }

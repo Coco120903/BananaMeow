@@ -37,6 +37,7 @@ import AdminDonationsPage from "./pages/admin/AdminDonationsPage.jsx";
 import AdminOrdersPage from "./pages/admin/AdminOrdersPage.jsx";
 import AdminGalleryPage from "./pages/AdminGalleryPage.jsx";
 import AdminNotificationsPage from "./pages/admin/AdminNotificationsPage.jsx";
+import AdminReviewsPage from "./pages/admin/AdminReviewsPage.jsx";
 import NotificationsPage from "./pages/NotificationsPage.jsx";
 import NotificationPopup from "./components/NotificationPopup.jsx";
 
@@ -162,6 +163,7 @@ export default function App() {
                 <Route path="orders" element={<AdminOrdersPage />} />
                 <Route path="gallery" element={<AdminGalleryPage />} />
                 <Route path="notifications" element={<AdminNotificationsPage />} />
+                <Route path="reviews" element={<AdminReviewsPage />} />
               </Route>
 
               {/* Public Routes */}

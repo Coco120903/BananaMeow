@@ -1,6 +1,7 @@
-import { Crown, Star, Heart, Sparkles, TrendingUp, Users, Gift, Shield, Quote, ChevronLeft, ChevronRight, Camera, ArrowRight } from "lucide-react";
+import { Crown, Star, Heart, Sparkles, TrendingUp, Users, Gift, Shield, Quote, ChevronLeft, ChevronRight, Camera, ArrowRight, Send, LogIn, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext.jsx";
 import { API_BASE } from "../lib/api.js";
 import HeroSection from "../components/HeroSection.jsx";
 import OriginStory from "../components/OriginStory.jsx";
@@ -73,26 +74,143 @@ function StatsSection() {
   );
 }
 
+// Star Rating Display
+function StarDisplay({ rating }) {
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((s) => (
+        <Star
+          key={s}
+          className={`h-4 w-4 ${s <= rating ? "text-banana-400 fill-banana-400" : "text-ink/20"}`}
+        />
+      ))}
+    </div>
+  );
+}
+
+// Interactive Star Rating Input
+function StarInput({ value, onChange }) {
+  const [hover, setHover] = useState(0);
+  return (
+    <div className="flex items-center gap-1">
+      {[1, 2, 3, 4, 5].map((s) => (
+        <button
+          key={s}
+          type="button"
+          onMouseEnter={() => setHover(s)}
+          onMouseLeave={() => setHover(0)}
+          onClick={() => onChange(s)}
+          className="p-0.5 transition-transform hover:scale-125"
+        >
+          <Star
+            className={`h-6 w-6 transition-colors ${
+              s <= (hover || value)
+                ? "text-banana-400 fill-banana-400"
+                : "text-ink/20"
+            }`}
+          />
+        </button>
+      ))}
+    </div>
+  );
+}
+
 // Testimonials Section Component
 function TestimonialsSection() {
-  const testimonials = [
-    {
-      quote: "These cats have brought so much joy to my life! The merchandise is top quality too.",
-      author: "Sarah M.",
-      role: "Royal Supporter"
-    },
-    {
-      quote: "Best cat content on the internet. Nana's side-eye is legendary!",
-      author: "James K.",
-      role: "Premium Member"
-    },
-    {
-      quote: "Supporting this kingdom was the best decision. The cats are absolutely adorable!",
-      author: "Emily R.",
-      role: "Monthly Donor"
-    }
-  ];
+  const { user, isAuthenticated, token } = useAuth();
+  const [reviews, setReviews] = useState([]);
   const [current, setCurrent] = useState(0);
+  const [loadingReviews, setLoadingReviews] = useState(true);
+
+  // Form state
+  const [showForm, setShowForm] = useState(false);
+  const [formRating, setFormRating] = useState(0);
+  const [formTitle, setFormTitle] = useState("");
+  const [formMessage, setFormMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitResult, setSubmitResult] = useState(null); // { type, message }
+
+  // Fallback testimonials when no approved reviews exist
+  const fallbackTestimonials = [
+    { quote: "These cats have brought so much joy to my life! The merchandise is top quality too.", author: "Sarah M.", role: "Royal Supporter", rating: 5 },
+    { quote: "Best cat content on the internet. Nana's side-eye is legendary!", author: "James K.", role: "Premium Member", rating: 5 },
+    { quote: "Supporting this kingdom was the best decision. The cats are absolutely adorable!", author: "Emily R.", role: "Monthly Donor", rating: 5 }
+  ];
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/site-reviews/approved?limit=20`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.reviews && data.reviews.length > 0) {
+            setReviews(
+              data.reviews.map((r) => ({
+                _id: r._id,
+                quote: r.message,
+                author: r.username,
+                role: r.title || "Royal Supporter",
+                rating: r.rating,
+                profileImage: r.profileImage,
+                createdAt: r.createdAt
+              }))
+            );
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load reviews:", error);
+      } finally {
+        setLoadingReviews(false);
+      }
+    };
+    fetchReviews();
+  }, []);
+
+  const displayReviews = reviews.length > 0 ? reviews : fallbackTestimonials;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!isAuthenticated || !token) return;
+    if (formRating === 0) {
+      setSubmitResult({ type: "error", message: "Please select a star rating" });
+      return;
+    }
+    if (!formMessage.trim()) {
+      setSubmitResult({ type: "error", message: "Please write your review message" });
+      return;
+    }
+
+    setSubmitting(true);
+    setSubmitResult(null);
+    try {
+      const res = await fetch(`${API_BASE}/api/site-reviews`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          rating: formRating,
+          title: formTitle.trim(),
+          message: formMessage.trim()
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSubmitResult({ type: "success", message: data.message || "Your review has been sent for royal approval 👑" });
+        setFormRating(0);
+        setFormTitle("");
+        setFormMessage("");
+        setTimeout(() => setShowForm(false), 3000);
+      } else {
+        setSubmitResult({ type: "error", message: data.message || "Failed to submit review" });
+      }
+    } catch {
+      setSubmitResult({ type: "error", message: "Something went wrong. Please try again." });
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <section className="relative mx-auto max-w-6xl px-4 py-16 md:px-8 overflow-hidden">
@@ -114,53 +232,208 @@ function TestimonialsSection() {
           </h2>
         </div>
         
+        {/* Review Carousel */}
         <div className="relative max-w-3xl mx-auto">
-          <div className="card-cute p-[2px] cat-face-card">
-            <div className="rounded-[1.85rem] bg-white p-8 md:p-10 text-center">
-              <Quote className="h-10 w-10 text-lilac/40 mx-auto mb-4" />
-              <p className="text-lg md:text-xl text-ink/80 leading-relaxed mb-6 transition-all duration-500">
-                "{testimonials[current].quote}"
-              </p>
-              <div className="flex items-center justify-center gap-3">
-                <div className="h-12 w-12 rounded-full bg-gradient-to-br from-banana-100 to-lilac flex items-center justify-center">
-                  <span className="text-lg font-bold text-royal">
-                    {testimonials[current].author.charAt(0)}
-                  </span>
-                </div>
-                <div className="text-left">
-                  <p className="font-semibold text-royal">{testimonials[current].author}</p>
-                  <p className="text-sm text-ink/50">{testimonials[current].role}</p>
+          {loadingReviews ? (
+            <div className="flex items-center justify-center h-48">
+              <div className="w-10 h-10 border-4 border-royal/20 border-t-royal rounded-full animate-spin" />
+            </div>
+          ) : displayReviews.length > 0 ? (
+            <>
+              <div className="card-cute p-[2px] cat-face-card">
+                <div className="rounded-[1.85rem] bg-white p-8 md:p-10 text-center">
+                  <Quote className="h-10 w-10 text-lilac/40 mx-auto mb-4" />
+
+                  {/* Star rating */}
+                  {displayReviews[current].rating && (
+                    <div className="flex justify-center mb-3">
+                      <StarDisplay rating={displayReviews[current].rating} />
+                    </div>
+                  )}
+
+                  <p className="text-lg md:text-xl text-ink/80 leading-relaxed mb-6 transition-all duration-500">
+                    &ldquo;{displayReviews[current].quote}&rdquo;
+                  </p>
+                  <div className="flex items-center justify-center gap-3">
+                    {displayReviews[current].profileImage ? (
+                      <img
+                        src={
+                          displayReviews[current].profileImage.startsWith("http")
+                            ? displayReviews[current].profileImage
+                            : `${API_BASE}${displayReviews[current].profileImage.startsWith("/") ? "" : "/"}${displayReviews[current].profileImage}`
+                        }
+                        alt={displayReviews[current].author}
+                        className="h-12 w-12 rounded-full object-cover border-2 border-banana-200"
+                      />
+                    ) : (
+                      <div className="h-12 w-12 rounded-full bg-gradient-to-br from-banana-100 to-lilac flex items-center justify-center">
+                        <span className="text-lg font-bold text-royal">
+                          {displayReviews[current].author.charAt(0)}
+                        </span>
+                      </div>
+                    )}
+                    <div className="text-left">
+                      <p className="font-semibold text-royal">{displayReviews[current].author}</p>
+                      <p className="text-sm text-ink/50">{displayReviews[current].role}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-          
-          {/* Navigation */}
-          <div className="flex items-center justify-center gap-4 mt-6">
-            <button
-              onClick={() => setCurrent((prev) => (prev - 1 + testimonials.length) % testimonials.length)}
-              className="h-10 w-10 rounded-full bg-white shadow-soft flex items-center justify-center transition-all duration-300 hover:shadow-glow hover:scale-110"
-            >
-              <ChevronLeft className="h-5 w-5 text-royal" />
-            </button>
-            <div className="flex gap-2">
-              {testimonials.map((_, i) => (
+              
+              {/* Navigation */}
+              <div className="flex items-center justify-center gap-4 mt-6">
                 <button
-                  key={i}
-                  onClick={() => setCurrent(i)}
-                  className={`h-2.5 rounded-full transition-all duration-300 ${
-                    i === current ? 'w-8 bg-royal' : 'w-2.5 bg-royal/20 hover:bg-royal/40'
-                  }`}
-                />
-              ))}
+                  onClick={() => setCurrent((prev) => (prev - 1 + displayReviews.length) % displayReviews.length)}
+                  className="h-10 w-10 rounded-full bg-white shadow-soft flex items-center justify-center transition-all duration-300 hover:shadow-glow hover:scale-110"
+                >
+                  <ChevronLeft className="h-5 w-5 text-royal" />
+                </button>
+                <div className="flex gap-2">
+                  {displayReviews.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrent(i)}
+                      className={`h-2.5 rounded-full transition-all duration-300 ${
+                        i === current ? 'w-8 bg-royal' : 'w-2.5 bg-royal/20 hover:bg-royal/40'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <button
+                  onClick={() => setCurrent((prev) => (prev + 1) % displayReviews.length)}
+                  className="h-10 w-10 rounded-full bg-white shadow-soft flex items-center justify-center transition-all duration-300 hover:shadow-glow hover:scale-110"
+                >
+                  <ChevronRight className="h-5 w-5 text-royal" />
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-ink/50 text-lg">
+                No royal reviews yet. Be the first to share your experience! 🐾
+              </p>
             </div>
-            <button
-              onClick={() => setCurrent((prev) => (prev + 1) % testimonials.length)}
-              className="h-10 w-10 rounded-full bg-white shadow-soft flex items-center justify-center transition-all duration-300 hover:shadow-glow hover:scale-110"
-            >
-              <ChevronRight className="h-5 w-5 text-royal" />
-            </button>
-          </div>
+          )}
+        </div>
+
+        {/* Submit Review Section */}
+        <div className="max-w-3xl mx-auto mt-10">
+          {!isAuthenticated ? (
+            <div className="text-center">
+              <Link
+                to="/login"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-banana-100 to-lilac/30 text-royal font-medium hover:shadow-glow transition-all duration-300"
+              >
+                <LogIn className="h-4 w-4" />
+                Please log in to leave a royal review 🐱
+              </Link>
+            </div>
+          ) : !showForm ? (
+            <div className="text-center">
+              <button
+                onClick={() => setShowForm(true)}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-royal to-royal/90 text-white font-medium hover:shadow-glow transition-all duration-300 hover:scale-105"
+              >
+                <Star className="h-4 w-4" />
+                Share Your Royal Review
+              </button>
+            </div>
+          ) : (
+            <div className="card-cute p-[2px]">
+              <form
+                onSubmit={handleSubmit}
+                className="rounded-[1.85rem] bg-white p-6 md:p-8 space-y-5"
+              >
+                <h3 className="text-lg font-semibold text-royal text-center">
+                  Share Your Experience
+                </h3>
+
+                {/* Rating */}
+                <div className="flex flex-col items-center gap-2">
+                  <p className="text-sm text-ink/60">Your Rating</p>
+                  <StarInput value={formRating} onChange={setFormRating} />
+                </div>
+
+                {/* Title (optional) */}
+                <div>
+                  <label className="block text-sm text-ink/60 mb-1">
+                    Title <span className="text-ink/30">(optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formTitle}
+                    onChange={(e) => setFormTitle(e.target.value)}
+                    maxLength={100}
+                    placeholder="e.g. Amazing experience!"
+                    className="w-full px-4 py-2.5 rounded-xl border border-ink/10 bg-cream/30 focus:outline-none focus:ring-2 focus:ring-royal/30 text-sm"
+                  />
+                </div>
+
+                {/* Message */}
+                <div>
+                  <label className="block text-sm text-ink/60 mb-1">
+                    Your Review <span className="text-coral">*</span>
+                  </label>
+                  <textarea
+                    value={formMessage}
+                    onChange={(e) => setFormMessage(e.target.value)}
+                    maxLength={1000}
+                    rows={4}
+                    placeholder="Tell us about your experience with Banana Meow..."
+                    className="w-full px-4 py-2.5 rounded-xl border border-ink/10 bg-cream/30 focus:outline-none focus:ring-2 focus:ring-royal/30 text-sm resize-none"
+                    required
+                  />
+                  <p className="text-xs text-ink/40 text-right mt-1">
+                    {formMessage.length}/1000
+                  </p>
+                </div>
+
+                {/* Result message */}
+                {submitResult && (
+                  <div
+                    className={`text-center text-sm font-medium px-4 py-2.5 rounded-xl ${
+                      submitResult.type === "success"
+                        ? "bg-mint/30 text-emerald-700"
+                        : "bg-blush/50 text-coral"
+                    }`}
+                  >
+                    {submitResult.message}
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex items-center justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowForm(false);
+                      setSubmitResult(null);
+                    }}
+                    className="px-5 py-2.5 rounded-xl border border-ink/10 text-ink/60 text-sm hover:bg-cream transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-royal to-royal/90 text-white text-sm font-medium hover:shadow-glow transition-all disabled:opacity-50"
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Submitting…
+                      </>
+                    ) : (
+                      <>
+                        <Send className="h-4 w-4" />
+                        Submit Review
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
         </div>
       </div>
     </section>

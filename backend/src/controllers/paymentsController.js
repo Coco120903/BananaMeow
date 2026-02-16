@@ -2,6 +2,7 @@ import Stripe from "stripe";
 import Donation from "../models/Donation.js";
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
+import { sendOrderReceipt, sendDonationReceipt } from "../utils/emailService.js";
 
 function getStripeClient() {
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
@@ -113,7 +114,10 @@ export async function createOrderCheckout(req, res) {
     line_items: lineItems,
     success_url: `${frontendUrl}/cart?success=true`,
     cancel_url: `${frontendUrl}/cart?canceled=true`,
-    customer_email: email
+    // Only include customer_email if it's a non-empty, valid email string.
+    ...(email && typeof email === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+      ? { customer_email: email }
+      : (email ? (console.warn(`Invalid customer email provided for checkout: '${email}'`), {}) : {}))
   });
 
   await Order.create({
@@ -128,6 +132,14 @@ export async function createOrderCheckout(req, res) {
     console.error("Stripe order checkout error:", error);
     res.status(500).json({ message: "Unable to start checkout" });
   }
+}
+
+/**
+ * Stripe webhook handler — confirms payment and updates order/donation status
+ * Receives raw body (use express.raw when mounting the route)
+ */
+export async function handleStripeWebhook(req, res) {
+  const stripe = getStripeClient();
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
   let event;
@@ -179,6 +191,13 @@ export async function createOrderCheckout(req, res) {
               });
             }
           }
+
+          // Send receipt email (non-blocking)
+          if (order.email) {
+            sendOrderReceipt(order.email, order.email, order).catch((err) => {
+              console.error("Failed to send order receipt (webhook):", err);
+            });
+          }
         }
 
         // Try to update a donation
@@ -190,6 +209,11 @@ export async function createOrderCheckout(req, res) {
 
         if (donation) {
           console.log(`✅ Donation ${donation._id} marked as completed`);
+          if (donation.email) {
+            sendDonationReceipt(donation.email, donation.email, donation).catch((err) => {
+              console.error("Failed to send donation receipt (webhook):", err);
+            });
+          }
         }
 
         if (!order && !donation) {

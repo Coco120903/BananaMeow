@@ -23,6 +23,7 @@ import TermsPage from "./pages/TermsPage.jsx";
 import GalleryPage from "./pages/GalleryPage.jsx";
 import GalleryDetailPage from "./pages/GalleryDetailPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
+import ContactPage from "./pages/ContactPage.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
 // Admin imports
@@ -45,9 +46,18 @@ function PublicLayout({ children }) {
         <div className="mesh-gradient" />
 
         {/* Floating gradient orbs */}
-        <div className="floating-orb floating-orb-1" style={{ top: "5%", left: "3%" }} />
-        <div className="floating-orb floating-orb-2" style={{ top: "55%", right: "5%" }} />
-        <div className="floating-orb floating-orb-3" style={{ bottom: "15%", left: "25%" }} />
+        <div
+          className="floating-orb floating-orb-1"
+          style={{ top: "5%", left: "3%" }}
+        />
+        <div
+          className="floating-orb floating-orb-2"
+          style={{ top: "55%", right: "5%" }}
+        />
+        <div
+          className="floating-orb floating-orb-3"
+          style={{ bottom: "15%", left: "25%" }}
+        />
         <div
           className="floating-orb floating-orb-1"
           style={{ top: "35%", right: "20%", opacity: 0.6 }}
@@ -79,9 +89,14 @@ function PublicLayout({ children }) {
                 animationDuration: `${2 + Math.random() * 3}s`,
                 width: `${3 + Math.random() * 5}px`,
                 height: `${3 + Math.random() * 5}px`,
-                background: ["#FFE699", "#EBDCF9", "#FDE2E4", "#D4F5E9", "#BAE6FD", "#FFB5A7"][
-                  Math.floor(Math.random() * 6)
-                ],
+                background: [
+                  "#FFE699",
+                  "#EBDCF9",
+                  "#FDE2E4",
+                  "#D4F5E9",
+                  "#BAE6FD",
+                  "#FFB5A7",
+                ][Math.floor(Math.random() * 6)],
               }}
             />
           ))}
@@ -104,9 +119,9 @@ function PublicLayout({ children }) {
         </div>
       </div>
 
-      <div className="relative flex min-h-screen flex-col text-ink">
+      <div className="relative flex min-h-screen flex-col text-ink overflow-x-hidden w-full">
         <Navbar />
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 w-full overflow-x-hidden">{children}</main>
         <Footer />
       </div>
     </>
@@ -122,7 +137,10 @@ export default function App() {
           <CartProvider>
             <Routes>
               {/* Admin Routes - redirect old admin login to unified login */}
-              <Route path="/admin/login" element={<Navigate to="/login" replace />} />
+              <Route
+                path="/admin/login"
+                element={<Navigate to="/login" replace />}
+              />
 
               <Route
                 path="/admin"
@@ -153,27 +171,55 @@ export default function App() {
                       <Route path="/shop" element={<ShopPage />} />
                       <Route
                         path="/shop/apparel"
-                        element={<ShopCategoryPage title="Apparel" category="Apparel" />}
+                        element={
+                          <ShopCategoryPage
+                            title="Apparel"
+                            category="Apparel"
+                          />
+                        }
                       />
                       <Route
                         path="/shop/cat-items"
-                        element={<ShopCategoryPage title="Cat Items" category="Cat Items" />}
+                        element={
+                          <ShopCategoryPage
+                            title="Cat Items"
+                            category="Cat Items"
+                          />
+                        }
                       />
                       <Route
                         path="/shop/accessories"
-                        element={<ShopCategoryPage title="Accessories" category="Accessories" />}
+                        element={
+                          <ShopCategoryPage
+                            title="Accessories"
+                            category="Accessories"
+                          />
+                        }
                       />
-                      <Route path="/shop/:productId" element={<ProductPage />} />
+                      <Route
+                        path="/shop/:productId"
+                        element={<ProductPage />}
+                      />
                       <Route path="/cart" element={<CartPage />} />
                       <Route path="/login" element={<LoginPage />} />
                       <Route path="/signup" element={<SignUpPage />} />
-                      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                      <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+                      <Route
+                        path="/forgot-password"
+                        element={<ForgotPasswordPage />}
+                      />
+                      <Route
+                        path="/reset-password/:token"
+                        element={<ResetPasswordPage />}
+                      />
                       <Route path="/about" element={<AboutPage />} />
                       <Route path="/gallery" element={<GalleryPage />} />
-                      <Route path="/gallery/:id" element={<GalleryDetailPage />} />
+                      <Route
+                        path="/gallery/:id"
+                        element={<GalleryDetailPage />}
+                      />
                       <Route path="/privacy" element={<PrivacyPage />} />
                       <Route path="/terms" element={<TermsPage />} />
+                      <Route path="/contact" element={<ContactPage />} />
                       <Route
                         path="/profile"
                         element={

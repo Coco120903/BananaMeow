@@ -5,7 +5,7 @@ import { ShoppingCart, Search, Package, DollarSign, FileDown } from "lucide-reac
 import { generateOrdersPDF } from "../../utils/pdfExport.js";
 
 export default function AdminOrdersPage() {
-  const { admin } = useAdminAuth();
+  const { admin, token } = useAdminAuth();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -14,7 +14,9 @@ export default function AdminOrdersPage() {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const response = await fetch(`${API_BASE}/api/orders`);
+        const response = await fetch(`${API_BASE}/api/orders`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
         if (response.ok) {
           const data = await response.json();
           setOrders(data);
@@ -36,6 +38,47 @@ export default function AdminOrdersPage() {
   );
 
   const totalRevenue = orders.reduce((sum, o) => sum + (o.total || 0), 0);
+
+  const handleStatusChange = async (orderId, newStatus) => {
+    try {
+      const resp = await fetch(`${API_BASE}/api/orders/${orderId}/status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : ""
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+      if (resp.ok) {
+        const updated = await resp.json();
+        setOrders((prev) => prev.map((o) => (o._id === updated._id ? updated : o)));
+      } else {
+        const err = await resp.json().catch(() => ({}));
+        alert(err.message || "Failed to update status");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update status");
+    }
+  };
+
+  const handleSendReceipt = async (orderId) => {
+    try {
+      const resp = await fetch(`${API_BASE}/api/orders/${orderId}/receipt`, {
+        method: "POST",
+        headers: { Authorization: token ? `Bearer ${token}` : "" }
+      });
+      if (resp.ok) {
+        alert("Receipt sent");
+      } else {
+        const err = await resp.json().catch(() => ({}));
+        alert(err.message || "Failed to send receipt");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to send receipt");
+    }
+  };
 
   if (loading) {
     return (
@@ -101,7 +144,7 @@ export default function AdminOrdersPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-mint/30 border-b border-ink/10">
+                  <tr className="bg-mint/30 border-b border-ink/10">
                   <th className="px-6 py-4 text-left text-sm font-semibold text-ink/70">
                     Order ID
                   </th>
@@ -116,6 +159,9 @@ export default function AdminOrdersPage() {
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-ink/70">
                     Status
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-ink/70">
+                    Actions
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-semibold text-ink/70">
                     Date
@@ -150,17 +196,26 @@ export default function AdminOrdersPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span
-                        className={`px-3 py-1 rounded-full text-sm ${
-                          order.status === "completed"
-                            ? "bg-mint/50 text-emerald-700"
-                            : order.status === "processing"
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-banana-100 text-amber-700"
-                        }`}
+                      <select
+                        value={order.status || "pending"}
+                        onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                        className="rounded-lg border px-3 py-1 text-sm"
                       >
-                        {order.status || "pending"}
-                      </span>
+                        <option value="pending">pending</option>
+                        <option value="processing">processing</option>
+                        <option value="completed">completed</option>
+                        <option value="on_transit">on_transit</option>
+                        <option value="received">received</option>
+                        <option value="cancelled">cancelled</option>
+                      </select>
+                    </td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => handleSendReceipt(order._id)}
+                        className="inline-flex items-center gap-2 px-3 py-1 bg-white border rounded-lg text-sm"
+                      >
+                        Send Receipt
+                      </button>
                     </td>
                     <td className="px-6 py-4 text-sm text-ink/60">
                       {order.createdAt

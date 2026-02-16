@@ -15,7 +15,6 @@ import galleryRoutes from "./routes/galleryRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
 import favoritesRoutes from "./routes/favoritesRoutes.js";
 import categoriesRoutes from "./routes/categoriesRoutes.js";
-
 import reviewsRoutes from "./routes/reviewsRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
 import newsletterRoutes from "./routes/newsletterRoutes.js";
@@ -26,7 +25,23 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 
-app.use(cors());
+const allowedOrigins = [
+  process.env.FRONTEND_URL || "http://localhost:5173",
+  "http://localhost:5173",
+  "http://localhost:5174"
+].filter(Boolean);
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, Stripe webhooks)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    callback(new Error("Not allowed by CORS"));
+  },
+  credentials: true
+}));
 
 // Stripe webhooks need raw body — must come BEFORE express.json()
 app.use("/api/webhooks", webhookRoutes);

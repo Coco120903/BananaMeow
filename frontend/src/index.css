@@ -9,10 +9,17 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+html {
+  overflow-x: hidden;
+  width: 100%;
+}
+
 body {
   font-family: "Baloo 2", ui-sans-serif, system-ui;
   min-height: 100vh;
   position: relative;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 /* ===== GLOBAL ANIMATED BACKGROUND ===== */
@@ -21,6 +28,8 @@ body {
   inset: 0;
   z-index: -1;
   overflow: hidden;
+  width: 100%;
+  max-width: 100vw;
   background: 
     linear-gradient(135deg, 
       #FFF9F5 0%, 
@@ -146,6 +155,8 @@ body {
   inset: 0;
   pointer-events: none;
   overflow: hidden;
+  width: 100%;
+  max-width: 100%;
 }
 
 .sparkle {
@@ -271,6 +282,8 @@ body {
   inset: 0;
   pointer-events: none;
   overflow: hidden;
+  width: 100%;
+  max-width: 100%;
 }
 
 .paw-print {

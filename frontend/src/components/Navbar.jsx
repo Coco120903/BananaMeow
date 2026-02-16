@@ -2,14 +2,15 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
-import { Cat, Crown, ShoppingCart, User, Heart, Sparkles, Menu, X, LogOut, Settings, ChevronDown, Star, Camera } from "lucide-react";
+import { Cat, Crown, ShoppingCart, User, Heart, Sparkles, Menu, X, LogOut, Settings, ChevronDown, Star, Camera, Mail } from "lucide-react";
 
 const navLinks = [
   { label: "Home", href: "/", icon: Sparkles },
   { label: "Meet the Cats", href: "/cats", icon: Cat },
   { label: "Shop", href: "/shop", icon: ShoppingCart },
   { label: "About", href: "/about", icon: Heart },
-  { label: "Gallery", href: "/gallery", icon: Camera }
+  { label: "Gallery", href: "/gallery", icon: Camera },
+  { label: "Contact", href: "/contact", icon: Mail }
 ];
 
 export default function Navbar() {

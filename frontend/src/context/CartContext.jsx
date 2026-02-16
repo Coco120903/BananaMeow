@@ -1,10 +1,24 @@
-import { createContext, useContext, useMemo, useReducer } from "react";
+import { createContext, useContext, useEffect, useMemo, useReducer } from "react";
 
 const CartContext = createContext(null);
 
-const initialState = {
-  items: []
-};
+// Load cart from localStorage
+function loadCartFromStorage() {
+  try {
+    const saved = localStorage.getItem("bananameow-cart");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed && Array.isArray(parsed.items)) {
+        return parsed;
+      }
+    }
+  } catch {
+    // Ignore parse errors
+  }
+  return { items: [] };
+}
+
+const initialState = loadCartFromStorage();
 
 function cartReducer(state, action) {
   switch (action.type) {
@@ -40,7 +54,7 @@ function cartReducer(state, action) {
         )
       };
     case "CLEAR_CART":
-      return initialState;
+      return { items: [] };
     default:
       return state;
   }
@@ -48,6 +62,15 @@ function cartReducer(state, action) {
 
 export function CartProvider({ children }) {
   const [state, dispatch] = useReducer(cartReducer, initialState);
+
+  // Persist cart to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem("bananameow-cart", JSON.stringify(state));
+    } catch {
+      // Ignore storage errors (e.g., private browsing)
+    }
+  }, [state]);
 
   const value = useMemo(() => {
     const subtotal = state.items.reduce(

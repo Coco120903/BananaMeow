@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Crown, Mail, Sparkles, ArrowRight, AlertCircle, Loader2, CheckCircle } from "lucide-react";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
+import { API_BASE } from "../lib/api.js";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");

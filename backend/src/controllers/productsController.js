@@ -8,8 +8,86 @@ const __dirname = path.dirname(__filename);
 
 export async function getProducts(req, res) {
   try {
-    const products = await Product.find().sort({ createdAt: -1 });
-    res.json(products);
+    const {
+      search,
+      category,
+      minPrice,
+      maxPrice,
+      sort,
+      page,
+      limit,
+      inStock,
+      paginated
+    } = req.query;
+
+    // Check if any advanced query params are used
+    const useAdvanced = search || category || minPrice || maxPrice || sort || page || limit || inStock || paginated;
+
+    const filter = {};
+
+    // Text search
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } }
+      ];
+    }
+
+    // Category filter
+    if (category) {
+      filter.category = { $regex: `^${category}$`, $options: "i" };
+    }
+
+    // Price range
+    if (minPrice || maxPrice) {
+      filter.price = {};
+      if (minPrice) filter.price.$gte = parseFloat(minPrice);
+      if (maxPrice) filter.price.$lte = parseFloat(maxPrice);
+    }
+
+    // In-stock filter
+    if (inStock === "true") {
+      filter.inventory = { $gt: 0 };
+    }
+
+    // Sorting
+    let sortOption = { createdAt: -1 };
+    if (sort) {
+      switch (sort) {
+        case "price-asc": sortOption = { price: 1 }; break;
+        case "price-desc": sortOption = { price: -1 }; break;
+        case "rating": sortOption = { avgRating: -1 }; break;
+        case "name-asc": sortOption = { name: 1 }; break;
+        case "name-desc": sortOption = { name: -1 }; break;
+        case "newest": sortOption = { createdAt: -1 }; break;
+        case "oldest": sortOption = { createdAt: 1 }; break;
+        default: sortOption = { createdAt: -1 };
+      }
+    }
+
+    // If no advanced params, return plain array (backward compatible)
+    if (!useAdvanced) {
+      const products = await Product.find(filter).sort(sortOption);
+      return res.json(products);
+    }
+
+    // Paginated response
+    const pageNum = parseInt(page) || 1;
+    const limitNum = parseInt(limit) || 20;
+    const skip = (pageNum - 1) * limitNum;
+    const total = await Product.countDocuments(filter);
+
+    const products = await Product.find(filter)
+      .sort(sortOption)
+      .skip(skip)
+      .limit(limitNum);
+
+    res.json({
+      products,
+      page: pageNum,
+      totalPages: Math.ceil(total / limitNum),
+      total
+    });
   } catch (error) {
     console.error("Error fetching products:", error);
     res.status(500).json({ message: "Error fetching products" });

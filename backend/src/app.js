@@ -16,12 +16,21 @@ import profileRoutes from "./routes/profileRoutes.js";
 import favoritesRoutes from "./routes/favoritesRoutes.js";
 import categoriesRoutes from "./routes/categoriesRoutes.js";
 
+import reviewsRoutes from "./routes/reviewsRoutes.js";
+import contactRoutes from "./routes/contactRoutes.js";
+import newsletterRoutes from "./routes/newsletterRoutes.js";
+import webhookRoutes from "./routes/webhookRoutes.js";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 
 app.use(cors());
+
+// Stripe webhooks need raw body — must come BEFORE express.json()
+app.use("/api/webhooks", webhookRoutes);
+
 app.use(express.json());
 
 // Serve uploaded files
@@ -42,6 +51,9 @@ app.use("/api/products", productsRoutes);
 app.use("/api/donations", donationsRoutes);
 app.use("/api/orders", ordersRoutes);
 app.use("/api/payments", paymentsRoutes);
+app.use("/api/reviews", reviewsRoutes);
+app.use("/api/contact", contactRoutes);
+app.use("/api/newsletter", newsletterRoutes);
 
 // 404 handler — return JSON, not HTML
 app.use((req, res) => {

@@ -4,6 +4,9 @@ import Donation from "../models/Donation.js";
 import Order from "../models/Order.js";
 import User from "../models/User.js";
 import Gallery from "../models/Gallery.js";
+import Review from "../models/Review.js";
+import Contact from "../models/Contact.js";
+import Newsletter from "../models/Newsletter.js";
 
 // Helper function to get date range based on period
 const getDateRange = (period) => {
@@ -420,5 +423,367 @@ export async function getAnalytics(req, res) {
   } catch (error) {
     console.error("Analytics error:", error);
     res.status(500).json({ message: "Failed to load analytics" });
+  }
+}
+
+/* ===========================
+   ADMIN USER MANAGEMENT
+=========================== */
+
+// @desc    Get all users with pagination and filters
+// @route   GET /api/admin/users
+export async function getUsers(req, res) {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const search = req.query.search;
+    const role = req.query.role;
+    const status = req.query.status; // active, archived
+
+    const filter = {};
+
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } }
+      ];
+    }
+
+    if (role) filter.role = role;
+    if (status === "archived") filter.isArchived = true;
+    else if (status === "active") filter.isArchived = false;
+
+    const skip = (page - 1) * limit;
+    const total = await User.countDocuments(filter);
+
+    const users = await User.find(filter)
+      .select("-password -resetPasswordToken -resetPasswordExpire")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    res.json({
+      users,
+      page,
+      totalPages: Math.ceil(total / limit),
+      total
+    });
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    res.status(500).json({ message: "Error fetching users" });
+  }
+}
+
+// @desc    Get single user details
+// @route   GET /api/admin/users/:id
+export async function getUserById(req, res) {
+  try {
+    const user = await User.findById(req.params.id)
+      .select("-password -resetPasswordToken -resetPasswordExpire")
+      .populate("favoriteCats");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Get user's orders
+    const orders = await Order.find({ email: user.email })
+      .sort({ createdAt: -1 })
+      .limit(10);
+
+    // Get user's donations
+    const donations = await Donation.find({ 
+      $or: [{ userId: user._id }, { email: user.email }] 
+    })
+      .sort({ createdAt: -1 })
+      .limit(10);
+
+    // Get user's reviews
+    const reviews = await Review.find({ user: user._id })
+      .populate("product", "name imageUrl")
+      .sort({ createdAt: -1 })
+      .limit(10);
+
+    res.json({
+      user,
+      orders,
+      donations,
+      reviews,
+      stats: {
+        totalOrders: orders.length,
+        totalSpent: orders.reduce((sum, o) => sum + (o.total || 0), 0),
+        totalDonated: donations.reduce((sum, d) => sum + (d.amount || 0), 0),
+        totalReviews: reviews.length
+      }
+    });
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    res.status(500).json({ message: "Error fetching user details" });
+  }
+}
+
+// @desc    Update user role
+// @route   PUT /api/admin/users/:id/role
+export async function updateUserRole(req, res) {
+  try {
+    const { role } = req.body;
+    if (!["user", "admin"].includes(role)) {
+      return res.status(400).json({ message: "Role must be 'user' or 'admin'" });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { role },
+      { new: true }
+    ).select("-password -resetPasswordToken -resetPasswordExpire");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({ message: `User role updated to ${role}`, user });
+  } catch (error) {
+    console.error("Error updating user role:", error);
+    res.status(500).json({ message: "Error updating user role" });
+  }
+}
+
+// @desc    Archive/Ban a user
+// @route   PUT /api/admin/users/:id/archive
+export async function archiveUser(req, res) {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.isArchived = !user.isArchived;
+    await user.save();
+
+    res.json({
+      message: user.isArchived ? "User has been archived (banned)" : "User has been restored",
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        isArchived: user.isArchived
+      }
+    });
+  } catch (error) {
+    console.error("Error archiving user:", error);
+    res.status(500).json({ message: "Error updating user status" });
+  }
+}
+
+// @desc    Unlock a locked user account
+// @route   PUT /api/admin/users/:id/unlock
+export async function unlockUser(req, res) {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.failedLoginAttempts = 0;
+    user.lockUntil = null;
+    await user.save();
+
+    res.json({ message: "User account unlocked successfully" });
+  } catch (error) {
+    console.error("Error unlocking user:", error);
+    res.status(500).json({ message: "Error unlocking user" });
+  }
+}
+
+/* ===========================
+   ADMIN ORDER MANAGEMENT
+=========================== */
+
+// @desc    Get all orders with pagination and filters
+// @route   GET /api/admin/orders
+export async function getAdminOrders(req, res) {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const status = req.query.status;
+    const search = req.query.search;
+
+    const filter = {};
+    if (status) filter.status = status;
+    if (search) {
+      filter.$or = [
+        { email: { $regex: search, $options: "i" } },
+        { "items.name": { $regex: search, $options: "i" } }
+      ];
+    }
+
+    const skip = (page - 1) * limit;
+    const total = await Order.countDocuments(filter);
+
+    const orders = await Order.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    res.json({
+      orders,
+      page,
+      totalPages: Math.ceil(total / limit),
+      total
+    });
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    res.status(500).json({ message: "Error fetching orders" });
+  }
+}
+
+// @desc    Get single order details
+// @route   GET /api/admin/orders/:id
+export async function getAdminOrderById(req, res) {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    // Get product details for each item
+    const itemsWithDetails = await Promise.all(
+      order.items.map(async (item) => {
+        const product = item.productId
+          ? await Product.findById(item.productId).select("name imageUrl category inventory")
+          : null;
+        return {
+          ...item.toObject(),
+          product
+        };
+      })
+    );
+
+    res.json({
+      ...order.toObject(),
+      items: itemsWithDetails
+    });
+  } catch (error) {
+    console.error("Error fetching order:", error);
+    res.status(500).json({ message: "Error fetching order details" });
+  }
+}
+
+// @desc    Update order status
+// @route   PUT /api/admin/orders/:id/status
+export async function updateOrderStatus(req, res) {
+  try {
+    const { status } = req.body;
+    const validStatuses = ["pending", "paid", "processing", "shipped", "completed", "cancelled", "refunded"];
+
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: `Status must be one of: ${validStatuses.join(", ")}` });
+    }
+
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    const previousStatus = order.status;
+    order.status = status;
+    await order.save();
+
+    // If cancelling, restore inventory
+    if (status === "cancelled" && previousStatus === "paid") {
+      for (const item of order.items) {
+        if (item.productId) {
+          await Product.findByIdAndUpdate(item.productId, {
+            $inc: { inventory: item.quantity }
+          });
+        }
+      }
+    }
+
+    res.json({ message: `Order status updated to ${status}`, order });
+  } catch (error) {
+    console.error("Error updating order status:", error);
+    res.status(500).json({ message: "Error updating order status" });
+  }
+}
+
+// @desc    Delete an order
+// @route   DELETE /api/admin/orders/:id
+export async function deleteAdminOrder(req, res) {
+  try {
+    const order = await Order.findByIdAndDelete(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+    res.json({ message: "Order deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting order:", error);
+    res.status(500).json({ message: "Error deleting order" });
+  }
+}
+
+/* ===========================
+   ADMIN DONATION MANAGEMENT
+=========================== */
+
+// @desc    Get all donations with pagination and filters
+// @route   GET /api/admin/donations
+export async function getAdminDonations(req, res) {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const status = req.query.status;
+    const cat = req.query.cat;
+
+    const filter = {};
+    if (status) filter.status = status;
+    if (cat) filter.cat = { $regex: cat, $options: "i" };
+
+    const skip = (page - 1) * limit;
+    const total = await Donation.countDocuments(filter);
+
+    const donations = await Donation.find(filter)
+      .populate("userId", "name email")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    res.json({
+      donations,
+      page,
+      totalPages: Math.ceil(total / limit),
+      total
+    });
+  } catch (error) {
+    console.error("Error fetching donations:", error);
+    res.status(500).json({ message: "Error fetching donations" });
+  }
+}
+
+// @desc    Update donation status
+// @route   PUT /api/admin/donations/:id/status
+export async function updateDonationStatus(req, res) {
+  try {
+    const { status } = req.body;
+    const validStatuses = ["pending", "completed", "failed", "refunded", "expired"];
+
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: `Status must be one of: ${validStatuses.join(", ")}` });
+    }
+
+    const donation = await Donation.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    );
+
+    if (!donation) {
+      return res.status(404).json({ message: "Donation not found" });
+    }
+
+    res.json({ message: `Donation status updated to ${status}`, donation });
+  } catch (error) {
+    console.error("Error updating donation status:", error);
+    res.status(500).json({ message: "Error updating donation status" });
   }
 }

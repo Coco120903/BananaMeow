@@ -139,8 +139,8 @@ export async function createOrderCheckout(req, res) {
  * Receives raw body (use express.raw when mounting the route)
  */
 export async function handleStripeWebhook(req, res) {
-  const stripe = getStripeClient();
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  const stripe = getStripeClient();
 
   let event;
 

@@ -119,9 +119,9 @@ function PublicLayout({ children }) {
         </div>
       </div>
 
-      <div className="relative flex min-h-screen flex-col text-ink">
+      <div className="relative flex min-h-screen flex-col text-ink overflow-x-hidden w-full">
         <Navbar />
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 w-full overflow-x-hidden">{children}</main>
         <Footer />
       </div>
     </>

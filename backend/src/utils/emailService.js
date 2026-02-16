@@ -1,305 +1,473 @@
 import nodemailer from "nodemailer";
+import dns from "dns";
 
-// Create Gmail SMTP transporter
-const createTransporter = () => {
+const createTransporter = ({
+  host = "smtp.gmail.com",
+  port = 465,
+  secure = true,
+  allowInsecure = false,
+  forceIPv4 = false,
+} = {}) => {
   const user = process.env.EMAIL_USER;
   const pass = process.env.EMAIL_PASS;
 
   if (!user || !pass) {
-    console.warn("EMAIL_USER or EMAIL_PASS not configured - emails will not be sent");
+    console.warn("EMAIL_USER or EMAIL_PASS not configured - emails will not be sent (dev fallback)");
     return null;
   }
 
-  return nodemailer.createTransport({
-    service: "gmail",
+  const lookup = forceIPv4
+    ? (hostname, options, callback) => dns.lookup(hostname, { family: 4 }, callback)
+    : undefined;
+
+  const transportOptions = {
+    host,
+    port,
+    secure,
     auth: { user, pass },
-  });
+    tls: { rejectUnauthorized: !allowInsecure },
+  };
+
+  if (lookup) transportOptions.lookup = lookup;
+
+  return nodemailer.createTransport(transportOptions);
 };
 
-/**
- * Send verification code email
- */
-export async function sendVerificationEmail(to, code, name) {
-  const transporter = createTransporter();
+async function sendMailSafe(mailOptions) {
+  const allowInsecure = process.env.EMAIL_ALLOW_INSECURE === "true";
+  const forceIPv4 = process.env.EMAIL_FORCE_IPV4 === "true";
 
-  if (!transporter) {
+  // Primary: try SMTPS (465)
+  const primary = createTransporter({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    allowInsecure,
+    forceIPv4,
+  });
+
+  if (!primary) {
+    console.log("[DEV] SMTP not configured, skipping real send:", mailOptions.subject);
+    return { success: false, fallback: true };
+  }
+
+  try {
+    const info = await primary.sendMail(mailOptions);
+    return { success: true, messageId: info.messageId };
+  } catch (err) {
+    console.error("Primary SMTP send failed:", err?.message || err);
+
+    // Retry using explicit STARTTLS (587) on socket errors
+    if (
+      err &&
+      (err.code === "ECONNREFUSED" ||
+        err.code === "ESOCKET" ||
+        err.code === "ENOTFOUND" ||
+        /ECONNRESET/.test(err?.code || ""))
+    ) {
+      try {
+        const fallback = createTransporter({
+          host: "smtp.gmail.com",
+          port: 587,
+          secure: false,
+          allowInsecure,
+          forceIPv4,
+        });
+        const info2 = await fallback.sendMail(mailOptions);
+        return { success: true, messageId: info2.messageId };
+      } catch (err2) {
+        console.error("Fallback SMTP send also failed:", err2?.message || err2);
+
+        // If TLS error due to self-signed cert, optionally retry once with insecure TLS
+        const msg = (err2?.message || "").toLowerCase();
+        if (msg.includes("self-signed") || msg.includes("self signed certificate") || msg.includes("certificate")) {
+          try {
+            console.warn("Retrying fallback SMTP with relaxed TLS (self-signed certificate detected)");
+            const fallbackInsecure = createTransporter({
+              host: "smtp.gmail.com",
+              port: 587,
+              secure: false,
+              allowInsecure: true,
+              forceIPv4,
+            });
+            const info3 = await fallbackInsecure.sendMail(mailOptions);
+            return { success: true, messageId: info3.messageId };
+          } catch (err3) {
+            console.error("Fallback (insecure) SMTP send also failed:", err3?.message || err3);
+            return { success: false, error: err3?.message || String(err3) };
+          }
+        }
+
+        return { success: false, error: err2?.message || String(err2) };
+      }
+    }
+
+    return { success: false, error: err?.message || String(err) };
+  }
+}
+
+function formatCurrency(n) {
+  return (Number(n) || 0).toFixed(2);
+}
+
+/**
+ * ✅ UPDATED: Polished “real receipt” style + "we’ll keep you updated" + table breakdown
+ * Drop-in replacement for your old sendOrderReceipt.
+ */
+export async function sendOrderReceipt(to, name, order) {
+  const money = (n) =>
+    new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(Number(n) || 0);
+
+  const brand = "Banana Meow";
+  const supportEmail = process.env.EMAIL_USER || "support@example.com";
+
+  const orderNumber = order?.orderNumber || order?._id || `BM-${Date.now()}`;
+  const placedAt = order?.createdAt ? new Date(order.createdAt) : new Date();
+  const placedAtText = placedAt.toLocaleString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const items = Array.isArray(order?.items) ? order.items : [];
+  const subtotal =
+    order?.subtotal ??
+    items.reduce((sum, i) => sum + (Number(i?.price) || 0) * (Number(i?.quantity) || 1), 0);
+
+  const shipping = Number(order?.shippingFee || order?.shipping || 0);
+  const discount = Number(order?.discount || 0);
+  const tax = Number(order?.tax || 0);
+
+  const computedTotal = subtotal + shipping + tax - discount;
+  const total = Number(order?.total ?? computedTotal);
+
+  const paymentLabel =
+    order?.paymentStatus === "paid"
+      ? "Paid"
+      : order?.paymentStatus
+      ? String(order.paymentStatus).toUpperCase()
+      : order?.isPaid
+      ? "Paid"
+      : "Pending";
+
+  const rowsHtml = items
+    .map((i) => {
+      const qty = Number(i?.quantity) || 1;
+      const unit = Number(i?.price) || 0;
+      const line = unit * qty;
+      const sku = i?.sku
+        ? `<div style="font-size:12px;color:#6b7280; margin-top:2px;">SKU: ${i.sku}</div>`
+        : "";
+
+      return `
+        <tr>
+          <td style="padding:12px 0; border-bottom:1px solid #f0f2f5;">
+            <div style="font-weight:600; color:#111827;">${i?.name || "Item"}</div>
+            ${sku}
+          </td>
+          <td align="center" style="padding:12px 0; border-bottom:1px solid #f0f2f5; color:#111827;">${qty}</td>
+          <td align="right" style="padding:12px 0; border-bottom:1px solid #f0f2f5; color:#111827;">${money(unit)}</td>
+          <td align="right" style="padding:12px 0; border-bottom:1px solid #f0f2f5; font-weight:600; color:#111827;">${money(line)}</td>
+        </tr>
+      `;
+    })
+    .join("");
+
+  const html = `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <body style="margin:0; padding:0; background:#f6f7fb;">
+    <div style="display:none; max-height:0; overflow:hidden; opacity:0;">
+      Order received — we’ll keep you posted as we process your order.
+    </div>
+
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f6f7fb; padding:24px 12px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="width:600px; max-width:600px;">
+            <tr>
+              <td style="padding:18px 18px 10px 18px;">
+                <div style="font-family:Segoe UI, Tahoma, Arial, sans-serif; font-weight:800; font-size:18px; color:#111827;">
+                  ${brand}
+                </div>
+                <div style="font-family:Segoe UI, Tahoma, Arial, sans-serif; font-size:12px; color:#6b7280; margin-top:4px;">
+                  Official Receipt / Order Confirmation
+                </div>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="background:#ffffff; border-radius:14px; box-shadow:0 6px 20px rgba(17,24,39,0.06); padding:22px;">
+                <div style="font-family:Segoe UI, Tahoma, Arial, sans-serif; font-size:22px; font-weight:800; color:#111827; margin-bottom:6px;">
+                  Thank you for your purchase${name ? `, ${name}` : ""}! 💛
+                </div>
+
+                <div style="font-family:Segoe UI, Tahoma, Arial, sans-serif; font-size:14px; color:#374151; line-height:1.6;">
+                  We’ve received your order and we’re getting it ready.
+                  <strong>We’ll keep you updated</strong> with the next steps (processing, shipping, and delivery).
+                </div>
+
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0"
+                  style="margin-top:16px; background:#f9fafb; border:1px solid #eef0f4; border-radius:12px; padding:14px;">
+                  <tr>
+                    <td style="font-family:Segoe UI, Tahoma, Arial, sans-serif; font-size:13px; color:#6b7280;">
+                      <div style="margin-bottom:6px;"><span style="color:#111827; font-weight:700;">Order #</span> ${orderNumber}</div>
+                      <div style="margin-bottom:6px;"><span style="color:#111827; font-weight:700;">Placed</span> ${placedAtText}</div>
+                      <div><span style="color:#111827; font-weight:700;">Payment</span> ${paymentLabel}</div>
+                    </td>
+                    <td align="right" style="font-family:Segoe UI, Tahoma, Arial, sans-serif; font-size:13px; color:#6b7280;">
+                      <div style="font-size:12px; margin-bottom:6px;">Receipt Total</div>
+                      <div style="font-size:20px; font-weight:900; color:#111827;">${money(total)}</div>
+                    </td>
+                  </tr>
+                </table>
+
+                <div style="font-family:Segoe UI, Tahoma, Arial, sans-serif; font-size:14px; font-weight:800; color:#111827; margin-top:18px;">
+                  Receipt Details
+                </div>
+
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-top:10px;">
+                  <tr>
+                    <th align="left" style="font-family:Segoe UI, Tahoma, Arial, sans-serif; font-size:12px; color:#6b7280; font-weight:700; padding:10px 0; border-bottom:1px solid #eef0f4;">Item</th>
+                    <th align="center" style="font-family:Segoe UI, Tahoma, Arial, sans-serif; font-size:12px; color:#6b7280; font-weight:700; padding:10px 0; border-bottom:1px solid #eef0f4;">Qty</th>
+                    <th align="right" style="font-family:Segoe UI, Tahoma, Arial, sans-serif; font-size:12px; color:#6b7280; font-weight:700; padding:10px 0; border-bottom:1px solid #eef0f4;">Unit</th>
+                    <th align="right" style="font-family:Segoe UI, Tahoma, Arial, sans-serif; font-size:12px; color:#6b7280; font-weight:700; padding:10px 0; border-bottom:1px solid #eef0f4;">Amount</th>
+                  </tr>
+                  ${rowsHtml || `
+                    <tr>
+                      <td colspan="4" style="padding:14px 0; font-family:Segoe UI, Tahoma, Arial, sans-serif; color:#6b7280;">
+                        (No items found on this order.)
+                      </td>
+                    </tr>
+                  `}
+                </table>
+
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-top:14px;">
+                  <tr>
+                    <td></td>
+                    <td style="width:260px;">
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0"
+                        style="font-family:Segoe UI, Tahoma, Arial, sans-serif; font-size:13px; color:#374151;">
+                        <tr>
+                          <td style="padding:6px 0;">Subtotal</td>
+                          <td align="right" style="padding:6px 0; font-weight:700; color:#111827;">${money(subtotal)}</td>
+                        </tr>
+                        ${shipping ? `
+                        <tr>
+                          <td style="padding:6px 0;">Shipping</td>
+                          <td align="right" style="padding:6px 0; font-weight:700; color:#111827;">${money(shipping)}</td>
+                        </tr>` : ""}
+                        ${tax ? `
+                        <tr>
+                          <td style="padding:6px 0;">Tax</td>
+                          <td align="right" style="padding:6px 0; font-weight:700; color:#111827;">${money(tax)}</td>
+                        </tr>` : ""}
+                        ${discount ? `
+                        <tr>
+                          <td style="padding:6px 0;">Discount</td>
+                          <td align="right" style="padding:6px 0; font-weight:700; color:#111827;">- ${money(discount)}</td>
+                        </tr>` : ""}
+                        <tr>
+                          <td style="padding:10px 0; border-top:1px solid #eef0f4; font-size:14px; font-weight:900; color:#111827;">Total</td>
+                          <td align="right" style="padding:10px 0; border-top:1px solid #eef0f4; font-size:14px; font-weight:900; color:#111827;">${money(total)}</td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+
+                <div style="margin-top:16px; padding:14px; border-radius:12px; background:#fff7ed; border:1px solid #ffedd5;">
+                  <div style="font-family:Segoe UI, Tahoma, Arial, sans-serif; font-weight:800; color:#9a3412; margin-bottom:6px;">
+                    What happens next?
+                  </div>
+                  <div style="font-family:Segoe UI, Tahoma, Arial, sans-serif; font-size:13px; color:#7c2d12; line-height:1.6;">
+                    • We’ll confirm your order and start processing it.<br/>
+                    • You’ll receive updates when it’s shipped / ready for delivery.<br/>
+                    • Need help? Just reply to this email — we’re here for you.
+                  </div>
+                </div>
+
+                <div style="font-family:Segoe UI, Tahoma, Arial, sans-serif; font-size:12px; color:#6b7280; margin-top:18px; line-height:1.6;">
+                  Questions? Reply to this email or contact <strong>${supportEmail}</strong>.<br/>
+                  <span style="color:#9ca3af;">This receipt was generated automatically.</span>
+                </div>
+              </td>
+            </tr>
+
+            <tr><td style="height:18px;"></td></tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
+
+  const mailOptions = {
+    from: `"Banana Meow" <${process.env.EMAIL_USER}>`,
+    to,
+    subject: `Order received — ${brand} Receipt (${orderNumber})`,
+    html,
+    text:
+      `Order received — ${brand}\n` +
+      `Order #: ${orderNumber}\n` +
+      `Placed: ${placedAtText}\n` +
+      `Payment: ${paymentLabel}\n\n` +
+      `Items:\n` +
+      items
+        .map(
+          (i) =>
+            `- ${i?.name} x${i?.quantity} @ ${money(i?.price)} = ${money((i?.price || 0) * (i?.quantity || 1))}`
+        )
+        .join("\n") +
+      `\n\nSubtotal: ${money(subtotal)}` +
+      (shipping ? `\nShipping: ${money(shipping)}` : "") +
+      (tax ? `\nTax: ${money(tax)}` : "") +
+      (discount ? `\nDiscount: -${money(discount)}` : "") +
+      `\nTotal: ${money(total)}\n\n` +
+      `We’ll keep you updated with the next steps. If you have questions, reply to this email.`,
+  };
+
+  const result = await sendMailSafe(mailOptions);
+
+  if (result.fallback) {
+    console.log(`[DEV] Order receipt for ${to}: total ${money(total)} (order: ${orderNumber})`);
+    return { success: false, fallback: true };
+  }
+  if (result.success) {
+    console.log(`✉️ Order receipt sent to ${to} (id: ${result.messageId})`);
+    return { success: true, messageId: result.messageId };
+  }
+  console.error("Order receipt send failed:", result.error);
+  return { success: false, error: result.error };
+}
+
+export async function sendDonationReceipt(to, name, donation) {
+  const mailOptions = {
+    from: `"Banana Meow" <${process.env.EMAIL_USER}>`,
+    to,
+    subject: `Thank you for your donation to Banana Meow`,
+    html:
+      `<!doctype html><html><body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding:20px;">` +
+      `<div style="max-width:600px;margin:0 auto;">` +
+      `<h2>Thank you for your donation${name ? `, ${name}` : ""}!</h2>` +
+      `<p>We received your ${donation.frequency || "donation"} of <strong>$${formatCurrency(donation.amount)}</strong>.</p>` +
+      `<p>Your support helps our cats — we appreciate it!</p>` +
+      `</div></body></html>`,
+    text: `Thank you for your donation of $${formatCurrency(donation.amount)}.`,
+  };
+
+  const result = await sendMailSafe(mailOptions);
+  if (result.fallback) {
+    console.log(`[DEV] Donation receipt for ${to}: $${formatCurrency(donation.amount)}`);
+    return { success: false, fallback: true };
+  }
+  if (result.success) {
+    console.log(`✉️ Donation receipt sent to ${to} (id: ${result.messageId})`);
+    return { success: true, messageId: result.messageId };
+  }
+  console.error("Donation receipt send failed:", result.error);
+  return { success: false, error: result.error };
+}
+
+export async function sendVerificationEmail(to, code, name) {
+  const mailOptions = {
+    from: `"Banana Meow" <${process.env.EMAIL_USER}>`,
+    to,
+    subject: "Your Banana Meow verification code",
+    html:
+      `<!doctype html><html><body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding:20px;">` +
+      `<div style="max-width:500px;margin:0 auto;">` +
+      `<h2>Hello${name ? `, ${name}` : ""}!</h2>` +
+      `<p>Your verification code is:</p>` +
+      `<p style="font-size:28px; font-weight:700; letter-spacing:4px;">${code}</p>` +
+      `<p>This code expires in 10 minutes.</p>` +
+      `</div></body></html>`,
+    text: `Your verification code is: ${code} (expires in 10 minutes)`,
+  };
+
+  const result = await sendMailSafe(mailOptions);
+  if (result.fallback) {
     console.log(`[DEV] Verification code for ${to}: ${code}`);
     return { success: false, fallback: true };
   }
-
-  try {
-    const info = await transporter.sendMail({
-      from: `"Banana Meow 🐱" <${process.env.EMAIL_USER}>`,
-      to,
-      subject: "🐱 Your Royal Verification Code - Banana Meow",
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        </head>
-        <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #FFF7F0;">
-          <div style="max-width: 500px; margin: 0 auto; padding: 40px 20px;">
-            <div style="text-align: center; margin-bottom: 30px;">
-              <div style="display: inline-block; background: linear-gradient(135deg, #FFE699 0%, #EBDCF9 100%); padding: 20px; border-radius: 20px; margin-bottom: 20px;">
-                <span style="font-size: 48px;">🐱</span>
-              </div>
-              <h1 style="color: #5A3E85; margin: 0; font-size: 28px;">Banana Meow</h1>
-              <p style="color: #666; margin: 5px 0 0 0; font-size: 14px; letter-spacing: 2px;">CHONKY ROYALS</p>
-            </div>
-
-            <div style="background: white; border-radius: 24px; padding: 40px 30px; box-shadow: 0 10px 40px rgba(90, 62, 133, 0.1);">
-              <h2 style="color: #5A3E85; margin: 0 0 10px 0; font-size: 22px; text-align: center;">
-                Welcome to the Royal Court, ${name}!
-              </h2>
-              <p style="color: #666; text-align: center; margin: 0 0 30px 0; font-size: 15px; line-height: 1.6;">
-                Enter this verification code to complete your registration and join our kingdom of chonky cats.
-              </p>
-
-              <div style="background: linear-gradient(135deg, #FFF9F5 0%, #EBDCF9 100%); border-radius: 16px; padding: 25px; text-align: center; margin-bottom: 30px;">
-                <p style="color: #5A3E85; margin: 0 0 10px 0; font-size: 13px; font-weight: 600; letter-spacing: 1px;">YOUR VERIFICATION CODE</p>
-                <div style="font-size: 36px; font-weight: bold; letter-spacing: 8px; color: #5A3E85; font-family: 'Courier New', monospace;">
-                  ${code}
-                </div>
-              </div>
-
-              <div style="background: #FDE2E4; border-radius: 12px; padding: 15px; text-align: center; margin-bottom: 25px;">
-                <p style="color: #E57373; margin: 0; font-size: 13px;">
-                  ⏰ This code expires in <strong>10 minutes</strong>
-                </p>
-              </div>
-
-              <p style="color: #999; font-size: 12px; text-align: center; margin: 0; line-height: 1.6;">
-                If you didn't request this code, please ignore this email.<br>
-                Someone may have entered your email by mistake.
-              </p>
-            </div>
-
-            <div style="text-align: center; margin-top: 30px;">
-              <p style="color: #999; font-size: 12px; margin: 0;">Made with 💜 by the Banana Meow Team</p>
-            </div>
-          </div>
-        </body>
-        </html>
-      `,
-      text: `Welcome to Banana Meow, ${name}!\n\nYour verification code is: ${code}\n\nThis code expires in 10 minutes.`,
-    });
-
-    console.log(`✉️ Verification email sent to ${to} (id: ${info.messageId})`);
-    return { success: true, messageId: info.messageId };
-  } catch (err) {
-    console.error("Email send failed:", err);
-    return { success: false, error: err.message };
-  }
+  if (result.success) return { success: true, messageId: result.messageId };
+  return { success: false, error: result.error };
 }
 
-/**
- * Send welcome email after successful registration
- */
 export async function sendWelcomeEmail(to, name) {
-  const transporter = createTransporter();
+  const mailOptions = {
+    from: `"Banana Meow" <${process.env.EMAIL_USER}>`,
+    to,
+    subject: `Welcome to Banana Meow${name ? `, ${name}` : ""}!`,
+    html:
+      `<!doctype html><html><body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding:20px; background:#FFF7F0;">` +
+      `<div style="max-width:500px;margin:0 auto; padding:20px;">` +
+      `<h1 style="color:#5A3E85;">Welcome${name ? `, ${name}` : ""}!</h1>` +
+      `<p>Thanks for joining the Banana Meow Royal Court — meet our cats at the site.</p>` +
+      `</div></body></html>`,
+    text: `Welcome to Banana Meow${name ? `, ${name}` : ""}!`,
+  };
 
-  if (!transporter) {
+  const result = await sendMailSafe(mailOptions);
+  if (result.fallback) {
     console.log(`[DEV] Welcome email would be sent to ${to}`);
     return { success: false, fallback: true };
   }
-
-  try {
-    const info = await transporter.sendMail({
-      from: `"Banana Meow 🐱" <${process.env.EMAIL_USER}>`,
-      to,
-      subject: "👑 Welcome to the Royal Court! - Banana Meow",
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        </head>
-        <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #FFF7F0;">
-          <div style="max-width: 500px; margin: 0 auto; padding: 40px 20px;">
-            <div style="text-align: center; margin-bottom: 30px;">
-              <div style="display: inline-block; background: linear-gradient(135deg, #D4F5E9 0%, #EBDCF9 100%); padding: 20px; border-radius: 20px; margin-bottom: 20px;">
-                <span style="font-size: 48px;">👑</span>
-              </div>
-              <h1 style="color: #5A3E85; margin: 0; font-size: 28px;">Welcome, ${name}!</h1>
-            </div>
-
-            <div style="background: white; border-radius: 24px; padding: 40px 30px; box-shadow: 0 10px 40px rgba(90, 62, 133, 0.1);">
-              <p style="color: #666; text-align: center; margin: 0 0 25px 0; font-size: 16px; line-height: 1.7;">
-                You're now officially a member of the <strong style="color: #5A3E85;">Banana Meow Royal Court</strong>!
-                Our 12 British Shorthairs are honored by your presence.
-              </p>
-
-              <div style="text-align: center; margin: 30px 0;">
-                <a href="${process.env.FRONTEND_URL || "http://localhost:5173"}/cats"
-                   style="display: inline-block; background: linear-gradient(135deg, #5A3E85 0%, #8B6DB3 100%); color: white; text-decoration: none; padding: 15px 35px; border-radius: 30px; font-weight: 600; font-size: 15px;">
-                  Meet the Cats 🐱
-                </a>
-              </div>
-
-              <p style="color: #999; font-size: 13px; text-align: center; margin: 0; line-height: 1.6;">
-                Thank you for supporting our chonky royals!
-              </p>
-            </div>
-
-            <div style="text-align: center; margin-top: 30px;">
-              <p style="color: #999; font-size: 12px; margin: 0;">Made with 💜 by the Banana Meow Team</p>
-            </div>
-          </div>
-        </body>
-        </html>
-      `,
-    });
-
-    console.log(`✉️ Welcome email sent to ${to} (id: ${info.messageId})`);
-    return { success: true, messageId: info.messageId };
-  } catch (err) {
-    console.error("Welcome email send failed:", err);
-    return { success: false, error: err.message };
-  }
+  if (result.success) return { success: true, messageId: result.messageId };
+  return { success: false, error: result.error };
 }
 
-/**
- * Send password reset email
- */
 export async function sendPasswordResetEmail(to, name, resetUrl) {
-  const transporter = createTransporter();
-  
-  if (!transporter) {
-    console.log(`[DEV] Password reset link for ${to}: ${resetUrl}`);
+  const mailOptions = {
+    from: `"Banana Meow" <${process.env.EMAIL_USER}>`,
+    to,
+    subject: "🔒 Reset Your Password - Banana Meow",
+    html:
+      `<!doctype html><html><body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding:20px; background:#fef9e7;">` +
+      `<div style="max-width:500px;margin:0 auto; padding:20px;">` +
+      `<h2>Hello${name ? `, ${name}` : ""}!</h2>` +
+      `<p>We received a request to reset your password. Click the button below to create a new password:</p>` +
+      `<div style="text-align:center;margin:20px 0;"><a href="${resetUrl}" style="background:#7c3aed;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;">Reset Password</a></div>` +
+      `<p>If you didn't request this, ignore this email.</p>` +
+      `</div></body></html>`,
+    text: `Reset your password: ${resetUrl}`,
+  };
+
+  const result = await sendMailSafe(mailOptions);
+  if (result.fallback) {
+    console.log(`[DEV] Password reset email for ${to}: ${resetUrl}`);
     return { success: false, fallback: true };
   }
-
-  try {
-    const info = await transporter.sendMail({
-      from: `"Banana Meow" <${process.env.EMAIL_USER}>`,
-      to,
-      subject: "🔒 Reset Your Password - Banana Meow",
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        </head>
-        <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #fef9e7;">
-          <div style="max-width: 500px; margin: 0 auto; padding: 40px 20px;">
-            <div style="background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); border-radius: 24px; padding: 32px; text-align: center;">
-              <h1 style="color: #fff; margin: 0 0 8px 0; font-size: 28px;">🍌 Banana Meow 🐱</h1>
-              <p style="color: rgba(255,255,255,0.9); margin: 0; font-size: 14px;">The Royal Cat Court</p>
-            </div>
-            
-            <div style="background: #fff; border-radius: 24px; padding: 32px; margin-top: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
-              <h2 style="color: #4c1d95; margin: 0 0 16px 0; font-size: 22px;">Hello, ${name}!</h2>
-              <p style="color: #6b7280; line-height: 1.6; margin: 0 0 24px 0;">
-                We received a request to reset your password. Click the button below to create a new password:
-              </p>
-              
-              <div style="text-align: center; margin: 32px 0;">
-                <a href="${resetUrl}" style="display: inline-block; background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); color: #fff; text-decoration: none; padding: 16px 32px; border-radius: 12px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);">
-                  Reset Password
-                </a>
-              </div>
-              
-              <p style="color: #9ca3af; font-size: 13px; line-height: 1.6; margin: 24px 0 0 0;">
-                <strong>This link will expire in 30 minutes.</strong><br>
-                If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.
-              </p>
-              
-              <div style="background: #fef3c7; border-radius: 12px; padding: 16px; margin: 24px 0; border-left: 4px solid #fbbf24;">
-                <p style="color: #92400e; margin: 0; font-size: 13px; line-height: 1.5;">
-                  <strong>⚠️ Security Notice:</strong><br>
-                  If the button doesn't work, copy and paste this link into your browser:<br>
-                  <span style="word-break: break-all; color: #7c3aed;">${resetUrl}</span>
-                </p>
-              </div>
-            </div>
-            
-            <p style="color: #9ca3af; font-size: 12px; text-align: center; margin-top: 24px;">
-              Made with 💛 by Banana Meow Team
-            </p>
-          </div>
-        </body>
-        </html>
-      `,
-    });
-
-    console.log(`✉️ Password reset email sent to ${to} (id: ${info.messageId})`);
-    return { success: true, id: info.messageId };
-  } catch (err) {
-    console.error("Password reset email send failed:", err);
-    return { success: false, error: err.message };
-  }
+  if (result.success) return { success: true, messageId: result.messageId };
+  return { success: false, error: result.error };
 }
 
-/**
- * Send password change notification email
- */
 export async function sendPasswordChangeNotification(to, name) {
-  const transporter = createTransporter();
-  
-  if (!transporter) {
+  const mailOptions = {
+    from: `"Banana Meow" <${process.env.EMAIL_USER}>`,
+    to,
+    subject: "🔒 Password Updated - Banana Meow",
+    html:
+      `<!doctype html><html><body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding:20px; background:#fef9e7;">` +
+      `<div style="max-width:500px;margin:0 auto; padding:20px;">` +
+      `<h2>Password Updated Successfully 🔒</h2>` +
+      `<p>Hello ${name},</p>` +
+      `<p>This is a confirmation that your password has been successfully updated on your Banana Meow account.</p>` +
+      `<p>If you did not make this change, please contact us immediately to secure your account.</p>` +
+      `</div></body></html>`,
+    text: `Your password was updated successfully. If you did not make this change, contact support.`,
+  };
+
+  const result = await sendMailSafe(mailOptions);
+  if (result.fallback) {
     console.log(`[DEV] Password change notification would be sent to ${to}`);
     return { success: false, fallback: true };
   }
-
-  try {
-    const info = await transporter.sendMail({
-      from: `"Banana Meow" <${process.env.EMAIL_USER}>`,
-      to,
-      subject: "🔒 Password Updated - Banana Meow",
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        </head>
-        <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #fef9e7;">
-          <div style="max-width: 500px; margin: 0 auto; padding: 40px 20px;">
-            <div style="background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); border-radius: 24px; padding: 32px; text-align: center;">
-              <h1 style="color: #fff; margin: 0 0 8px 0; font-size: 28px;">🍌 Banana Meow 🐱</h1>
-              <p style="color: rgba(255,255,255,0.9); margin: 0; font-size: 14px;">The Royal Cat Court</p>
-            </div>
-            
-            <div style="background: #fff; border-radius: 24px; padding: 32px; margin-top: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
-              <h2 style="color: #4c1d95; margin: 0 0 16px 0; font-size: 24px;">Password Updated Successfully 🔒</h2>
-              <p style="color: #6b7280; line-height: 1.6; margin: 0 0 16px 0;">
-                Hello ${name},
-              </p>
-              <p style="color: #6b7280; line-height: 1.6; margin: 0 0 24px 0;">
-                This is a confirmation that your password has been successfully updated on your Banana Meow account.
-              </p>
-              
-              <div style="background: #fef3c7; border-radius: 12px; padding: 16px; margin: 20px 0; border-left: 4px solid #fbbf24;">
-                <p style="color: #92400e; margin: 0; font-size: 14px; font-weight: 600;">
-                  ⚠️ Security Notice
-                </p>
-                <p style="color: #92400e; margin: 8px 0 0 0; font-size: 13px; line-height: 1.5;">
-                  If you did not make this change, please contact us immediately to secure your account.
-                </p>
-              </div>
-              
-              <p style="color: #6b7280; line-height: 1.6; margin: 24px 0 0 0; font-size: 14px;">
-                Your account security is important to us. If you have any concerns, please don't hesitate to reach out.
-              </p>
-            </div>
-            
-            <p style="color: #9ca3af; font-size: 12px; text-align: center; margin-top: 24px;">
-              Made with 💛 by Banana Meow Team
-            </p>
-          </div>
-        </body>
-        </html>
-      `,
-    });
-
-    console.log(`✉️ Password change notification sent to ${to} (id: ${info.messageId})`);
-    return { success: true, id: info.messageId };
-  } catch (err) {
-    console.error("Password change notification send failed:", err);
-    return { success: false, error: err.message };
-  }
+  if (result.success) return { success: true, messageId: result.messageId };
+  return { success: false, error: result.error };
 }

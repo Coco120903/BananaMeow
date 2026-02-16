@@ -1,29 +1,106 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
 import { API_BASE } from "../lib/api.js";
+import { CheckCircle, XCircle, Loader2, ShoppingBag, ArrowLeft } from "lucide-react";
 
 export default function CartPage() {
   const { state, dispatch, subtotal } = useCart();
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const isSuccess = searchParams.get("success") === "true";
+  const isCanceled = searchParams.get("canceled") === "true";
+
+  // Clear cart on successful payment and clean URL params
+  useEffect(() => {
+    if (isSuccess) {
+      dispatch({ type: "CLEAR_CART" });
+    }
+  }, [isSuccess, dispatch]);
 
   const handleCheckout = async () => {
-    const response = await fetch(
-      `${API_BASE}/api/payments/create-order-session`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ items: state.items, email })
-      }
-    );
+    setError("");
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `${API_BASE}/api/payments/create-order-session`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ items: state.items, email })
+        }
+      );
 
-    if (response.ok) {
-      const data = await response.json();
-      window.location.href = data.url;
+      if (response.ok) {
+        const data = await response.json();
+        window.location.href = data.url;
+      } else {
+        const data = await response.json().catch(() => ({}));
+        setError(data.message || "Checkout failed. Please try again.");
+        setLoading(false);
+      }
+    } catch (err) {
+      setError("Unable to connect to payment service. Please try again.");
+      setLoading(false);
     }
   };
+
+  // Success state — after Stripe redirect
+  if (isSuccess) {
+    return (
+      <section className="mx-auto max-w-2xl px-4 py-16 md:px-8 text-center">
+        <div className="card-soft rounded-[2.5rem] p-10">
+          <div className="mx-auto mb-6 grid h-20 w-20 place-items-center rounded-full bg-gradient-to-r from-mint/40 to-sky/30">
+            <CheckCircle className="h-10 w-10 text-emerald-600" />
+          </div>
+          <h1 className="text-3xl font-bold text-royal mb-3">Order Confirmed!</h1>
+          <p className="text-ink/60 mb-2">
+            Thank you for your purchase! Your order has been placed successfully.
+          </p>
+          <p className="text-sm text-ink/50 mb-8">
+            {email ? `A confirmation will be sent to ${email}.` : "Check your email for order details."}
+          </p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+            <Link to="/shop" className="btn-primary inline-flex items-center gap-2">
+              <ShoppingBag className="h-4 w-4" /> Continue Shopping
+            </Link>
+            <Link to="/" className="btn-secondary text-center">
+              Back to Home
+            </Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Canceled state — user backed out of Stripe
+  if (isCanceled) {
+    return (
+      <section className="mx-auto max-w-2xl px-4 py-16 md:px-8 text-center">
+        <div className="card-soft rounded-[2.5rem] p-10">
+          <div className="mx-auto mb-6 grid h-20 w-20 place-items-center rounded-full bg-gradient-to-r from-blush/40 to-coral/20">
+            <XCircle className="h-10 w-10 text-coral" />
+          </div>
+          <h1 className="text-2xl font-bold text-royal mb-3">Checkout Canceled</h1>
+          <p className="text-ink/60 mb-8">
+            No worries — your cart items are still saved. Come back when you're ready!
+          </p>
+          <Link
+            to="/cart"
+            onClick={() => setSearchParams({})}
+            className="btn-primary inline-flex items-center gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" /> Back to Cart
+          </Link>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="mx-auto max-w-5xl px-4 py-12 md:px-8">
@@ -134,10 +211,21 @@ export default function CartPage() {
             <button
               type="button"
               onClick={handleCheckout}
-              className="btn-primary mt-6 w-full"
+              disabled={loading}
+              className="btn-primary mt-6 w-full flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Checkout with Stripe
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                "Checkout with Stripe"
+              )}
             </button>
+            {error && (
+              <p className="mt-3 text-sm text-coral text-center">{error}</p>
+            )}
           </aside>
         </div>
       )}

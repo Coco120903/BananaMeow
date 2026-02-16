@@ -2,7 +2,7 @@ import Stripe from "stripe";
 import Donation from "../models/Donation.js";
 import Order from "../models/Order.js";
 import Product from "../models/Product.js";
-import { sendOrderReceipt, sendDonationReceipt } from "../utils/emailService.js";
+import { sendOrderReceipt, sendDonationThankYouEmail } from "../utils/emailService.js";
 
 function getStripeClient() {
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
@@ -210,7 +210,7 @@ export async function handleStripeWebhook(req, res) {
         if (donation) {
           console.log(`✅ Donation ${donation._id} marked as completed`);
           if (donation.email) {
-            sendDonationReceipt(donation.email, donation.email, donation).catch((err) => {
+            sendDonationThankYouEmail(donation.email, donation).catch((err) => {
               console.error("Failed to send donation receipt (webhook):", err);
             });
           }

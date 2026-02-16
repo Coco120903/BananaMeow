@@ -33,6 +33,11 @@ const createTransporter = ({
   return nodemailer.createTransport(transportOptions);
 };
 
+// Helper for functions that use the getTransporter() pattern
+function getTransporter() {
+  return createTransporter();
+}
+
 async function sendMailSafe(mailOptions) {
   const allowInsecure = process.env.EMAIL_ALLOW_INSECURE === "true";
   const forceIPv4 = process.env.EMAIL_FORCE_IPV4 === "true";
@@ -408,6 +413,38 @@ export async function sendContactReplyEmail(to, name, subject, reply) {
     console.error("Contact reply email failed:", err);
     return { success: false, error: err.message };
   }
+}
+
+/**
+ * Send password change notification email
+ */
+export async function sendPasswordChangeNotification(to, name) {
+  const mailOptions = {
+    from: `"Banana Meow" <${process.env.EMAIL_USER}>`,
+    to,
+    subject: "🔒 Password Changed - Banana Meow",
+    html: `
+<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;font-family:'Segoe UI',Tahoma;background:#FFF7F0;">
+  <div style="max-width:500px;margin:40px auto;">
+    <div style="background:#fff;border-radius:24px;padding:40px;box-shadow:0 10px 40px rgba(90,62,133,.1);">
+      <h2 style="text-align:center;color:#5A3E85;">Password Changed</h2>
+      <p style="text-align:center;color:#666;">
+        Hi ${name || "there"}, your Banana Meow account password was recently changed.
+      </p>
+      <p style="text-align:center;color:#999;font-size:13px;margin-top:20px;">
+        If you did not make this change, please contact us immediately.
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+`,
+    text: `Hi ${name || "there"}, your Banana Meow account password was recently changed. If you did not make this change, please contact us immediately.`,
+  };
+
+  return sendMailSafe(mailOptions);
 }
 
 /**

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Cat, Heart, Instagram, Twitter, Youtube, Mail, Sparkles, Crown, MapPin, Phone, ArrowUpRight, Star, X, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { Cat, Heart, Instagram, Twitter, Youtube, Mail, Sparkles, Crown, MapPin, Phone, ArrowUpRight, Star, X, CheckCircle, AlertCircle, Loader2, Images, MessageCircle } from "lucide-react";
 import { PawTrail, CatEars, FloatingCats } from "./CatDecorations.jsx";
 import { API_BASE } from "../lib/api.js";
 
@@ -8,6 +8,8 @@ const quickLinks = [
   { label: "Meet the Cats", href: "/cats", icon: Cat },
   { label: "Shop", href: "/shop", icon: Sparkles },
   { label: "Donate", href: "/donate", icon: Heart },
+  { label: "Gallery", href: "/gallery", icon: Images },
+  { label: "Contact", href: "/contact", icon: MessageCircle },
   { label: "About Us", href: "/about", icon: Star }
 ];
 

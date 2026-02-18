@@ -214,7 +214,7 @@ export default function CatsPage() {
             <Cat className="h-4 w-4 text-royal" />
           </div>
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-ink/50">
-            Meet the 12 Cats
+            Meet the {list.length} Cats
           </p>
         </div>
         <h1 className="text-3xl font-bold text-royal md:text-4xl lg:text-5xl flex items-center gap-4 flex-wrap">

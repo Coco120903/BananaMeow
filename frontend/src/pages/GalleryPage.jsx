@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Camera, Heart, Play, Images as ImagesIcon, Film, Sparkles } from "lucide-react";
+import { Camera, Heart, Play, Images as ImagesIcon, Film, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 import { API_BASE } from "../lib/api.js";
 import { FloatingCats } from "../components/CatDecorations.jsx";
+
+const POSTS_PER_PAGE = 9;
 
 export default function GalleryPage() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const loadPosts = async () => {
@@ -25,6 +28,10 @@ export default function GalleryPage() {
 
     loadPosts();
   }, []);
+
+  const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE) || 1;
+  const page = Math.min(currentPage, totalPages);
+  const paginatedPosts = posts.slice((page - 1) * POSTS_PER_PAGE, page * POSTS_PER_PAGE);
 
   const getMediaIcon = (mediaType) => {
     switch (mediaType) {
@@ -105,8 +112,9 @@ export default function GalleryPage() {
 
       {/* Gallery Grid with scrapbook photo frames */}
       {!loading && posts.length > 0 && (
+        <>
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
-          {posts.map((post, index) => {
+          {paginatedPosts.map((post, index) => {
             // Random subtle rotation for each photo
             const rotation = (index % 2 === 0 ? 1 : -1) * (1 + (index % 3));
             const hoverRotation = rotation > 0 ? -0.5 : 0.5;
@@ -191,6 +199,34 @@ export default function GalleryPage() {
             );
           })}
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="mt-12 flex flex-wrap items-center justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-royal/20 text-royal font-medium hover:bg-banana-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Previous
+            </button>
+            <span className="px-4 py-2.5 text-sm text-ink/70 font-medium">
+              Page {page} of {totalPages}
+            </span>
+            <button
+              type="button"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-royal/20 text-royal font-medium hover:bg-banana-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Next
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+        </>
       )}
 
       {/* Empty State with scrapbook style */}

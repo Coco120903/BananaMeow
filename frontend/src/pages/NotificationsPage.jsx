@@ -163,12 +163,18 @@ export default function NotificationsPage() {
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
                         <h3 className={`font-bold text-sm sm:text-base truncate ${notif.isRead ? "text-ink/70" : "text-royal"}`}>
                           {notification?.title}
                         </h3>
-                        {!notif.isRead && (
-                          <span className="w-2 h-2 rounded-full bg-royal flex-shrink-0" />
+                        {!notif.isRead ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-royal/10 text-royal text-xs font-semibold shrink-0">
+                            Unread
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-ink/5 text-ink/50 text-xs font-medium shrink-0">
+                            Read
+                          </span>
                         )}
                       </div>
 

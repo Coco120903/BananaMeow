@@ -143,7 +143,10 @@ export default function HeroSection() {
                   <Cat className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-white">"👑 Your presence is accepted."</p>
+                  <div className="flex items-center gap-1.5">
+                    <Crown className="h-4 w-4 text-white shrink-0" />
+                    <p className="text-sm font-semibold text-white">"Your presence is accepted."</p>
+                  </div>
                   <p className="text-xs text-white/70">— Nana, Head of Judgment</p>
                 </div>
               </div>

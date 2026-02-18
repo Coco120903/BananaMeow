@@ -1,4 +1,4 @@
-import { Crown, Star, Heart, Sparkles, TrendingUp, Users, Gift, Shield, Quote, ChevronLeft, ChevronRight, Camera, ArrowRight, Send, LogIn, Loader2 } from "lucide-react";
+import { Crown, Star, Heart, Sparkles, TrendingUp, Users, Gift, Shield, Quote, ChevronLeft, ChevronRight, Camera, ArrowRight, Send, LogIn, Loader2, Cat } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -325,7 +325,8 @@ function TestimonialsSection() {
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-banana-100 to-lilac/30 text-royal font-medium hover:shadow-glow transition-all duration-300"
               >
                 <LogIn className="h-4 w-4" />
-                Please log in to leave a royal review 🐱
+                <Cat className="h-4 w-4" />
+                Please log in to leave a royal review
               </Link>
             </div>
           ) : !showForm ? (

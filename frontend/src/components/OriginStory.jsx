@@ -151,15 +151,7 @@ function FishSvg({ className = "" }) {
 }
 
 function CrownSvg({ className = "" }) {
-  return (
-    <svg viewBox="0 0 48 32" fill="currentColor" className={className}>
-      <path d="M4 28L8 10l10 8 6-14 6 14 10-8 4 18z" />
-      <circle cx="8" cy="10" r="2.5" />
-      <circle cx="24" cy="4" r="2.5" />
-      <circle cx="40" cy="10" r="2.5" />
-      <rect x="4" y="26" width="40" height="3" rx="1.5" opacity="0.8" />
-    </svg>
-  );
+  return <Crown className={className} />;
 }
 
 function HeartTrailSvg({ className = "" }) {

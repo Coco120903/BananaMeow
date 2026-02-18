@@ -3,7 +3,7 @@ import {
   Mail, Send, User, MessageSquare, FileText, Loader2,
   CheckCircle, AlertCircle, Heart, Sparkles, Crown,
   Instagram, Twitter, Youtube, ExternalLink, MapPin,
-  Clock, ArrowRight, Star, X
+  Clock, ArrowRight, Star, X, ShoppingCart, Cat, Gift
 } from "lucide-react";
 import { API_BASE } from "../lib/api.js";
 import { FloatingCats } from "../components/CatDecorations.jsx";
@@ -483,17 +483,17 @@ export default function ContactPage() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 max-w-4xl mx-auto">
             {[
               {
-                icon: "🛒",
+                icon: ShoppingCart,
                 q: "Where's my order?",
                 a: "Check your email for tracking info, or reach out and we'll help locate it.",
               },
               {
-                icon: "🐱",
+                icon: Cat,
                 q: "Can I adopt a cat?",
                 a: "Our royals aren't up for adoption, but you can support them through donations!",
               },
               {
-                icon: "🎁",
+                icon: Gift,
                 q: "Do you ship internationally?",
                 a: "Currently we ship within select regions. Contact us for specifics on your area.",
               },
@@ -502,7 +502,7 @@ export default function ContactPage() {
                 key={faq.q}
                 className="group rounded-2xl bg-white border border-royal/5 p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-soft hover:border-royal/10"
               >
-                <div className="text-2xl mb-3">{faq.icon}</div>
+                <div className="text-2xl mb-3"><faq.icon className="h-8 w-8 text-royal" /></div>
                 <h3 className="text-sm font-bold text-royal mb-2">{faq.q}</h3>
                 <p className="text-xs text-ink/50 leading-relaxed">{faq.a}</p>
               </div>

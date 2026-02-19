@@ -5,7 +5,7 @@ import { API_BASE } from "../lib/api.js";
 import {
   User, Crown, Mail, Lock, Settings, Camera, Edit2, Trash2, Eye, EyeOff,
   ShoppingBag, Heart, Star, Calendar, CheckCircle, XCircle, AlertCircle,
-  Loader2, Sparkles, Shield, Gift, Image as ImageIcon, ArrowRight, ChevronLeft, ChevronRight, LogOut, Cat, X
+  Loader2, Sparkles, Shield, Gift, Image as ImageIcon, ArrowRight, ChevronLeft, ChevronRight, LogOut, Cat, X, ZoomIn, ImagePlus
 } from "lucide-react";
 import Cropper from "react-easy-crop";
 import { getCroppedImg } from "../utils/imageCrop.js";
@@ -28,6 +28,9 @@ export default function ProfilePage() {
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [imageSrc, setImageSrc] = useState(null);
   const [imageError, setImageError] = useState(false);
+  const [showEditOptions, setShowEditOptions] = useState(false);
+  const [editSubMode, setEditSubMode] = useState("zoom");
+  const [profilePreviewZoom, setProfilePreviewZoom] = useState(1);
   const fileInputRef = useRef(null);
   const editFileInputRef = useRef(null);
 
@@ -380,12 +383,20 @@ export default function ProfilePage() {
         <div className="relative">
           <div className="w-[20rem] h-[20rem] md:w-[20rem] md:h-[20rem] rounded-full overflow-hidden border-4 border-royal/10 shadow-soft">
             {profileImage && !imageError ? (
-              <img
-                src={`${API_BASE}${profileImage}`}
-                alt="Profile"
-                className="w-full h-full object-cover"
-                onError={() => setImageError(true)}
-              />
+              <div
+                className="w-full h-full flex items-center justify-center overflow-hidden"
+                style={{
+                  transform: showEditOptions && editSubMode === "zoom" ? `scale(${profilePreviewZoom})` : "scale(1)",
+                  transformOrigin: "center center",
+                }}
+              >
+                <img
+                  src={`${API_BASE}${profileImage}`}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                  onError={() => setImageError(true)}
+                />
+              </div>
             ) : (
               <div className="w-full h-full rounded-full bg-gradient-to-br from-banana-100 to-lilac/50 flex items-center justify-center">
                 <User className="h-[5rem] w-[5rem] md:h-[5rem] md:w-[5rem] text-royal/60" />
@@ -393,7 +404,58 @@ export default function ProfilePage() {
             )}
           </div>
         </div>
-        
+
+        {showEditOptions && profileImage && (
+          <div className="w-full max-w-md mx-auto flex flex-col items-center gap-4">
+            <div className="flex gap-2 w-full">
+              <button
+                type="button"
+                onClick={() => setEditSubMode("zoom")}
+                className={`flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 text-sm font-medium transition-colors ${
+                  editSubMode === "zoom"
+                    ? "border-royal bg-banana-100 text-royal"
+                    : "border-royal/20 text-ink/70 hover:bg-cream"
+                }`}
+              >
+                <ZoomIn className="h-4 w-4" />
+                Zoom
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEditSubMode("change");
+                  editFileInputRef.current?.click();
+                }}
+                className={`flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 text-sm font-medium transition-colors ${
+                  editSubMode === "change"
+                    ? "border-royal bg-banana-100 text-royal"
+                    : "border-royal/20 text-ink/70 hover:bg-cream"
+                }`}
+              >
+                <ImagePlus className="h-4 w-4" />
+                Change image
+              </button>
+            </div>
+            {editSubMode === "zoom" && (
+              <div className="w-full flex items-center gap-3 px-2">
+                <label className="text-sm font-semibold text-ink/60 whitespace-nowrap">Zoom:</label>
+                <input
+                  type="range"
+                  min={1}
+                  max={2.5}
+                  step={0.1}
+                  value={profilePreviewZoom}
+                  onChange={(e) => setProfilePreviewZoom(Number(e.target.value))}
+                  className="flex-1 h-2 rounded-lg appearance-none bg-royal/10 accent-royal"
+                />
+                <span className="text-sm font-medium text-ink/70 min-w-[3rem] text-right">
+                  {profilePreviewZoom.toFixed(1)}x
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="flex gap-2 justify-center w-full max-w-md mx-auto">
           <label className="btn-secondary text-xs md:text-sm cursor-pointer flex items-center gap-1.5 px-3 md:px-4 py-2 md:py-2.5 flex-1 justify-center min-w-0">
             <input
@@ -408,17 +470,29 @@ export default function ProfilePage() {
           </label>
           {profileImage && (
             <>
-              <label className="btn-secondary text-xs md:text-sm cursor-pointer flex items-center gap-1.5 px-3 md:px-4 py-2 md:py-2.5 flex-1 justify-center min-w-0">
-                <input
-                  ref={editFileInputRef}
-                  type="file"
-                  accept="image/jpeg,image/jpg,image/png,image/webp"
-                  onChange={onFileChange}
-                  className="hidden"
-                />
+              <button
+                type="button"
+                onClick={() => {
+                  setShowEditOptions((prev) => {
+                    if (!prev) {
+                      setEditSubMode("zoom");
+                      setProfilePreviewZoom(1);
+                    }
+                    return !prev;
+                  });
+                }}
+                className="btn-secondary text-xs md:text-sm flex items-center gap-1.5 px-3 md:px-4 py-2 md:py-2.5 flex-1 justify-center min-w-0"
+              >
                 <Edit2 className="h-3.5 w-3.5 md:h-4 md:w-4 flex-shrink-0" />
-                <span>Change Photo</span>
-              </label>
+                <span>Edit</span>
+              </button>
+              <input
+                ref={editFileInputRef}
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                onChange={onFileChange}
+                className="hidden"
+              />
               <button
                 type="button"
                 onClick={() => setShowRemoveImageModal(true)}

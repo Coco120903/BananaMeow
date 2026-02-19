@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { Cat, Crown, ShoppingCart, User, Heart, Sparkles, Menu, X, LogOut, Settings, ChevronDown, Star, Camera, Mail, Bell } from "lucide-react";
+import { CatEars } from "./CatDecorations.jsx";
 
 const navLinks = [
   { label: "Home", href: "/", icon: Sparkles },
@@ -108,14 +109,14 @@ export default function Navbar() {
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:px-8 md:py-4">
         {/* Logo */}
         <Link to="/" onClick={handleLogoClick} className="group flex items-center gap-3 transition-transform duration-300 hover:scale-105">
-          <div className="relative cat-ears cat-ears-inner">
-            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-banana-200 via-banana-100 to-lilac/40 shadow-soft transition-all duration-300 group-hover:shadow-glow purr-hover">
-              <Cat className="h-5 w-5 text-royal transition-transform duration-300 group-hover:scale-110" />
+          <CatEars small>
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-banana-200 via-banana-100 to-lilac/40 grid place-items-center shadow-soft transition-transform duration-300 group-hover:scale-105 purr-hover">
+              <Cat className="h-6 w-6 text-royal" />
             </div>
-            <div className="absolute -right-1 -top-1 z-[70] grid h-5 w-5 place-items-center rounded-full bg-white shadow-sm">
+            <div className="absolute -right-1 -top-1 z-[70] w-5 h-5 rounded-full bg-white shadow-sm grid place-items-center">
               <Crown className="h-3 w-3 text-banana-500" />
             </div>
-          </div>
+          </CatEars>
           <div className="hidden sm:block">
             <p className="text-lg font-bold text-royal transition-colors">
               Banana Meow

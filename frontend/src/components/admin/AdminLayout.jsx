@@ -54,12 +54,12 @@ export default function AdminLayout() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full w-64 bg-white/90 backdrop-blur-md shadow-xl z-40 transform transition-transform duration-300 lg:translate-x-0 ${
+        className={`fixed top-0 left-0 h-full w-64 bg-white/90 backdrop-blur-md shadow-xl z-40 transform transition-transform duration-300 lg:translate-x-0 flex flex-col ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         {/* Logo */}
-        <div className="p-6 border-b border-ink/10">
+        <div className="p-6 border-b border-ink/10 flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-gradient-to-br from-royal to-royal/80 rounded-2xl flex items-center justify-center">
               <Crown className="w-6 h-6 text-banana-300" />
@@ -71,8 +71,8 @@ export default function AdminLayout() {
           </div>
         </div>
 
-        {/* Navigation */}
-        <nav className="p-4 space-y-2">
+        {/* Navigation - scrollable when links would sit behind logout */}
+        <nav className="p-4 space-y-2 flex-1 min-h-0 overflow-y-auto">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
@@ -92,8 +92,8 @@ export default function AdminLayout() {
           ))}
         </nav>
 
-        {/* User info & Logout */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-ink/10 bg-cream/50">
+        {/* User info & Logout - fixed at bottom, never covered by nav */}
+        <div className="flex-shrink-0 p-4 border-t border-ink/10 bg-cream/50">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 bg-gradient-to-br from-banana-300 to-banana-400 rounded-full flex items-center justify-center">
               <Cat className="w-5 h-5 text-royal" />

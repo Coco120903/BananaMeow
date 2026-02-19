@@ -378,7 +378,7 @@ export default function ProfilePage() {
       {/* Profile Picture Section */}
       <div className="mb-6 flex flex-col items-center gap-6">
         <div className="relative">
-          <div className="w-56 h-56 md:w-64 md:h-64 rounded-full overflow-hidden border-4 border-royal/10 shadow-soft">
+          <div className="w-[16.25rem] h-[16.25rem] md:w-[16.25rem] md:h-[16.25rem] rounded-full overflow-hidden border-4 border-royal/10 shadow-soft">
             {profileImage && !imageError ? (
               <img
                 src={`${API_BASE}${profileImage}`}
@@ -388,7 +388,7 @@ export default function ProfilePage() {
               />
             ) : (
               <div className="w-full h-full rounded-full bg-gradient-to-br from-banana-100 to-lilac/50 flex items-center justify-center">
-                <User className="h-28 w-28 md:h-32 md:w-32 text-royal/60" />
+                <User className="h-[4rem] w-[4rem] md:h-[4rem] md:w-[4rem] text-royal/60" />
               </div>
             )}
           </div>

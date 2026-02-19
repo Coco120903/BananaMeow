@@ -31,6 +31,7 @@ export default function ProfilePage() {
   const [showEditOptions, setShowEditOptions] = useState(false);
   const [editSubMode, setEditSubMode] = useState("zoom");
   const [profilePreviewZoom, setProfilePreviewZoom] = useState(1);
+  const [editInitialZoom, setEditInitialZoom] = useState(1);
   const fileInputRef = useRef(null);
   const editFileInputRef = useRef(null);
 
@@ -473,18 +474,37 @@ export default function ProfilePage() {
               <button
                 type="button"
                 onClick={() => {
-                  setShowEditOptions((prev) => {
-                    if (!prev) {
-                      setEditSubMode("zoom");
-                      setProfilePreviewZoom(1);
-                    }
-                    return !prev;
-                  });
+                  if (showEditOptions) {
+                    const hasChanges = profilePreviewZoom !== editInitialZoom;
+                    setShowEditOptions(false);
+                    setProfilePreviewZoom(editInitialZoom);
+                  } else {
+                    setEditSubMode("zoom");
+                    setProfilePreviewZoom(1);
+                    setEditInitialZoom(1);
+                    setShowEditOptions(true);
+                  }
                 }}
                 className="btn-secondary text-xs md:text-sm flex items-center gap-1.5 px-3 md:px-4 py-2 md:py-2.5 flex-1 justify-center min-w-0"
               >
-                <Edit2 className="h-3.5 w-3.5 md:h-4 md:w-4 flex-shrink-0" />
-                <span>Edit</span>
+                {showEditOptions ? (
+                  profilePreviewZoom !== editInitialZoom ? (
+                    <>
+                      <CheckCircle className="h-3.5 w-3.5 md:h-4 md:w-4 flex-shrink-0" />
+                      <span>Save</span>
+                    </>
+                  ) : (
+                    <>
+                      <X className="h-3.5 w-3.5 md:h-4 md:w-4 flex-shrink-0" />
+                      <span>Cancel</span>
+                    </>
+                  )
+                ) : (
+                  <>
+                    <Edit2 className="h-3.5 w-3.5 md:h-4 md:w-4 flex-shrink-0" />
+                    <span>Edit</span>
+                  </>
+                )}
               </button>
               <input
                 ref={editFileInputRef}

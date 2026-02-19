@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 import { API_BASE } from "../lib/api.js";
+import { ShoppingCart, X } from "lucide-react";
 
 const fallbackProducts = [
   {
@@ -88,8 +90,11 @@ const fallbackProducts = [
 ];
 
 export default function ShopCategoryPage({ title, category }) {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [products, setProducts] = useState([]);
   const [quantities, setQuantities] = useState({});
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const { dispatch } = useCart();
 
   useEffect(() => {
@@ -142,6 +147,10 @@ export default function ShopCategoryPage({ title, category }) {
   };
 
   const handleAddToCart = (productId, product) => {
+    if (!isAuthenticated) {
+      setShowLoginModal(true);
+      return;
+    }
     const qty = getQuantity(productId);
     const stock = product.inventory ?? 0;
     
@@ -167,6 +176,44 @@ export default function ShopCategoryPage({ title, category }) {
   };
 
   return (
+    <>
+      {/* Login Required Modal */}
+      {showLoginModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm transition-opacity duration-200">
+          <div className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 md:p-8 transform transition-all duration-200 scale-100">
+            <button
+              onClick={() => setShowLoginModal(false)}
+              className="absolute top-4 right-4 w-8 h-8 rounded-xl bg-cream hover:bg-blush/30 grid place-items-center transition-colors"
+            >
+              <X className="h-4 w-4 text-ink/60" />
+            </button>
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-banana-100 to-lilac/40 grid place-items-center mx-auto mb-4">
+              <ShoppingCart className="h-8 w-8 text-royal" />
+            </div>
+            <h3 className="text-2xl font-bold text-royal text-center mb-2">
+              Login Required
+            </h3>
+            <p className="text-ink/60 text-center mb-6">
+              Please log in to add items to your cart and continue shopping.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => setShowLoginModal(false)}
+                className="flex-1 px-6 py-3 rounded-xl border-2 border-royal/20 text-royal font-medium hover:bg-cream transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => { setShowLoginModal(false); navigate("/login"); }}
+                className="flex-1 px-6 py-3 rounded-xl bg-royal text-white font-medium hover:bg-ink transition-colors shadow-soft"
+              >
+                Proceed to Login
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     <section className="mx-auto max-w-6xl px-4 py-12 md:px-8">
       <div className="flex flex-col gap-3 pb-6">
         <p className="text-sm font-semibold uppercase tracking-[0.3em] text-ink/50">
@@ -262,5 +309,6 @@ export default function ShopCategoryPage({ title, category }) {
         })}
       </div>
     </section>
+    </>
   );
 }

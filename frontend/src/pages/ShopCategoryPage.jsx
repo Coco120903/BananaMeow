@@ -3,7 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
 import { useAuth } from "../context/AuthContext.jsx";
 import { API_BASE } from "../lib/api.js";
-import { ShoppingCart, X } from "lucide-react";
+import { ShoppingCart, X, ChevronLeft, ChevronRight } from "lucide-react";
+
+const PRODUCTS_PER_PAGE = 12;
 
 const fallbackProducts = [
   {
@@ -95,7 +97,12 @@ export default function ShopCategoryPage({ title, category }) {
   const [products, setProducts] = useState([]);
   const [quantities, setQuantities] = useState({});
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const { dispatch } = useCart();
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [category]);
 
   useEffect(() => {
     setProducts([]);
@@ -137,6 +144,10 @@ export default function ShopCategoryPage({ title, category }) {
       })),
     [filtered]
   );
+
+  const totalPages = Math.ceil(withImages.length / PRODUCTS_PER_PAGE) || 1;
+  const page = Math.min(currentPage, totalPages);
+  const paginatedProducts = withImages.slice((page - 1) * PRODUCTS_PER_PAGE, page * PRODUCTS_PER_PAGE);
 
   const getQuantity = (productId) => quantities[productId] ?? 1;
 
@@ -226,7 +237,7 @@ export default function ShopCategoryPage({ title, category }) {
       </div>
 
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {withImages.map((product) => {
+        {paginatedProducts.map((product) => {
           const qty = getQuantity(product._id);
           const stock = product.inventory ?? 0;
           const inStock = stock > 0;
@@ -308,6 +319,33 @@ export default function ShopCategoryPage({ title, category }) {
           );
         })}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-2">
+          <button
+            type="button"
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-royal/20 text-royal font-medium hover:bg-banana-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Previous
+          </button>
+          <span className="px-4 py-2.5 text-sm text-ink/70 font-medium">
+            Page {page} of {totalPages}
+          </span>
+          <button
+            type="button"
+            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 border-royal/20 text-royal font-medium hover:bg-banana-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            Next
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      )}
     </section>
     </>
   );

@@ -112,7 +112,7 @@ export default function Navbar() {
             <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-banana-200 via-banana-100 to-lilac/40 shadow-soft transition-all duration-300 group-hover:shadow-glow purr-hover">
               <Cat className="h-5 w-5 text-royal transition-transform duration-300 group-hover:scale-110" />
             </div>
-            <div className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-white shadow-sm">
+            <div className="absolute -right-1 -top-1 z-[70] grid h-5 w-5 place-items-center rounded-full bg-white shadow-sm">
               <Crown className="h-3 w-3 text-banana-500" />
             </div>
           </div>

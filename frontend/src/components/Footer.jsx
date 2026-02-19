@@ -184,7 +184,7 @@ export default function Footer() {
                 </div>
               </CatEars>
               <div className="ml-1">
-                <div className="absolute -right-1 -top-1 w-5 h-5 rounded-full bg-white shadow-sm grid place-items-center" style={{position: 'relative', display: 'inline-block', marginBottom: '-4px'}}>
+                <div className="absolute -right-1 -top-1 z-[20] w-5 h-5 rounded-full bg-white shadow-sm grid place-items-center" style={{position: 'relative', display: 'inline-block', marginBottom: '-4px'}}>
                   <Crown className="h-3 w-3 text-banana-500" />
                 </div>
                 <p className="text-lg font-bold text-royal">Banana Meow</p>

@@ -1,7 +1,7 @@
 import { funnyQuotes } from "../content/funnyQuotes.js";
 import { educationalPosts } from "../content/educationalPosts.js";
 import { memeCaptions } from "../content/memeCaptions.js";
-import { Crown, Sparkles, Heart, Star, Quote, BookOpen, MessageCircle, Cat, Users, Gift, Award } from "lucide-react";
+import { Crown, Sparkles, Heart, Star, Quote, BookOpen, MessageCircle, Cat, Users, Gift, Award, ScrollText, Target } from "lucide-react";
 import { FloatingCats, WhiskerDivider } from "../components/CatDecorations.jsx";
 
 export default function AboutPage() {
@@ -94,6 +94,54 @@ export default function AboutPage() {
             </div>
           );
         })}
+      </div>
+
+      {/* Background & Goals */}
+      <div className="grid gap-6 md:grid-cols-2 mb-12">
+        <div className="card-cute p-[3px]">
+          <div className="rounded-[1.85rem] bg-white p-6 md:p-8 h-full">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-banana-100 to-lilac/50 flex items-center justify-center shadow-soft">
+                <ScrollText className="h-6 w-6 text-royal" />
+              </div>
+              <h2 className="text-xl font-bold text-royal">Our Background</h2>
+            </div>
+            <p className="text-ink/70 leading-relaxed mb-4">
+              Banana Meow started as a small passion project celebrating our beloved British Shorthairs—Bane, Nana, and Angela—and grew into a community for cat lovers who appreciate a little royal drama. We believe every chonky cat deserves a throne, quality naps, and adoring subjects.
+            </p>
+            <p className="text-ink/70 leading-relaxed">
+              What began with three founding royals has expanded to a kingdom of 12, each with their own personality and crown-worthy charm. We share their stories, quirks, and occasional judgmental stares with supporters who get it.
+            </p>
+          </div>
+        </div>
+        <div className="card-cute p-[3px]">
+          <div className="rounded-[1.85rem] bg-white p-6 md:p-8 h-full">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-lilac/50 to-blush/40 flex items-center justify-center shadow-soft">
+                <Target className="h-6 w-6 text-royal" />
+              </div>
+              <h2 className="text-xl font-bold text-royal">Our Goals</h2>
+            </div>
+            <ul className="space-y-3 text-ink/70 leading-relaxed">
+              <li className="flex items-start gap-2">
+                <Crown className="h-4 w-4 text-banana-400 mt-0.5 flex-shrink-0" />
+                <span>Give every royal the best care, comfort, and enrichment so they can nap and judge in peace.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Heart className="h-4 w-4 text-coral mt-0.5 flex-shrink-0" />
+                <span>Build a supportive community of cat lovers who celebrate British Shorthairs and rescue-friendly values.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Gift className="h-4 w-4 text-royal mt-0.5 flex-shrink-0" />
+                <span>Use donations and merch to fund vet care, food, and cozy thrones for our 12 chonky royals.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <Sparkles className="h-4 w-4 text-banana-400 mt-0.5 flex-shrink-0" />
+                <span>Spread joy and a bit of theatrical flair—because life is better with cats who know they’re royalty.</span>
+              </li>
+            </ul>
+          </div>
+        </div>
       </div>
 
       {/* Content Cards */}

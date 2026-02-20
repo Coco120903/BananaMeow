@@ -2,7 +2,7 @@ import { Crown, Star, Heart, Sparkles, TrendingUp, Users, Gift, Shield, Quote, C
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
-import { API_BASE } from "../lib/api.js";
+import { API_BASE, getImageUrl } from "../lib/api.js";
 import HeroSection from "../components/HeroSection.jsx";
 import OriginStory from "../components/OriginStory.jsx";
 import CTASection from "../components/CTASection.jsx";
@@ -521,7 +521,7 @@ function GalleryTeaser() {
     day: "numeric",
     year: "numeric"
   });
-  const thumbnail = post.thumbnailUrl || (post.mediaUrls && post.mediaUrls[0]) || null;
+  const thumbnail = getImageUrl(post.thumbnailUrl || (post.mediaUrls && post.mediaUrls[0]) || null);
 
   return (
     <section className="relative mx-auto max-w-6xl px-4 py-16 md:px-8">

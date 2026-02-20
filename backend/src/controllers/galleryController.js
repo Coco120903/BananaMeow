@@ -49,6 +49,22 @@ function galleryFilePath(url) {
   return possiblePaths[0];
 }
 
+// Helper: convert full URL to relative path (for backward compatibility)
+function urlToRelativePath(url) {
+  if (!url) return url;
+  // If it's already a relative path, return as-is
+  if (url.startsWith("/")) return url;
+  // If it's a full URL, extract the path
+  try {
+    const urlObj = new URL(url);
+    return urlObj.pathname; // Returns /uploads/gallery/filename.jpg
+  } catch {
+    // If URL parsing fails, try to extract path manually
+    const match = url.match(/\/uploads\/[^/]+\/[^/]+$/);
+    return match ? match[0] : url;
+  }
+}
+
 // Helper: normalize post data for backward compatibility
 function normalizePost(post) {
   if (!post) return post;
@@ -56,6 +72,14 @@ function normalizePost(post) {
   // Ensure mediaUrls is always an array
   if (!post.mediaUrls || !Array.isArray(post.mediaUrls)) {
     post.mediaUrls = [];
+  }
+  
+  // Convert any full URLs in mediaUrls to relative paths (backward compatibility)
+  post.mediaUrls = post.mediaUrls.map(url => urlToRelativePath(url));
+  
+  // Convert thumbnailUrl to relative path if it's a full URL
+  if (post.thumbnailUrl) {
+    post.thumbnailUrl = urlToRelativePath(post.thumbnailUrl);
   }
   
   // Ensure thumbnailUrl exists or defaults to first media file
@@ -126,14 +150,13 @@ export async function createPost(req, res) {
       }
     }
 
-    // Generate URLs for uploaded files
-    const baseUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 5000}`;
-    const mediaUrls = mediaFiles.map(file => `${baseUrl}/uploads/gallery/${file.filename}`);
+    // Generate relative paths for uploaded files (not full URLs)
+    const mediaUrls = mediaFiles.map(file => `/uploads/gallery/${file.filename}`);
     
     // Use custom thumbnail if provided, otherwise use first media file
     let thumbnailUrl = mediaUrls[0]; // Default to first media file
     if (thumbnailFile) {
-      thumbnailUrl = `${baseUrl}/uploads/gallery/${thumbnailFile.filename}`;
+      thumbnailUrl = `/uploads/gallery/${thumbnailFile.filename}`;
     }
     
     const post = await Gallery.create({
@@ -195,12 +218,14 @@ export async function updatePost(req, res) {
 
     // If new media files uploaded, append them to existing files (do not replace)
     if (mediaFiles.length > 0) {
-      // Generate URLs for new files
-      const baseUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 5000}`;
-      const newMediaUrls = mediaFiles.map(file => `${baseUrl}/uploads/gallery/${file.filename}`);
+      // Generate relative paths for new files (not full URLs)
+      const newMediaUrls = mediaFiles.map(file => `/uploads/gallery/${file.filename}`);
+      
+      // Normalize existing URLs to relative paths before appending
+      const normalizedExisting = (post.mediaUrls || []).map(url => urlToRelativePath(url));
       
       // Append new files to existing mediaUrls array (preserve existing files)
-      post.mediaUrls = [...(post.mediaUrls || []), ...newMediaUrls];
+      post.mediaUrls = [...normalizedExisting, ...newMediaUrls];
       
       // Keep existing thumbnail or use first new file if no existing media
       if (!post.thumbnailUrl && newMediaUrls.length > 0) {
@@ -211,14 +236,15 @@ export async function updatePost(req, res) {
     // Handle thumbnail upload/replacement
     if (thumbnailFile) {
       // Delete old thumbnail if it exists and is not in mediaUrls
-      if (post.thumbnailUrl && !post.mediaUrls.includes(post.thumbnailUrl)) {
-        const oldFp = galleryFilePath(post.thumbnailUrl);
+      const normalizedThumbnail = urlToRelativePath(post.thumbnailUrl);
+      const normalizedMediaUrls = (post.mediaUrls || []).map(url => urlToRelativePath(url));
+      if (normalizedThumbnail && !normalizedMediaUrls.includes(normalizedThumbnail)) {
+        const oldFp = galleryFilePath(normalizedThumbnail);
         if (oldFp) safeUnlink(oldFp);
       }
 
-      // Set new thumbnail
-      const baseUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 5000}`;
-      post.thumbnailUrl = `${baseUrl}/uploads/gallery/${thumbnailFile.filename}`;
+      // Set new thumbnail as relative path
+      post.thumbnailUrl = `/uploads/gallery/${thumbnailFile.filename}`;
     }
 
     // Update fields
@@ -252,13 +278,16 @@ export async function deleteThumbnail(req, res) {
     }
 
     // Delete thumbnail file if it exists and is not in mediaUrls
-    if (post.thumbnailUrl && !post.mediaUrls.includes(post.thumbnailUrl)) {
-      const fp = galleryFilePath(post.thumbnailUrl);
+    // Normalize URLs for comparison
+    const normalizedThumbnail = urlToRelativePath(post.thumbnailUrl);
+    const normalizedMediaUrls = (post.mediaUrls || []).map(url => urlToRelativePath(url));
+    if (normalizedThumbnail && !normalizedMediaUrls.includes(normalizedThumbnail)) {
+      const fp = galleryFilePath(normalizedThumbnail);
       if (fp) safeUnlink(fp);
     }
 
-    // Reset thumbnail to first media file or empty
-    post.thumbnailUrl = post.mediaUrls && post.mediaUrls.length > 0 ? post.mediaUrls[0] : "";
+    // Reset thumbnail to first media file or empty (normalize first)
+    post.thumbnailUrl = post.mediaUrls && post.mediaUrls.length > 0 ? urlToRelativePath(post.mediaUrls[0]) : "";
     
     await post.save();
     
@@ -312,15 +341,16 @@ export async function updateFile(req, res) {
     const oldFp = galleryFilePath(oldUrl);
     if (oldFp) safeUnlink(oldFp);
 
-    // Generate new URL
-    const baseUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 5000}`;
-    const newUrl = `${baseUrl}/uploads/gallery/${req.file.filename}`;
+    // Generate new relative path (not full URL)
+    const newUrl = `/uploads/gallery/${req.file.filename}`;
     
     // Replace file at specific index
     post.mediaUrls[fileIndex] = newUrl;
     
-    // Update thumbnail if it was the replaced file
-    if (post.thumbnailUrl === oldUrl) {
+    // Update thumbnail if it was the replaced file (normalize both for comparison)
+    const normalizedOldUrl = urlToRelativePath(oldUrl);
+    const normalizedThumbnail = urlToRelativePath(post.thumbnailUrl);
+    if (normalizedThumbnail === normalizedOldUrl) {
       post.thumbnailUrl = newUrl;
     }
     
@@ -367,9 +397,11 @@ export async function deleteFile(req, res) {
     // Remove from array
     post.mediaUrls.splice(fileIndex, 1);
     
-    // Update thumbnail if it was the deleted file
-    if (post.thumbnailUrl === urlToDelete) {
-      post.thumbnailUrl = post.mediaUrls.length > 0 ? post.mediaUrls[0] : "";
+    // Update thumbnail if it was the deleted file (normalize URLs for comparison)
+    const normalizedThumbnail = urlToRelativePath(post.thumbnailUrl);
+    const normalizedUrlToDelete = urlToRelativePath(urlToDelete);
+    if (normalizedThumbnail === normalizedUrlToDelete) {
+      post.thumbnailUrl = post.mediaUrls.length > 0 ? urlToRelativePath(post.mediaUrls[0]) : "";
     }
     
     await post.save();
@@ -398,9 +430,11 @@ export async function deletePost(req, res) {
       });
     }
 
-    // Delete thumbnail if it's separate from media files
-    if (post.thumbnailUrl && !post.mediaUrls.includes(post.thumbnailUrl)) {
-      const fp = galleryFilePath(post.thumbnailUrl);
+    // Delete thumbnail if it's separate from media files (normalize URLs for comparison)
+    const normalizedThumbnail = urlToRelativePath(post.thumbnailUrl);
+    const normalizedMediaUrls = (post.mediaUrls || []).map(url => urlToRelativePath(url));
+    if (normalizedThumbnail && !normalizedMediaUrls.includes(normalizedThumbnail)) {
+      const fp = galleryFilePath(normalizedThumbnail);
       if (fp) safeUnlink(fp);
     }
 

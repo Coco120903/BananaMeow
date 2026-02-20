@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Heart, Calendar, ArrowLeft, Play, Sparkles, Crown, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
-import { API_BASE } from "../lib/api.js";
+import { API_BASE, getImageUrl } from "../lib/api.js";
 
 export default function GalleryDetailPage() {
   const { id } = useParams();
@@ -243,7 +243,7 @@ export default function GalleryDetailPage() {
                   <div className="relative">
                     {post.mediaType === "video" || post.mediaType === "reel" ? (
                       <video
-                        src={post.mediaUrls[currentMediaIndex]}
+                        src={getImageUrl(post.mediaUrls[currentMediaIndex])}
                         controls
                         className="w-full h-auto transition-opacity duration-500"
                         style={{ maxHeight: "600px", objectFit: "contain" }}
@@ -251,7 +251,7 @@ export default function GalleryDetailPage() {
                       />
                     ) : (
                       <img
-                        src={post.mediaUrls[currentMediaIndex]}
+                        src={getImageUrl(post.mediaUrls[currentMediaIndex])}
                         alt={`${post.title} ${currentMediaIndex + 1}`}
                         className="w-full h-auto transition-opacity duration-500"
                         style={{ objectFit: "contain" }}
@@ -301,14 +301,14 @@ export default function GalleryDetailPage() {
                   <>
                     {post.mediaType === "video" || post.mediaType === "reel" ? (
                       <video
-                        src={post.mediaUrls[0]}
+                        src={getImageUrl(post.mediaUrls[0])}
                         controls
                         className="w-full h-auto"
                         style={{ maxHeight: "600px", objectFit: "contain" }}
                       />
                     ) : (
                       <img
-                        src={post.mediaUrls[0]}
+                        src={getImageUrl(post.mediaUrls[0])}
                         alt={post.title}
                         className="w-full h-auto"
                         style={{ objectFit: "contain" }}

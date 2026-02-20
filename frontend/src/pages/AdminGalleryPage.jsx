@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Camera, Edit2, Trash2, Plus, X, Save, Heart, Image as ImageIcon, Images as ImagesIcon, Video, Film, Upload, ChevronLeft, ChevronRight, CheckCircle, AlertTriangle } from "lucide-react";
-import { API_BASE } from "../lib/api.js";
+import { API_BASE, getImageUrl } from "../lib/api.js";
 
 // ── Themed Modal Component ──────────────────────────────────────────
 function GalleryModal({ isOpen, onClose, type = "info", title, message, onConfirm, confirmText = "Yes", cancelText = "Cancel", children }) {
@@ -253,7 +253,7 @@ export default function AdminGalleryPage() {
       if (response.ok) {
         const updatedPost = await response.json();
         setEditingPost(updatedPost);
-        setThumbnailPreview(updatedPost.thumbnailUrl || null);
+        setThumbnailPreview(getImageUrl(updatedPost.thumbnailUrl || null));
         setThumbnailFile(null);
         loadPosts();
         showToast("Thumbnail removed successfully");
@@ -509,7 +509,7 @@ export default function AdminGalleryPage() {
     setSelectedFiles([]);
     setFilePreviews([]);
     setThumbnailFile(null);
-    setThumbnailPreview(safePost.thumbnailUrl || null);
+    setThumbnailPreview(getImageUrl(safePost.thumbnailUrl || null));
     setShowForm(true);
   };
 
@@ -725,7 +725,7 @@ export default function AdminGalleryPage() {
                           <div key={`${editingPost._id}-${index}`} className="relative flex-shrink-0 w-24 h-24 rounded-lg overflow-hidden bg-cream group">
                             {isImage ? (
                               <img
-                                src={url}
+                                src={getImageUrl(url)}
                                 alt={`Current ${index + 1}`}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
@@ -799,7 +799,7 @@ export default function AdminGalleryPage() {
                     <div className="relative inline-block">
                       <div className="w-32 h-32 rounded-lg overflow-hidden bg-cream border-2 border-royal/10">
                         <img
-                          src={thumbnailPreview}
+                          src={getImageUrl(thumbnailPreview)}
                           alt="Thumbnail preview"
                           className="w-full h-full object-cover"
                           onError={(e) => {
@@ -898,7 +898,7 @@ export default function AdminGalleryPage() {
                 <div className="relative aspect-square overflow-hidden bg-cream">
                   {post.thumbnailUrl ? (
                     <img
-                      src={post.thumbnailUrl}
+                      src={getImageUrl(post.thumbnailUrl)}
                       alt={post.title}
                       className="w-full h-full object-cover"
                       onError={(e) => {

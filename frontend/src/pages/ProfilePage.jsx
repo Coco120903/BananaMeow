@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useNavigate } from "react-router-dom";
-import { API_BASE } from "../lib/api.js";
+import { API_BASE, getImageUrl } from "../lib/api.js";
 import {
   User, Crown, Mail, Lock, Settings, Camera, Edit2, Trash2, Eye, EyeOff,
   ShoppingBag, Heart, Star, Calendar, CheckCircle, XCircle, AlertCircle,
@@ -926,7 +926,7 @@ export default function ProfilePage() {
                             <div className="flex items-center gap-4">
                               {(post.thumbnailUrl || (post.mediaUrls && post.mediaUrls.length > 0)) && (
                                 <img
-                                  src={post.thumbnailUrl || post.mediaUrls[0]}
+                                  src={getImageUrl(post.thumbnailUrl || post.mediaUrls[0])}
                                   alt={post.title}
                                   className="w-20 h-20 rounded-xl object-cover flex-shrink-0"
                                 />

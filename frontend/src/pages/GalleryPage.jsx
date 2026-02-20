@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Camera, Heart, Play, Images as ImagesIcon, Film, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
-import { API_BASE } from "../lib/api.js";
+import { API_BASE, getImageUrl } from "../lib/api.js";
 import { FloatingCats } from "../components/CatDecorations.jsx";
 
 const POSTS_PER_PAGE = 9;
@@ -148,7 +148,7 @@ export default function GalleryPage() {
                   {/* Photo content */}
                   <div className="aspect-square overflow-hidden bg-cream/30 relative">
                     <img
-                      src={post.thumbnailUrl}
+                      src={getImageUrl(post.thumbnailUrl)}
                       alt={post.title}
                       className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
                     />

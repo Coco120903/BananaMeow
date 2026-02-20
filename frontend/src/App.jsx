@@ -40,6 +40,7 @@ import AdminNotificationsPage from "./pages/admin/AdminNotificationsPage.jsx";
 import AdminReviewsPage from "./pages/admin/AdminReviewsPage.jsx";
 import NotificationsPage from "./pages/NotificationsPage.jsx";
 import NotificationPopup from "./components/NotificationPopup.jsx";
+import WelcomeBackPopup from "./components/WelcomeBackPopup.jsx";
 
 function PublicLayout({ children }) {
   return (
@@ -140,6 +141,7 @@ export default function App() {
         <AuthProvider>
           <CartProvider>
             <NotificationPopup />
+            <WelcomeBackPopup />
             <Routes>
               {/* Admin Routes - redirect old admin login to unified login */}
               <Route

@@ -34,7 +34,8 @@ export default function AdminOrdersPage() {
   const filteredOrders = orders.filter(
     (order) =>
       order.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order._id?.toLowerCase().includes(searchTerm.toLowerCase())
+      order._id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.customerName?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const totalRevenue = orders.reduce((sum, o) => sum + (o.total || 0), 0);
@@ -131,7 +132,7 @@ export default function AdminOrdersPage() {
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-ink/40" />
         <input
           type="text"
-          placeholder="Search by email or order ID..."
+          placeholder="Search by name, email or order ID..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full pl-12 pr-4 py-3 bg-white/80 border border-ink/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-royal/30"
@@ -177,7 +178,10 @@ export default function AdminOrdersPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="text-ink">{order.email || "Guest"}</span>
+                      <span className="text-ink font-medium">{order.customerName || "Guest"}</span>
+                      {order.email && (
+                        <div className="text-xs text-ink/50 mt-0.5">{order.email}</div>
+                      )}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">

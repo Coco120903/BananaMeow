@@ -72,7 +72,7 @@ export async function createDonationCheckout(req, res) {
 }
 
 export async function createOrderCheckout(req, res) {
-  const { items, email } = req.body;
+  const { items, email, userId, customerName } = req.body;
 
   try {
     const stripe = getStripeClient();
@@ -124,7 +124,9 @@ export async function createOrderCheckout(req, res) {
     items,
     total,
     stripeSessionId: session.id,
-    email
+    email,
+    ...(userId ? { userId } : {}),
+    ...(customerName ? { customerName } : {})
   });
 
   res.json({ url: session.url });

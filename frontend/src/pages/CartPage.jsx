@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 import { API_BASE } from "../lib/api.js";
 import { CheckCircle, XCircle, Loader2, ShoppingBag, ArrowLeft } from "lucide-react";
 
 export default function CartPage() {
   const { state, dispatch, subtotal } = useCart();
-  const [email, setEmail] = useState("");
+  const { user } = useAuth();
+  const [email, setEmail] = useState(user?.email || "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [searchParams, setSearchParams] = useSearchParams();
@@ -48,7 +50,12 @@ export default function CartPage() {
           headers: {
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({ items: checkoutItems, email })
+          body: JSON.stringify({
+            items: checkoutItems,
+            email: email || (user?.email ?? ""),
+            ...(user?._id ? { userId: user._id } : {}),
+            ...(user?.name ? { customerName: user.name } : {})
+          })
         }
       );
 

@@ -13,7 +13,9 @@ const orderSchema = new mongoose.Schema(
     total: { type: Number, required: true },
     status: { type: String, default: "pending" },
     stripeSessionId: { type: String },
-    email: { type: String }
+    email: { type: String },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    customerName: { type: String }
   },
   { timestamps: true }
 );

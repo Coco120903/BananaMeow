@@ -207,8 +207,10 @@ export const getUserActivity = async (req, res) => {
     });
     const userEmail = user.email;
 
-    // Get purchase history (orders by email)
-    const orders = await Order.find({ email: userEmail })
+    // Get purchase history (orders by userId OR email for backward compatibility)
+    const orderQuery = { $or: [{ userId: req.user.id }] };
+    if (userEmail) orderQuery.$or.push({ email: userEmail });
+    const orders = await Order.find(orderQuery)
       .sort({ createdAt: -1 })
       .limit(50);
 
